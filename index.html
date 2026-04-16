@@ -2210,7 +2210,8 @@ async function importSpotifyPlaylist(spotifyId, name, total) {
 }
 
 // ── Spotify: open modal ───────────────────────────────────────────────
-document.getElementById('btn-spotify-import').addEventListener('click', () => {
+const _spotifyBtn = document.getElementById('btn-spotify-import');
+if (_spotifyBtn) _spotifyBtn.addEventListener('click', () => {
   const token = localStorage.getItem('spotify_token');
   document.getElementById('spotify-step-connect').style.display = token ? 'none' : '';
   document.getElementById('spotify-step-select').style.display = 'none';
