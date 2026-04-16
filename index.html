@@ -2107,13 +2107,13 @@ function populateAccount(user) {
   document.getElementById('btn-avatar').textContent = initials.slice(0, 1);
   document.getElementById('account-avatar').textContent = initials.slice(0, 1);
   // Load username from profiles
-  sbClient.from('profiles').select('username, display_name').eq('id', user.id).single()
+  sbClient.from('profiles').select('*').eq('id', user.id).single()
     .then(({ data }) => {
       if (data?.username) {
         document.getElementById('account-username').value = data.username;
         updateProfileLink(data.username);
       }
-    });
+    }).catch(e => console.warn('profile load:', e.message));
 }
 
 // ── Auth: onSignedIn ──────────────────────────────────────────────────
@@ -2747,7 +2747,7 @@ async function loadPublicPlaylist(slug) {
     try {
       const { data: profile } = await sbClient
         .from('profiles')
-        .select('display_name')
+        .select('*')
         .eq('id', pl.user_id)
         .single();
       authorName = profile?.display_name || '';
