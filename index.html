@@ -1336,14 +1336,17 @@ document.getElementById('btn-add-track').addEventListener('click', async () => {
 
   setLoading('btn-add-track', true);
   try {
-    // Get max position
-    const { data: existing } = await sbClient
-      .from('playlist_tracks')
-      .select('position')
-      .eq('playlist_id', playlistId)
-      .order('position', { ascending: false })
-      .limit(1);
-    const nextPos = existing?.length ? (existing[0].position + 1) : 0;
+    // Get max position safely
+    let nextPos = 0;
+    try {
+      const { data: existing } = await sbClient
+        .from('playlist_tracks')
+        .select('position')
+        .eq('playlist_id', playlistId)
+        .order('position', { ascending: false })
+        .limit(1);
+      nextPos = existing?.length ? (existing[0].position + 1) : 0;
+    } catch (_) {}
 
     const { error } = await sbClient.from('playlist_tracks').insert({
       playlist_id: playlistId,
@@ -1354,15 +1357,15 @@ document.getElementById('btn-add-track').addEventListener('click', async () => {
     });
     if (error) throw error;
 
-    showToast(`✅ Added to playlist`);
-    // Clear fields
+    showToast('✅ Added to playlist');
     document.getElementById('search-artist').value = '';
     document.getElementById('search-track').value = '';
     document.getElementById('search-genre').value = '';
     updateSearchPreview();
     await loadPlaylists();
   } catch (err) {
-    showToast('Error: ' + err.message);
+    showToast('Error: ' + (err.message || JSON.stringify(err)));
+    console.warn('add track error:', err);
   }
   setLoading('btn-add-track', false);
 });
