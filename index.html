@@ -907,15 +907,15 @@
       </div>
       <div class="form-group">
         <label>Artist</label>
-        <input type="text" id="search-artist" placeholder="e.g. Radiohead" />
+        <input type="text" id="search-artist" placeholder="e.g. Radiohead" autocomplete="off" />
       </div>
       <div class="form-group">
         <label>Track Name</label>
-        <input type="text" id="search-track" placeholder="e.g. Creep" />
+        <input type="text" id="search-track" placeholder="e.g. Creep" autocomplete="off" />
       </div>
       <div class="form-group">
         <label>Genre <span class="text-muted" style="font-family:DM Sans;font-size:11px;letter-spacing:0">(optional)</span></label>
-        <input type="text" id="search-genre" placeholder="e.g. Alternative Rock" />
+        <input type="text" id="search-genre" placeholder="e.g. Alternative Rock" autocomplete="off" />
       </div>
 
       <!-- Platform preview -->
@@ -923,17 +923,18 @@
         <div class="divider"></div>
         <div class="section-header">
           <span class="section-title">Open In</span>
+          <button class="btn btn-ghost btn-sm" id="btn-share-track">🔗 Share Track</button>
         </div>
         <div class="platform-links" id="search-platform-links"></div>
-        <div style="margin-top:14px">
-          <div class="form-group">
-            <label>Add to Playlist</label>
-            <select id="search-playlist-select">
-              <option value="">— Select playlist —</option>
-            </select>
-          </div>
-          <button class="btn btn-primary" id="btn-add-track">Add to Playlist</button>
+        <button class="platform-expand" id="btn-expand-platforms" style="margin-top:4px">+ Show all platforms</button>
+        <div class="divider"></div>
+        <div class="form-group">
+          <label>Add to Playlist</label>
+          <select id="search-playlist-select">
+            <option value="">— Select playlist —</option>
+          </select>
         </div>
+        <button class="btn btn-primary" id="btn-add-track">+ Add to Playlist</button>
       </div>
 
       <div id="search-empty" style="padding:24px 0">
@@ -1241,18 +1242,485 @@ document.getElementById('btn-new-playlist').addEventListener('click', () => {
   openModal('overlay-playlist');
 });
 
-// ── Placeholder stubs ─────────────────────────────────────────────────
-document.getElementById('btn-save-playlist').addEventListener('click', () => showToast('Playlist logic coming soon'));
-document.getElementById('btn-add-track').addEventListener('click', () => showToast('Track logic coming soon'));
-document.getElementById('btn-copy-link').addEventListener('click', () => showToast('🔗 Link copied!'));
+// ── Streaming Platforms ───────────────────────────────────────────────
+const enc = s => encodeURIComponent(String(s).trim());
+
+const STREAMING_PLATFORMS = [
+  { id: 'spotify',     name: 'Spotify',       icon: '🟢', url: (a,t) => `https://open.spotify.com/search/${enc(a)}%20${enc(t)}` },
+  { id: 'apple',       name: 'Apple Music',   icon: '🎵', url: (a,t) => `https://music.apple.com/search?term=${enc(a)}+${enc(t)}` },
+  { id: 'youtube',     name: 'YouTube Music', icon: '🔴', url: (a,t) => `https://music.youtube.com/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'amazon',      name: 'Amazon Music',  icon: '🟠', url: (a,t) => `https://music.amazon.com/search/${enc(a)}+${enc(t)}` },
+  { id: 'deezer',      name: 'Deezer',        icon: '🟣', url: (a,t) => `https://www.deezer.com/search/${enc(a)}%20${enc(t)}` },
+  { id: 'tidal',       name: 'Tidal',         icon: '⬛', url: (a,t) => `https://tidal.com/browse/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'qobuz',       name: 'Qobuz',         icon: '🔵', url: (a,t) => `https://www.qobuz.com/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'soundcloud',  name: 'SoundCloud',    icon: '🟧', url: (a,t) => `https://soundcloud.com/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'bandcamp',    name: 'Bandcamp',      icon: '🔵', url: (a,t) => `https://bandcamp.com/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'lastfm',      name: 'Last.fm',       icon: '🔴', url: (a,t) => `https://www.last.fm/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'yandex',      name: 'Yandex Music',  icon: '🟡', url: (a,t) => `https://music.yandex.com/search?text=${enc(a)}+${enc(t)}` },
+  { id: 'vk',          name: 'VK Music',      icon: '🔵', url: (a,t) => `https://vk.com/audio?q=${enc(a)}+${enc(t)}` },
+  { id: 'iheart',      name: 'iHeartRadio',   icon: '🫀', url: (a,t) => `https://www.iheart.com/search/${enc(a)}%20${enc(t)}/` },
+  { id: 'jiosaavn',    name: 'JioSaavn',      icon: '🎶', url: (a,t) => `https://www.jiosaavn.com/search/${enc(a)}-${enc(t)}` },
+  { id: 'kkbox',       name: 'KKBOX',         icon: '🎵', url: (a,t) => `https://www.kkbox.com/tw/tc/search.html?q=${enc(a)}+${enc(t)}` },
+  { id: 'melon',       name: 'MelOn',         icon: '🍈', url: (a,t) => `https://www.melon.com/search/total/index.htm?q=${enc(a)}+${enc(t)}` },
+  { id: 'netease',     name: 'NetEase Music', icon: '🎵', url: (a,t) => `https://music.163.com/#/search/m/?s=${enc(a)}+${enc(t)}` },
+  { id: 'genius',      name: 'Genius',        icon: '💡', url: (a,t) => `https://genius.com/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'musicbrainz', name: 'MusicBrainz',   icon: '🧠', url: (a,t) => `https://musicbrainz.org/search?query=${enc(a)}+${enc(t)}&type=recording` },
+];
+
+const TOP_PLATFORMS = 5;
+let platformsExpanded = false;
+
+// ── Platform links renderer ───────────────────────────────────────────
+function renderPlatformLinks(artist, track, containerId, showAll = false) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const list = showAll ? STREAMING_PLATFORMS : STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS);
+  container.innerHTML = list.map(p => `
+    <a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn">
+      ${p.icon} ${p.name}
+    </a>`).join('');
+}
+
+// ── Search: expand/collapse platforms ────────────────────────────────
+document.getElementById('btn-expand-platforms').addEventListener('click', () => {
+  platformsExpanded = !platformsExpanded;
+  const artist = document.getElementById('search-artist').value.trim();
+  const track  = document.getElementById('search-track').value.trim();
+  renderPlatformLinks(artist, track, 'search-platform-links', platformsExpanded);
+  document.getElementById('btn-expand-platforms').textContent =
+    platformsExpanded ? '− Show fewer' : '+ Show all platforms';
+});
+
+// ── Search: share single track link ──────────────────────────────────
+document.getElementById('btn-share-track').addEventListener('click', async () => {
+  const artist = document.getElementById('search-artist').value.trim();
+  const track  = document.getElementById('search-track').value.trim();
+  const genre  = document.getElementById('search-genre').value.trim();
+  if (!artist || !track) return;
+
+  setLoading('btn-share-track', true);
+  try {
+    // Save as a single-track public playlist with auto-slug
+    const slug = generateSlug();
+    const name = `${artist} — ${track}`;
+    const { data: pl, error: plErr } = await sbClient
+      .from('music_playlists')
+      .insert({ user_id: currentUser.id, name, is_public: true, public_slug: slug })
+      .select()
+      .single();
+    if (plErr) throw plErr;
+
+    await sbClient.from('playlist_tracks').insert({
+      playlist_id: pl.id, artist, track_name: track, genre: genre || null, position: 0
+    });
+
+    const url = `https://dafaspace.github.io/music-night/?p=${slug}`;
+    await navigator.clipboard.writeText(url);
+    showToast('🔗 Track link copied!');
+    await loadPlaylists();
+  } catch (err) {
+    showToast('Error: ' + err.message);
+  }
+  setLoading('btn-share-track', false);
+});
+
+// ── Tracks: add to playlist ───────────────────────────────────────────
+document.getElementById('btn-add-track').addEventListener('click', async () => {
+  const artist    = document.getElementById('search-artist').value.trim();
+  const track     = document.getElementById('search-track').value.trim();
+  const genre     = document.getElementById('search-genre').value.trim();
+  const playlistId = document.getElementById('search-playlist-select').value;
+
+  if (!artist || !track) { showToast('Enter artist and track name'); return; }
+  if (!playlistId) { showToast('Select a playlist first'); return; }
+
+  setLoading('btn-add-track', true);
+  try {
+    // Get max position
+    const { data: existing } = await sbClient
+      .from('playlist_tracks')
+      .select('position')
+      .eq('playlist_id', playlistId)
+      .order('position', { ascending: false })
+      .limit(1);
+    const nextPos = existing?.length ? (existing[0].position + 1) : 0;
+
+    const { error } = await sbClient.from('playlist_tracks').insert({
+      playlist_id: playlistId,
+      artist,
+      track_name: track,
+      genre: genre || null,
+      position: nextPos
+    });
+    if (error) throw error;
+
+    showToast(`✅ Added to playlist`);
+    // Clear fields
+    document.getElementById('search-artist').value = '';
+    document.getElementById('search-track').value = '';
+    document.getElementById('search-genre').value = '';
+    updateSearchPreview();
+    await loadPlaylists();
+  } catch (err) {
+    showToast('Error: ' + err.message);
+  }
+  setLoading('btn-add-track', false);
+});
+
+// ── Tracks: reorder ───────────────────────────────────────────────────
+async function moveTrack(trackId, playlistId, direction) {
+  try {
+    const { data: tracks } = await sbClient
+      .from('playlist_tracks')
+      .select('id, position')
+      .eq('playlist_id', playlistId)
+      .order('position', { ascending: true });
+
+    const idx = tracks.findIndex(t => t.id === trackId);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= tracks.length) return;
+
+    const posA = tracks[idx].position;
+    const posB = tracks[swapIdx].position;
+
+    await sbClient.from('playlist_tracks').update({ position: posB }).eq('id', tracks[idx].id);
+    await sbClient.from('playlist_tracks').update({ position: posA }).eq('id', tracks[swapIdx].id);
+
+    loadPlaylistTracks(playlistId);
+  } catch (err) {
+    showToast('Error: ' + err.message);
+  }
+}
+
+// ── Copy link ─────────────────────────────────────────────────────────
+document.getElementById('btn-copy-link').addEventListener('click', () => {
+  const url = document.getElementById('detail-share-url').textContent;
+  if (url) {
+    navigator.clipboard.writeText(url).then(() => showToast('🔗 Link copied!'));
+  }
+});
+
+// ── Playlists: render list ────────────────────────────────────────────
+function renderPlaylists() {
+  const container = document.getElementById('playlists-list');
+  if (!playlists.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🎶</div>
+        <div class="empty-state-title">No Playlists Yet</div>
+        <p>Create your first playlist and start adding tracks.</p>
+      </div>`;
+    return;
+  }
+  container.innerHTML = playlists.map(p => `
+    <div class="card" data-id="${p.id}">
+      <div class="card-header">
+        <div>
+          <div class="card-title">${escHtml(p.name)}</div>
+          <div class="card-meta">
+            ${p.is_public
+              ? `<span class="badge badge-public">🌐 Public</span>`
+              : `<span class="badge badge-private">🔒 Private</span>`}
+            <span style="margin-left:6px">${p._trackCount || 0} track${p._trackCount !== 1 ? 's' : ''}</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-icon btn-ghost" onclick="openPlaylistDetail('${p.id}')" title="Open">▶</button>
+          <button class="btn btn-icon btn-ghost" onclick="openEditPlaylist('${p.id}')" title="Edit">✎</button>
+          <button class="btn btn-icon btn-ghost" style="color:#f87171" onclick="deletePlaylist('${p.id}')" title="Delete">✕</button>
+        </div>
+      </div>
+      ${p.description ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">${escHtml(p.description)}</div>` : ''}
+    </div>`).join('');
+
+  // Also update shared tab
+  renderMyPublic();
+  // Update search playlist select
+  updatePlaylistSelect();
+}
+
+// ── Playlists: render My Public tab ──────────────────────────────────
+function renderMyPublic() {
+  const container = document.getElementById('my-public-list');
+  const pub = playlists.filter(p => p.is_public);
+  if (!pub.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🌐</div>
+        <div class="empty-state-title">No Public Playlists</div>
+        <p>Make a playlist public to share it with anyone — no account needed to view.</p>
+      </div>`;
+    return;
+  }
+  const base = `https://dafaspace.github.io/music-night/`;
+  container.innerHTML = pub.map(p => `
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">${escHtml(p.name)}</div>
+          <div class="card-meta">${p._trackCount || 0} track${p._trackCount !== 1 ? 's' : ''}</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="copyPublicLink('${p.public_slug}')">Copy Link</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;word-break:break-all">${base}?p=${p.public_slug}</div>
+    </div>`).join('');
+}
+
+// ── Playlists: update select in search tab ────────────────────────────
+function updatePlaylistSelect() {
+  const sel = document.getElementById('search-playlist-select');
+  sel.innerHTML = '<option value="">— Select playlist —</option>' +
+    playlists.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
+}
+
+// ── Playlists: load from Supabase ─────────────────────────────────────
+async function loadPlaylists() {
+  document.getElementById('playlists-list').innerHTML =
+    '<div class="loading-dots"><span></span><span></span><span></span></div>';
+  try {
+    const { data, error } = await sbClient
+      .from('music_playlists')
+      .select('*, playlist_tracks(count)')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    playlists = (data || []).map(p => ({
+      ...p,
+      _trackCount: p.playlist_tracks?.[0]?.count || 0
+    }));
+    renderPlaylists();
+  } catch (err) {
+    showToast('Failed to load playlists');
+    console.warn(err);
+    document.getElementById('playlists-list').innerHTML = '';
+  }
+}
+
+// ── Playlists: save (create or update) ───────────────────────────────
+document.getElementById('btn-save-playlist').addEventListener('click', async () => {
+  const name = document.getElementById('playlist-name-input').value.trim();
+  if (!name) { showToast('Please enter a playlist name'); return; }
+  const desc = document.getElementById('playlist-desc-input').value.trim();
+  const isPublic = document.getElementById('playlist-public-toggle').checked;
+
+  setLoading('btn-save-playlist', true);
+  try {
+    if (currentPlaylist) {
+      // Update
+      const updates = { name, description: desc, is_public: isPublic, updated_at: new Date().toISOString() };
+      // Generate slug if making public for first time
+      if (isPublic && !currentPlaylist.public_slug) {
+        updates.public_slug = generateSlug();
+      }
+      const { error } = await sbClient
+        .from('music_playlists')
+        .update(updates)
+        .eq('id', currentPlaylist.id);
+      if (error) throw error;
+      showToast('✅ Playlist updated');
+    } else {
+      // Create
+      const newPl = {
+        user_id: currentUser.id,
+        name,
+        description: desc,
+        is_public: isPublic,
+        public_slug: isPublic ? generateSlug() : null
+      };
+      const { error } = await sbClient.from('music_playlists').insert(newPl);
+      if (error) throw error;
+      showToast('✅ Playlist created');
+    }
+    closeModal('overlay-playlist');
+    await loadPlaylists();
+  } catch (err) {
+    showToast('Error: ' + err.message);
+    console.warn(err);
+  }
+  setLoading('btn-save-playlist', false);
+});
+
+// ── Playlists: open edit modal ────────────────────────────────────────
+function openEditPlaylist(id) {
+  const p = playlists.find(x => x.id === id);
+  if (!p) return;
+  currentPlaylist = p;
+  document.getElementById('modal-playlist-title').textContent = 'Edit Playlist';
+  document.getElementById('playlist-name-input').value = p.name;
+  document.getElementById('playlist-desc-input').value = p.description || '';
+  document.getElementById('playlist-public-toggle').checked = p.is_public;
+  openModal('overlay-playlist');
+}
+
+// ── Playlists: delete ─────────────────────────────────────────────────
+function deletePlaylist(id) {
+  const p = playlists.find(x => x.id === id);
+  if (!p) return;
+  showConfirm(
+    'Delete Playlist',
+    `Delete "${p.name}"? All tracks will be removed. This cannot be undone.`,
+    async () => {
+      try {
+        const { error } = await sbClient.from('music_playlists').delete().eq('id', id);
+        if (error) throw error;
+        showToast('🗑 Playlist deleted');
+        await loadPlaylists();
+      } catch (err) {
+        showToast('Error: ' + err.message);
+      }
+    }
+  );
+}
+
+// ── Playlists: open detail modal ──────────────────────────────────────
+function openPlaylistDetail(id) {
+  const p = playlists.find(x => x.id === id);
+  if (!p) return;
+  currentPlaylist = p;
+  document.getElementById('detail-playlist-name').textContent = p.name;
+  document.getElementById('detail-playlist-meta').textContent =
+    `${p._trackCount || 0} track${p._trackCount !== 1 ? 's' : ''} · ${p.is_public ? 'Public' : 'Private'}`;
+
+  // Share row
+  const shareRow = document.getElementById('detail-share-row');
+  if (p.is_public && p.public_slug) {
+    const url = `https://dafaspace.github.io/music-night/?p=${p.public_slug}`;
+    document.getElementById('detail-share-url').textContent = url;
+    shareRow.style.display = '';
+  } else {
+    shareRow.style.display = 'none';
+  }
+
+  document.getElementById('detail-tracks-list').innerHTML =
+    '<div class="loading-dots"><span></span><span></span><span></span></div>';
+  openModal('overlay-playlist-detail');
+  loadPlaylistTracks(id);
+}
+
+// ── Playlists: edit button inside detail modal ────────────────────────
+document.getElementById('btn-detail-edit').addEventListener('click', () => {
+  closeModal('overlay-playlist-detail');
+  if (currentPlaylist) openEditPlaylist(currentPlaylist.id);
+});
+
+// ── Playlists: copy public link ───────────────────────────────────────
+function copyPublicLink(slug) {
+  const url = `https://dafaspace.github.io/music-night/?p=${slug}`;
+  navigator.clipboard.writeText(url).then(() => showToast('🔗 Link copied!'));
+}
+
+// ── Tracks: load for detail modal (stub, full logic in step 6) ────────
+async function loadPlaylistTracks(playlistId) {
+  try {
+    const { data, error } = await sbClient
+      .from('playlist_tracks')
+      .select('*')
+      .eq('playlist_id', playlistId)
+      .order('position', { ascending: true });
+    if (error) throw error;
+    renderTrackList(data || [], playlistId);
+  } catch (err) {
+    showToast('Failed to load tracks');
+    console.warn(err);
+  }
+}
+
+// ── Tracks: render ────────────────────────────────────────────────────
+function renderTrackList(tracks, playlistId) {
+  const container = document.getElementById('detail-tracks-list');
+  const p = playlists.find(x => x.id === playlistId);
+  if (p) {
+    p._trackCount = tracks.length;
+    document.getElementById('detail-playlist-meta').textContent =
+      `${tracks.length} track${tracks.length !== 1 ? 's' : ''} · ${p.is_public ? 'Public' : 'Private'}`;
+  }
+  if (!tracks.length) {
+    container.innerHTML = `
+      <div class="empty-state" style="padding:32px 0">
+        <div class="empty-state-icon">🎵</div>
+        <div class="empty-state-title">No Tracks Yet</div>
+        <p>Go to the Search tab to find and add tracks.</p>
+      </div>`;
+    return;
+  }
+  container.innerHTML = tracks.map((t, i) => {
+    const topLinks = STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS)
+      .map(p => `<a href="${p.url(t.artist, t.track_name)}" target="_blank" rel="noopener" class="platform-btn">${p.icon} ${p.name}</a>`)
+      .join('');
+    return `
+    <div class="track-item" data-track-id="${t.id}">
+      <div class="track-header">
+        <div class="track-num">${i + 1}</div>
+        <div class="track-info">
+          <div class="track-name">${escHtml(t.track_name)}</div>
+          <div class="track-artist">${escHtml(t.artist)}${t.genre ? ` · <span class="badge badge-genre" style="padding:1px 5px;font-size:10px">${escHtml(t.genre)}</span>` : ''}</div>
+        </div>
+        <div class="track-actions">
+          <button class="btn btn-icon btn-ghost" style="font-size:11px" title="Move up"
+            onclick="moveTrack('${t.id}','${playlistId}','up')">↑</button>
+          <button class="btn btn-icon btn-ghost" style="font-size:11px" title="Move down"
+            onclick="moveTrack('${t.id}','${playlistId}','down')">↓</button>
+          <button class="btn btn-icon btn-ghost" style="color:#f87171;font-size:12px" title="Remove"
+            onclick="deleteTrack('${t.id}','${playlistId}')">✕</button>
+        </div>
+      </div>
+      <div class="platform-links" style="margin-top:8px">${topLinks}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+        <button class="platform-expand" onclick="toggleTrackPlatforms(this,'${escHtml(t.artist)}','${escHtml(t.track_name)}')">+ All platforms</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Tracks: toggle all platforms for a track ──────────────────────────
+function toggleTrackPlatforms(btn, artist, track) {
+  const expanded = btn.dataset.expanded === '1';
+  const linksDiv = btn.closest('.track-item').querySelector('.platform-links');
+  if (expanded) {
+    linksDiv.innerHTML = STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS)
+      .map(p => `<a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn">${p.icon} ${p.name}</a>`).join('');
+    btn.textContent = '+ All platforms';
+    btn.dataset.expanded = '0';
+  } else {
+    linksDiv.innerHTML = STREAMING_PLATFORMS
+      .map(p => `<a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn">${p.icon} ${p.name}</a>`).join('');
+    btn.textContent = '− Fewer';
+    btn.dataset.expanded = '1';
+  }
+}
+
+// ── Track delete stub (full logic in step 6) ──────────────────────────
+async function deleteTrack(trackId, playlistId) {
+  showConfirm('Remove Track', 'Remove this track from the playlist?', async () => {
+    try {
+      const { error } = await sbClient.from('playlist_tracks').delete().eq('id', trackId);
+      if (error) throw error;
+      showToast('Track removed');
+      loadPlaylistTracks(playlistId);
+      loadPlaylists();
+    } catch (err) {
+      showToast('Error: ' + err.message);
+    }
+  });
+}
+
+// ── Utility: escape HTML ──────────────────────────────────────────────
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
 // ── Search preview trigger ────────────────────────────────────────────
 function updateSearchPreview() {
   const artist = document.getElementById('search-artist').value.trim();
-  const track = document.getElementById('search-track').value.trim();
+  const track  = document.getElementById('search-track').value.trim();
   const hasInput = artist && track;
   document.getElementById('search-preview').style.display = hasInput ? '' : 'none';
-  document.getElementById('search-empty').style.display = hasInput ? 'none' : '';
+  document.getElementById('search-empty').style.display  = hasInput ? 'none' : '';
+  if (hasInput) {
+    platformsExpanded = false;
+    document.getElementById('btn-expand-platforms').textContent = '+ Show all platforms';
+    renderPlatformLinks(artist, track, 'search-platform-links', false);
+  }
 }
 document.getElementById('search-artist').addEventListener('input', updateSearchPreview);
 document.getElementById('search-track').addEventListener('input', updateSearchPreview);
@@ -1276,6 +1744,7 @@ async function onSignedIn(user) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('main-app').classList.add('active');
   showTab('search');
+  await loadPlaylists();
 }
 
 // ── Auth: Sign In ─────────────────────────────────────────────────────
@@ -1372,7 +1841,31 @@ document.getElementById('signup-password').addEventListener('keydown', e => {
   // Init Supabase client
   sbClient = window.supabase.createClient(SB_URL, SB_KEY);
 
-  // Handle email confirmation token in URL
+  // Handle hash fragment tokens (legacy Supabase email confirmation)
+  const hash = window.location.hash;
+  if (hash && hash.includes('access_token')) {
+    const hashParams = new URLSearchParams(hash.slice(1));
+    const accessToken = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
+    if (accessToken) {
+      try {
+        const { data, error } = await sbClient.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || ''
+        });
+        if (error) throw error;
+        window.history.replaceState({}, '', window.location.pathname);
+        showToast('✅ Email confirmed! Welcome!');
+        if (data.session) await onSignedIn(data.session.user);
+        return;
+      } catch (err) {
+        console.warn('Hash token error:', err.message);
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }
+
+  // Handle query param tokens (new Supabase format)
   const tokenHash = params.get('token_hash');
   const type = params.get('type');
   if (tokenHash && type) {
@@ -1380,7 +1873,6 @@ document.getElementById('signup-password').addEventListener('keydown', e => {
       const { error } = await sbClient.auth.verifyOtp({ token_hash: tokenHash, type });
       if (error) throw error;
       showToast('✅ Email confirmed! You are now signed in.');
-      // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     } catch (err) {
       showToast('Email confirmation failed: ' + err.message);
