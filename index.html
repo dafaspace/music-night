@@ -1115,7 +1115,7 @@
 <script>
 // ── Config ────────────────────────────────────────────────────────────
 const SB_URL = "https://rqruaqoecvpythbvnozf.supabase.co";
-const SB_KEY = "sb_publishable_eYrSiN3LLgX_aYRame-O3g_i1-Z4Gyi";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcnVhcW9lY3ZweXRoYnZub3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyOTY4OTEsImV4cCI6MjA5MTg3Mjg5MX0.3yw1LEN2mvZMg1PXA_IvE0DmNbh4TXNP2uyWRFFJNQo";
 
 // ── State ─────────────────────────────────────────────────────────────
 let sbClient = null;
@@ -1839,7 +1839,13 @@ document.getElementById('signup-password').addEventListener('keydown', e => {
   }
 
   // Init Supabase client
-  sbClient = window.supabase.createClient(SB_URL, SB_KEY);
+  sbClient = window.supabase.createClient(SB_URL, SB_KEY, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
+  });
 
   // Handle hash fragment tokens (legacy Supabase email confirmation)
   const hash = window.location.hash;
