@@ -1928,8 +1928,7 @@ document.getElementById('signup-password').addEventListener('keydown', e => {
 
 // ── Import from text ─────────────────────────────────────────────────
 function parseTrackList(text) {
-  const lines = text.split('
-').map(l => l.trim()).filter(l => l.length > 0);
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const tracks = [];
   for (const line of lines) {
     // Skip obvious headers/numbers like "1." or "#1"
