@@ -2198,6 +2198,8 @@ async function handleSpotifyCallback(code) {
     document.getElementById('spotify-step-connect').style.display = 'none';
     document.getElementById('spotify-step-select').style.display = 'none';
     document.getElementById('spotify-step-importing').style.display = 'none';
+    // Small delay to let Supabase auth settle
+    await new Promise(r => setTimeout(r, 300));
     openModal('overlay-spotify');
     await loadSpotifyPlaylists(token);
   } catch (err) {
@@ -2695,7 +2697,9 @@ document.getElementById('btn-public-create').addEventListener('click', () => {
 
   // Listen for auth state changes
   sbClient.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session) {
+    // Skip if we're handling Spotify callback — it manages its own flow
+    if (new URLSearchParams(window.location.search).get('state') === 'spotify_import') return;
+    if (event === 'SIGNED_IN' && session && !currentUser) {
       await onSignedIn(session.user);
     } else if (event === 'SIGNED_OUT') {
       currentUser = null;
