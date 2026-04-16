@@ -901,6 +901,18 @@
         <button class="btn btn-ghost btn-sm" id="btn-public-signin">Sign In →</button>
       </div>
     </div>
+    <!-- Spotify embed (shown if playlist was imported from Spotify) -->
+    <div id="public-spotify-embed" style="display:none;padding:0 16px;margin-top:16px">
+      <div style="font-family:Bebas Neue,cursive;font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-align:center">LISTEN ON SPOTIFY</div>
+      <iframe id="spotify-embed-iframe"
+        style="border-radius:12px;width:100%;border:none"
+        height="352"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        loading="lazy">
+      </iframe>
+      <div class="divider" style="margin:16px 0"></div>
+      <div style="font-family:Bebas Neue,cursive;font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-align:center">OR OPEN ON ANY PLATFORM</div>
+    </div>
     <div class="public-content" id="public-tracks">
       <div class="loading-dots"><span></span><span></span><span></span></div>
     </div>
@@ -2138,7 +2150,7 @@ async function importSpotifyPlaylist(spotifyId, name, total) {
     const slug = generateSlug();
     const { data: pl, error: plErr } = await sbClient
       .from('music_playlists')
-      .insert({ user_id: currentUser.id, name, is_public: false, public_slug: slug })
+      .insert({ user_id: currentUser.id, name, is_public: false, public_slug: slug, spotify_playlist_id: spotifyId })
       .select().single();
     if (plErr) throw plErr;
 
@@ -2564,6 +2576,14 @@ async function loadPublicPlaylist(slug) {
 
     // Set page title
     document.title = `${pl.name} — Music Night`;
+
+    // Show Spotify embed if playlist was imported from Spotify
+    if (pl.spotify_playlist_id) {
+      const embedDiv = document.getElementById('public-spotify-embed');
+      const iframe = document.getElementById('spotify-embed-iframe');
+      iframe.src = `https://open.spotify.com/embed/playlist/${pl.spotify_playlist_id}?utm_source=generator&theme=0`;
+      embedDiv.style.display = '';
+    }
 
     // Render tracks
     const container = document.getElementById('public-tracks');
