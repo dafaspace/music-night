@@ -1904,21 +1904,26 @@ function renderTrackList(tracks, playlistId) {
     </div>`;
   }).join('');
 
-  // Fetch odesli links in background for tracks with spotify_uri
+  // Fetch odesli links sequentially to respect rate limit (10 req/min)
   const uriTracks = tracks.filter(t => t.spotify_uri);
   if (uriTracks.length) {
-    // Stagger requests to avoid rate limiting (10 req/min = 1 per 6s)
-    uriTracks.forEach((t, idx) => {
-      setTimeout(async () => {
+    (async () => {
+      for (const t of uriTracks) {
+        // Stop if modal was closed
+        if (!container.isConnected) break;
         const links = await fetchOdesliLinks(t.spotify_uri);
-        if (!links) return;
-        const el = container.querySelector(`[data-track-id="${t.id}"]`);
-        if (!el) return;
-        const linksDiv = el.querySelector('.platform-links');
-        const expandBtn = el.querySelector('.platform-expand');
-        if (linksDiv) linksDiv.innerHTML = buildPlatformLinksHtml(t.artist, t.track_name, links, expandBtn?.dataset.expanded === '1');
-      }, idx * 6500);
-    });
+        if (links) {
+          const el = container.querySelector(`[data-track-id="${t.id}"]`);
+          if (el) {
+            const linksDiv = el.querySelector('.platform-links');
+            const expandBtn = el.querySelector('.platform-expand');
+            if (linksDiv) linksDiv.innerHTML = buildPlatformLinksHtml(t.artist, t.track_name, links, expandBtn?.dataset.expanded === '1');
+          }
+        }
+        // Wait 6.5s between requests (10 req/min limit)
+        await new Promise(r => setTimeout(r, 6500));
+      }
+    })();
   }
 
   // Init Sortable
