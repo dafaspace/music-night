@@ -2110,12 +2110,12 @@ async function spotifyGetAllTracks(playlistId, token) {
 function renderSpotifyPlaylists(playlists) {
   const container = document.getElementById('spotify-playlists-list');
   container.innerHTML = playlists.map(p => `
-    <div class="card" style="cursor:pointer;margin-bottom:8px" onclick="importSpotifyPlaylist('${p.id}','${escHtml(p.name)}',${p.tracks.total})">
+    <div class="card" style="cursor:pointer;margin-bottom:8px" onclick="importSpotifyPlaylist('${p.id}','${escHtml(p.name)}',${p.tracks?.total ?? 0})">
       <div style="display:flex;align-items:center;gap:10px">
         ${p.images?.[0] ? `<img src="${p.images[0].url}" style="width:44px;height:44px;border-radius:6px;object-fit:cover;flex-shrink:0">` : '<div style="width:44px;height:44px;border-radius:6px;background:var(--primary-soft);flex-shrink:0"></div>'}
         <div style="min-width:0">
           <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(p.name)}</div>
-          <div style="font-size:12px;color:var(--muted)">${p.tracks.total} tracks</div>
+          <div style="font-size:12px;color:var(--muted)">${p.tracks?.total ?? '?'} tracks</div>
         </div>
         <div style="margin-left:auto;color:var(--muted);font-size:18px;flex-shrink:0">›</div>
       </div>
