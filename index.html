@@ -1068,6 +1068,20 @@
             <span class="toggle-slider"></span>
           </label>
         </div>
+        <div class="divider"></div>
+        <div style="font-family:Bebas Neue,cursive;font-size:13px;letter-spacing:0.5px;color:var(--muted);margin-bottom:10px">Streaming Links <span style="font-family:DM Sans;font-size:11px;letter-spacing:0;text-transform:none">(optional — adds an embedded player)</span></div>
+        <div class="form-group">
+          <label>🎵 Apple Music URL</label>
+          <input type="url" id="playlist-apple-url" placeholder="https://music.apple.com/..." />
+        </div>
+        <div class="form-group">
+          <label>🟣 Deezer URL</label>
+          <input type="url" id="playlist-deezer-url" placeholder="https://www.deezer.com/playlist/..." />
+        </div>
+        <div class="form-group">
+          <label>🟧 SoundCloud URL</label>
+          <input type="url" id="playlist-soundcloud-url" placeholder="https://soundcloud.com/..." />
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" data-close="overlay-playlist">Cancel</button>
@@ -1373,6 +1387,9 @@ document.getElementById('btn-new-playlist').addEventListener('click', () => {
   document.getElementById('playlist-name-input').value = '';
   document.getElementById('playlist-desc-input').value = '';
   document.getElementById('playlist-public-toggle').checked = false;
+  document.getElementById('playlist-apple-url').value = '';
+  document.getElementById('playlist-deezer-url').value = '';
+  document.getElementById('playlist-soundcloud-url').value = '';
   currentPlaylist = null;
   openModal('overlay-playlist');
 });
@@ -1641,12 +1658,16 @@ document.getElementById('btn-save-playlist').addEventListener('click', async () 
   if (!name) { showToast('Please enter a playlist name'); return; }
   const desc = document.getElementById('playlist-desc-input').value.trim();
   const isPublic = document.getElementById('playlist-public-toggle').checked;
+  const appleUrl = document.getElementById('playlist-apple-url').value.trim() || null;
+  const deezerUrl = document.getElementById('playlist-deezer-url').value.trim() || null;
+  const soundcloudUrl = document.getElementById('playlist-soundcloud-url').value.trim() || null;
 
   setLoading('btn-save-playlist', true);
   try {
     if (currentPlaylist) {
       // Update
-      const updates = { name, description: desc, is_public: isPublic, updated_at: new Date().toISOString() };
+      const updates = { name, description: desc, is_public: isPublic, updated_at: new Date().toISOString(),
+        apple_music_url: appleUrl, deezer_url: deezerUrl, soundcloud_url: soundcloudUrl };
       // Generate slug if making public for first time
       if (isPublic && !currentPlaylist.public_slug) {
         updates.public_slug = generateSlug();
@@ -1664,7 +1685,10 @@ document.getElementById('btn-save-playlist').addEventListener('click', async () 
         name,
         description: desc,
         is_public: isPublic,
-        public_slug: isPublic ? generateSlug() : null
+        public_slug: isPublic ? generateSlug() : null,
+        apple_music_url: appleUrl,
+        deezer_url: deezerUrl,
+        soundcloud_url: soundcloudUrl
       };
       const { error } = await sbClient.from('music_playlists').insert(newPl);
       if (error) throw error;
@@ -1688,6 +1712,9 @@ function openEditPlaylist(id) {
   document.getElementById('playlist-name-input').value = p.name;
   document.getElementById('playlist-desc-input').value = p.description || '';
   document.getElementById('playlist-public-toggle').checked = p.is_public;
+  document.getElementById('playlist-apple-url').value = p.apple_music_url || '';
+  document.getElementById('playlist-deezer-url').value = p.deezer_url || '';
+  document.getElementById('playlist-soundcloud-url').value = p.soundcloud_url || '';
   openModal('overlay-playlist');
 }
 
@@ -2577,11 +2604,62 @@ async function loadPublicPlaylist(slug) {
     // Set page title
     document.title = `${pl.name} — Music Night`;
 
-    // Show Spotify embed if playlist was imported from Spotify
+    // Show embed players
+    const embedDiv = document.getElementById('public-spotify-embed');
+    let embedHtml = '';
+
     if (pl.spotify_playlist_id) {
-      const embedDiv = document.getElementById('public-spotify-embed');
-      const iframe = document.getElementById('spotify-embed-iframe');
-      iframe.src = `https://open.spotify.com/embed/playlist/${pl.spotify_playlist_id}?utm_source=generator&theme=0`;
+      embedHtml += `
+        <div style="margin-bottom:12px">
+          <div style="font-family:Bebas Neue,cursive;font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">🟢 SPOTIFY</div>
+          <iframe src="https://open.spotify.com/embed/playlist/${pl.spotify_playlist_id}?utm_source=generator&theme=0"
+            style="border-radius:12px;width:100%;border:none" height="352"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        </div>`;
+    }
+
+    if (pl.apple_music_url) {
+      const appleId = pl.apple_music_url.match(/playlist\/[^/]+\/(pl\.[^?&]+)/)?.[1] ||
+                      pl.apple_music_url.match(/\/(pl\.[^?&/]+)/)?.[1];
+      if (appleId) {
+        embedHtml += `
+          <div style="margin-bottom:12px">
+            <div style="font-family:Bebas Neue,cursive;font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">🎵 APPLE MUSIC</div>
+            <iframe src="https://embed.music.apple.com/us/playlist/${appleId}"
+              style="border-radius:12px;width:100%;border:none;overflow:hidden;background:transparent" height="450"
+              sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+              allow="autoplay *; encrypted-media *;" loading="lazy"></iframe>
+          </div>`;
+      }
+    }
+
+    if (pl.deezer_url) {
+      const deezerId = pl.deezer_url.match(/playlist\/(\d+)/)?.[1];
+      if (deezerId) {
+        embedHtml += `
+          <div style="margin-bottom:12px">
+            <div style="font-family:Bebas Neue,cursive;font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">🟣 DEEZER</div>
+            <iframe src="https://widget.deezer.com/widget/dark/playlist/${deezerId}"
+              style="border-radius:12px;width:100%;border:none" height="350"
+              allow="encrypted-media; clipboard-write" loading="lazy"></iframe>
+          </div>`;
+      }
+    }
+
+    if (pl.soundcloud_url) {
+      embedHtml += `
+        <div style="margin-bottom:12px">
+          <div style="font-family:Bebas Neue,cursive;font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">🟧 SOUNDCLOUD</div>
+          <iframe src="https://w.soundcloud.com/player/?url=${encodeURIComponent(pl.soundcloud_url)}&color=%237c3aed&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&visual=true"
+            style="border-radius:12px;width:100%;border:none" height="300" loading="lazy"></iframe>
+        </div>`;
+    }
+
+    if (embedHtml) {
+      embedDiv.innerHTML = `
+        <div style="padding:0 16px;margin-top:16px">${embedHtml}</div>
+        <div class="divider" style="margin:16px 0"></div>
+        <div style="font-family:Bebas Neue,cursive;font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-align:center;padding:0 16px">OR OPEN ON ANY PLATFORM</div>`;
       embedDiv.style.display = '';
     }
 
