@@ -1421,19 +1421,20 @@ function renderPlaylists() {
     return;
   }
   container.innerHTML = playlists.map(p => `
-    <div class="card" data-id="${p.id}">
+    <div class="card" data-id="${p.id}" style="cursor:pointer" onclick="openPlaylistDetail('${p.id}')">
       <div class="card-header">
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="card-title">${escHtml(p.name)}</div>
-          <div class="card-meta">
+          <div class="card-meta" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px">
             ${p.is_public
               ? `<span class="badge badge-public">🌐 Public</span>`
               : `<span class="badge badge-private">🔒 Private</span>`}
-            <span style="margin-left:6px">${p._trackCount || 0} track${p._trackCount !== 1 ? 's' : ''}</span>
+            <span>${p._trackCount || 0} track${p._trackCount !== 1 ? 's' : ''}</span>
           </div>
         </div>
-        <div class="card-actions">
-          <button class="btn btn-icon btn-ghost" onclick="openPlaylistDetail('${p.id}')" title="Open">▶</button>
+        <div class="card-actions" onclick="event.stopPropagation()">
+          ${p.is_public && p.public_slug ? `
+          <button class="btn btn-icon btn-ghost" onclick="copyPublicLink('${p.public_slug}')" title="Copy link">🔗</button>` : ''}
           <button class="btn btn-icon btn-ghost" onclick="openEditPlaylist('${p.id}')" title="Edit">✎</button>
           <button class="btn btn-icon btn-ghost" style="color:#f87171" onclick="deletePlaylist('${p.id}')" title="Delete">✕</button>
         </div>
