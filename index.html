@@ -2617,13 +2617,29 @@ async function loadPublicPlaylist(slug) {
     }
 
     if (pl.apple_music_url) {
-      const appleId = pl.apple_music_url.match(/playlist\/[^/]+\/(pl\.[^?&]+)/)?.[1] ||
-                      pl.apple_music_url.match(/\/(pl\.[^?&/]+)/)?.[1];
-      if (appleId) {
+      // Parse Apple Music URL — supports playlists, albums, songs
+      let appleEmbedUrl = null;
+      const appleUrl = pl.apple_music_url;
+      // Playlist: pl.xxx
+      const plMatch = appleUrl.match(/\/(pl\.[^?&/]+)/);
+      // Album: /album/name/id
+      const albumMatch = appleUrl.match(/\/album\/[^/]+\/(\d+)/);
+      // Song: /album/name/id?i=songid
+      const songMatch = appleUrl.match(/[?&]i=(\d+)/);
+
+      if (plMatch) {
+        appleEmbedUrl = `https://embed.music.apple.com/us/playlist/${plMatch[1]}`;
+      } else if (albumMatch && songMatch) {
+        appleEmbedUrl = `https://embed.music.apple.com/us/album/${albumMatch[1]}?i=${songMatch[1]}`;
+      } else if (albumMatch) {
+        appleEmbedUrl = `https://embed.music.apple.com/us/album/${albumMatch[1]}`;
+      }
+
+      if (appleEmbedUrl) {
         embedHtml += `
           <div style="margin-bottom:12px">
             <div style="font-family:Bebas Neue,cursive;font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">🎵 APPLE MUSIC</div>
-            <iframe src="https://embed.music.apple.com/us/playlist/${appleId}"
+            <iframe src="${appleEmbedUrl}"
               style="border-radius:12px;width:100%;border:none;overflow:hidden;background:transparent" height="450"
               sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
               allow="autoplay *; encrypted-media *;" loading="lazy"></iframe>
