@@ -2107,7 +2107,7 @@ function populateAccount(user) {
   document.getElementById('btn-avatar').textContent = initials.slice(0, 1);
   document.getElementById('account-avatar').textContent = initials.slice(0, 1);
   // Load username from profiles
-  sbClient.from('profiles').select('*').eq('id', user.id).single()
+  sbClient.from('profiles').select('*').eq('id', user.id).maybeSingle()
     .then(({ data }) => {
       if (data?.username) {
         document.getElementById('account-username').value = data.username;
@@ -2123,6 +2123,9 @@ async function onSignedIn(user) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('main-app').classList.add('active');
   showTab('search');
+  // Ensure profile row exists
+  const name = user.user_metadata?.display_name || user.email?.split('@')[0] || 'User';
+  sbClient.from('profiles').upsert({ id: user.id, display_name: name }, { onConflict: 'id', ignoreDuplicates: true }).then(() => {});
   await loadPlaylists();
 }
 
@@ -2749,7 +2752,7 @@ async function loadPublicPlaylist(slug) {
         .from('profiles')
         .select('*')
         .eq('id', pl.user_id)
-        .single();
+        .maybeSingle();
       authorName = profile?.display_name || '';
     } catch (_) {}
 
@@ -2920,9 +2923,9 @@ async function loadUserProfile(username) {
     // Find user by username
     const { data: profile, error: profErr } = await sbClient
       .from('profiles')
-      .select('id, display_name, username')
+      .select('*')
       .eq('username', username)
-      .single();
+      .maybeSingle();
 
     if (profErr || !profile) {
       document.getElementById('profile-name').textContent = 'User Not Found';
