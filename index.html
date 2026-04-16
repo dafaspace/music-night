@@ -1436,6 +1436,9 @@ const ODESLI_PLATFORM_MAP = {
 };
 
 async function fetchOdesliLinks(spotifyUri) {
+  // Disabled until API key obtained — uncomment below when ready
+  return null;
+  // eslint-disable-next-line no-unreachable
   if (!spotifyUri) return null;
   if (odesliCache.has(spotifyUri)) return odesliCache.get(spotifyUri);
   try {
