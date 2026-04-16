@@ -2202,20 +2202,22 @@ async function loadSpotifyPlaylists(token) {
 
 // ── Spotify: handle OAuth callback ───────────────────────────────────
 async function handleSpotifyCallback(code) {
+  console.log('[Spotify] callback code:', code ? code.slice(0,20)+'...' : 'NULL');
+  console.log('[Spotify] verifier:', localStorage.getItem('spotify_verifier') ? 'EXISTS' : 'NULL');
   try {
     const token = await spotifyExchangeToken(code);
+    console.log('[Spotify] token OK:', token ? token.slice(0,10)+'...' : 'NULL');
     // Clean URL
     window.history.replaceState({}, '', window.location.pathname);
-    // Open modal and load playlists
     document.getElementById('spotify-step-connect').style.display = 'none';
     document.getElementById('spotify-step-select').style.display = 'none';
     document.getElementById('spotify-step-importing').style.display = 'none';
-    // Small delay to let Supabase auth settle
     await new Promise(r => setTimeout(r, 300));
     openModal('overlay-spotify');
     await loadSpotifyPlaylists(token);
   } catch (err) {
-    showToast('Spotify connection failed: ' + err.message);
+    console.error('[Spotify] callback error:', err.message, err);
+    showToast('Spotify error: ' + err.message);
     window.history.replaceState({}, '', window.location.pathname);
   }
 }
