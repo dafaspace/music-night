@@ -2054,8 +2054,12 @@ async function spotifyExchangeToken(code) {
       code_verifier: verifier
     })
   });
-  if (!res.ok) throw new Error('Token exchange failed');
   const data = await res.json();
+  console.log('[Spotify] token response:', JSON.stringify(data).slice(0, 200));
+  if (!res.ok || data.error) {
+    throw new Error('Token exchange failed: ' + (data.error_description || data.error || res.status));
+  }
+  if (!data.access_token) throw new Error('No access_token in response');
   localStorage.setItem('spotify_token', data.access_token);
   localStorage.removeItem('spotify_verifier');
   return data.access_token;
