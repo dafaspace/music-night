@@ -875,15 +875,20 @@
   <div id="public-view">
     <div class="public-header">
       <div class="public-header-logo"><span>MUSIC</span> NIGHT</div>
-      <div class="public-playlist-name" id="public-playlist-name">Playlist Name</div>
-      <div class="public-playlist-meta" id="public-playlist-meta">0 tracks · by someone</div>
-      <div style="margin-top:14px;display:flex;gap:8px;justify-content:center">
+      <div class="public-playlist-name" id="public-playlist-name">Loading…</div>
+      <div class="public-playlist-meta" id="public-playlist-meta"></div>
+      <div id="public-desc" style="font-size:13px;color:var(--muted);margin-top:6px;display:none"></div>
+      <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
         <button class="btn btn-secondary btn-sm" id="btn-public-copy">🔗 Copy Link</button>
-        <button class="btn btn-ghost btn-sm" id="btn-public-signin">Sign In to Save</button>
+        <button class="btn btn-ghost btn-sm" id="btn-public-signin">Sign In →</button>
       </div>
     </div>
     <div class="public-content" id="public-tracks">
       <div class="loading-dots"><span></span><span></span><span></span></div>
+    </div>
+    <div style="text-align:center;padding:24px 16px 40px;border-top:1px solid var(--border);margin-top:8px">
+      <div style="font-family:Bebas Neue,cursive;font-size:14px;letter-spacing:1px;color:var(--muted);margin-bottom:8px">CREATE YOUR OWN PLAYLIST</div>
+      <button class="btn btn-primary" id="btn-public-create" style="width:200px">Get Started Free</button>
     </div>
   </div>
 
@@ -1826,6 +1831,116 @@ document.getElementById('signup-password').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('btn-signup').click();
 });
 
+// ── Public playlist: load ─────────────────────────────────────────────
+async function loadPublicPlaylist(slug) {
+  try {
+    // Load playlist
+    const { data: pl, error: plErr } = await sbClient
+      .from('music_playlists')
+      .select('*')
+      .eq('public_slug', slug)
+      .eq('is_public', true)
+      .single();
+
+    if (plErr || !pl) {
+      document.getElementById('public-playlist-name').textContent = 'Playlist Not Found';
+      document.getElementById('public-tracks').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🔍</div>
+          <div class="empty-state-title">Not Found</div>
+          <p>This playlist may have been made private or deleted.</p>
+        </div>`;
+      return;
+    }
+
+    // Load author name
+    let authorName = '';
+    try {
+      const { data: profile } = await sbClient
+        .from('profiles')
+        .select('display_name')
+        .eq('id', pl.user_id)
+        .single();
+      authorName = profile?.display_name || '';
+    } catch (_) {}
+
+    // Load tracks
+    const { data: tracks } = await sbClient
+      .from('playlist_tracks')
+      .select('*')
+      .eq('playlist_id', pl.id)
+      .order('position', { ascending: true });
+
+    const trackList = tracks || [];
+
+    // Render header
+    document.getElementById('public-playlist-name').textContent = pl.name;
+    document.getElementById('public-playlist-meta').textContent =
+      `${trackList.length} track${trackList.length !== 1 ? 's' : ''}${authorName ? ' · by ' + authorName : ''}`;
+
+    if (pl.description) {
+      const descEl = document.getElementById('public-desc');
+      descEl.textContent = pl.description;
+      descEl.style.display = '';
+    }
+
+    // Set page title
+    document.title = `${pl.name} — Music Night`;
+
+    // Render tracks
+    const container = document.getElementById('public-tracks');
+    if (!trackList.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🎵</div>
+          <div class="empty-state-title">No Tracks Yet</div>
+          <p>This playlist is empty.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = trackList.map((t, i) => {
+      const topLinks = STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS)
+        .map(p => `<a href="${p.url(t.artist, t.track_name)}" target="_blank" rel="noopener" class="platform-btn">${p.icon} ${p.name}</a>`)
+        .join('');
+      return `
+        <div class="track-item">
+          <div class="track-header">
+            <div class="track-num">${i + 1}</div>
+            <div class="track-info">
+              <div class="track-name">${escHtml(t.track_name)}</div>
+              <div class="track-artist">${escHtml(t.artist)}${t.genre ? ` · <span class="badge badge-genre" style="padding:1px 5px;font-size:10px">${escHtml(t.genre)}</span>` : ''}</div>
+            </div>
+          </div>
+          <div class="platform-links" style="margin-top:8px">${topLinks}</div>
+          <div style="margin-top:4px">
+            <button class="platform-expand" onclick="toggleTrackPlatforms(this,'${escHtml(t.artist)}','${escHtml(t.track_name)}')">+ All platforms</button>
+          </div>
+        </div>`;
+    }).join('');
+
+  } catch (err) {
+    console.warn('Public load error:', err);
+    document.getElementById('public-tracks').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">⚠️</div>
+        <div class="empty-state-title">Something went wrong</div>
+        <p>${escHtml(err.message)}</p>
+      </div>`;
+  }
+}
+
+// ── Public playlist: button handlers ─────────────────────────────────
+document.getElementById('btn-public-copy').addEventListener('click', () => {
+  navigator.clipboard.writeText(window.location.href).then(() => showToast('🔗 Link copied!'));
+});
+document.getElementById('btn-public-signin').addEventListener('click', () => {
+  window.location.href = window.location.pathname;
+});
+document.getElementById('btn-public-create').addEventListener('click', () => {
+  window.location.href = window.location.pathname;
+});
+
 // ── Init (IIFE) ───────────────────────────────────────────────────────
 (async () => {
   // Hide all screens while loading
@@ -1836,8 +1951,11 @@ document.getElementById('signup-password').addEventListener('keydown', e => {
   const slug = params.get('p');
   if (slug) {
     document.getElementById('public-view').classList.add('active');
-    document.getElementById('public-tracks').innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎵</div><div class="empty-state-title">Loading Playlist…</div></div>';
-    // Public load logic coming in step 9
+    // Init Supabase for public read (no auth needed)
+    sbClient = window.supabase.createClient(SB_URL, SB_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+    await loadPublicPlaylist(slug);
     return;
   }
 
