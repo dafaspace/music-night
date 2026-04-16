@@ -2197,8 +2197,8 @@ async function loadSpotifyPlaylists(token) {
     const playlists = await spotifyGetAllPlaylists(token);
     renderSpotifyPlaylists(playlists);
   } catch (err) {
-    showToast('Failed to load Spotify playlists');
-    localStorage.removeItem('spotify_token');
+    console.error('[Spotify] loadPlaylists error:', err.message);
+    showToast('Failed to load Spotify playlists: ' + err.message);
     document.getElementById('spotify-step-connect').style.display = '';
     document.getElementById('spotify-step-select').style.display = 'none';
   }
