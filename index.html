@@ -771,6 +771,24 @@
       border-bottom-color: var(--primary);
     }
 
+    /* ── Drag handle ────────────────────────────────────────────────── */
+    .drag-handle {
+      cursor: grab;
+      color: var(--muted);
+      font-size: 16px;
+      padding: 0 4px;
+      flex-shrink: 0;
+      touch-action: none;
+      user-select: none;
+    }
+    .drag-handle:active { cursor: grabbing; }
+    .sortable-ghost {
+      opacity: 0.4;
+      background: var(--primary-soft) !important;
+      border-color: var(--primary-border) !important;
+    }
+    .sortable-drag { opacity: 0.9; }
+
     /* ── Scrollbar ──────────────────────────────────────────────────── */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -1119,6 +1137,7 @@
 </div><!-- /app -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
 // ── Config ────────────────────────────────────────────────────────────
 const SB_URL = "https://rqruaqoecvpythbvnozf.supabase.co";
@@ -1637,6 +1656,8 @@ async function loadPlaylistTracks(playlistId) {
 }
 
 // ── Tracks: render ────────────────────────────────────────────────────
+let sortableInstance = null;
+
 function renderTrackList(tracks, playlistId) {
   const container = document.getElementById('detail-tracks-list');
   const p = playlists.find(x => x.id === playlistId);
@@ -1645,6 +1666,10 @@ function renderTrackList(tracks, playlistId) {
     document.getElementById('detail-playlist-meta').textContent =
       `${tracks.length} track${tracks.length !== 1 ? 's' : ''} · ${p.is_public ? 'Public' : 'Private'}`;
   }
+
+  // Destroy existing sortable
+  if (sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
+
   if (!tracks.length) {
     container.innerHTML = `
       <div class="empty-state" style="padding:32px 0">
@@ -1654,33 +1679,64 @@ function renderTrackList(tracks, playlistId) {
       </div>`;
     return;
   }
+
   container.innerHTML = tracks.map((t, i) => {
     const topLinks = STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS)
-      .map(p => `<a href="${p.url(t.artist, t.track_name)}" target="_blank" rel="noopener" class="platform-btn">${p.icon} ${p.name}</a>`)
+      .map(pl => `<a href="${pl.url(t.artist, t.track_name)}" target="_blank" rel="noopener" class="platform-btn">${pl.icon} ${pl.name}</a>`)
       .join('');
     return `
     <div class="track-item" data-track-id="${t.id}">
       <div class="track-header">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
         <div class="track-num">${i + 1}</div>
         <div class="track-info">
           <div class="track-name">${escHtml(t.track_name)}</div>
           <div class="track-artist">${escHtml(t.artist)}${t.genre ? ` · <span class="badge badge-genre" style="padding:1px 5px;font-size:10px">${escHtml(t.genre)}</span>` : ''}</div>
         </div>
         <div class="track-actions">
-          <button class="btn btn-icon btn-ghost" style="font-size:11px" title="Move up"
-            onclick="moveTrack('${t.id}','${playlistId}','up')">↑</button>
-          <button class="btn btn-icon btn-ghost" style="font-size:11px" title="Move down"
-            onclick="moveTrack('${t.id}','${playlistId}','down')">↓</button>
           <button class="btn btn-icon btn-ghost" style="color:#f87171;font-size:12px" title="Remove"
             onclick="deleteTrack('${t.id}','${playlistId}')">✕</button>
         </div>
       </div>
       <div class="platform-links" style="margin-top:8px">${topLinks}</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+      <div style="margin-top:4px">
         <button class="platform-expand" onclick="toggleTrackPlatforms(this,'${escHtml(t.artist)}','${escHtml(t.track_name)}')">+ All platforms</button>
       </div>
     </div>`;
   }).join('');
+
+  // Init Sortable
+  sortableInstance = Sortable.create(container, {
+    handle: '.drag-handle',
+    animation: 150,
+    ghostClass: 'sortable-ghost',
+    dragClass: 'sortable-drag',
+    onEnd: async (evt) => {
+      if (evt.oldIndex === evt.newIndex) return;
+      // Get new order from DOM
+      const items = container.querySelectorAll('[data-track-id]');
+      const updates = Array.from(items).map((el, idx) => ({
+        id: el.dataset.trackId,
+        position: idx
+      }));
+      // Update positions in DB
+      try {
+        await Promise.all(updates.map(u =>
+          sbClient.from('playlist_tracks').update({ position: u.position }).eq('id', u.id)
+        ));
+        // Update track numbers in UI
+        items.forEach((el, idx) => {
+          const numEl = el.querySelector('.track-num');
+          if (numEl) numEl.textContent = idx + 1;
+        });
+      } catch (err) {
+        showToast('Error saving order');
+        console.warn(err);
+        // Reload to restore correct order
+        loadPlaylistTracks(playlistId);
+      }
+    }
+  });
 }
 
 // ── Tracks: toggle all platforms for a track ──────────────────────────
