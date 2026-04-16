@@ -1933,8 +1933,7 @@ document.getElementById('btn-export-csv').addEventListener('click', async () => 
      `"${(t.genre||'').replace(/"/g,'""')}"`].join(',')
   )];
   const filename = (currentPlaylist.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'playlist') + '.csv';
-  downloadFile(filename, rows.join('
-'), 'text/csv');
+  downloadFile(filename, rows.join('\n'), 'text/csv');
   showToast('📥 CSV exported');
 });
 
