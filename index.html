@@ -1097,37 +1097,60 @@
     </div>
   </div>
 
-  <!-- Import Text Modal -->
+  <!-- Import Modal -->
   <div class="overlay" id="overlay-import">
-    <div class="modal">
+    <div class="modal" style="max-height:92vh">
       <div class="modal-handle"></div>
       <div class="modal-header">
         <span class="modal-title">Import Tracks</span>
         <button class="modal-close" data-close="overlay-import">✕</button>
       </div>
       <div class="modal-body">
-        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">
-          Paste a list of tracks — one per line.<br/>
-          Supported formats:
-        </p>
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted);font-family:monospace;margin-bottom:14px;line-height:1.8">
-          Artist - Track Name<br/>
-          Artist — Track Name<br/>
-          Artist: Track Name<br/>
-          Track Name (artist name ignored if no separator)
+        <!-- Source tabs -->
+        <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border)">
+          <button class="shared-tab-btn active" id="import-tab-csv" onclick="switchImportTab('csv')">CSV File</button>
+          <button class="shared-tab-btn" id="import-tab-text" onclick="switchImportTab('text')">Paste Text</button>
         </div>
-        <div class="form-group">
-          <label>Paste your tracklist</label>
-          <textarea id="import-text" placeholder="Radiohead - Creep&#10;Pink Floyd - Wish You Were Here&#10;Nirvana - Smells Like Teen Spirit" style="min-height:160px;font-family:monospace;font-size:13px"></textarea>
+
+        <!-- CSV tab -->
+        <div id="import-panel-csv">
+          <div style="background:var(--primary-soft);border:1px solid var(--primary-border);border-radius:8px;padding:12px;margin-bottom:14px">
+            <div style="font-family:Bebas Neue,cursive;font-size:13px;letter-spacing:0.5px;color:#a78bfa;margin-bottom:4px">Exportify CSV</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6">
+              Go to <strong style="color:var(--text)">exportify.app</strong> → connect Spotify → export playlist as CSV → upload here.<br/>
+              Artist, track name, album, duration and Spotify URI are all imported automatically.
+            </div>
+          </div>
+          <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--border);border-radius:10px;padding:28px 16px;cursor:pointer;transition:border-color 0.15s" id="csv-drop-zone">
+            <span style="font-size:28px">📂</span>
+            <span style="font-family:Bebas Neue,cursive;font-size:14px;letter-spacing:0.5px;color:var(--muted)">Drop CSV here or tap to browse</span>
+            <input type="file" id="csv-file-input" accept=".csv" style="display:none" />
+          </label>
+          <div id="csv-file-name" style="font-size:12px;color:#a78bfa;margin-top:8px;display:none"></div>
         </div>
-        <div id="import-preview" style="display:none;margin-bottom:12px">
+
+        <!-- Text tab -->
+        <div id="import-panel-text" style="display:none">
+          <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted);font-family:monospace;margin-bottom:12px;line-height:1.8">
+            Artist - Track Name<br/>
+            Artist — Track Name<br/>
+            Artist: Track Name
+          </div>
+          <div class="form-group">
+            <label>Paste tracklist</label>
+            <textarea id="import-text" placeholder="Radiohead - Creep&#10;Pink Floyd - Wish You Were Here&#10;Nirvana - Smells Like Teen Spirit" style="min-height:140px;font-family:monospace;font-size:13px"></textarea>
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <div id="import-preview" style="display:none;margin-top:12px">
           <div style="font-family:Bebas Neue,cursive;font-size:13px;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px" id="import-preview-count"></div>
-          <div id="import-preview-list" style="max-height:160px;overflow-y:auto"></div>
+          <div id="import-preview-list" style="max-height:150px;overflow-y:auto"></div>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" data-close="overlay-import">Cancel</button>
-        <button class="btn btn-primary" id="btn-import-confirm">Import</button>
+        <button class="btn btn-primary" id="btn-import-confirm" disabled>Import</button>
       </div>
     </div>
   </div>
@@ -1727,9 +1750,14 @@ function renderTrackList(tracks, playlistId) {
         <div class="track-num">${i + 1}</div>
         <div class="track-info">
           <div class="track-name">${escHtml(t.track_name)}</div>
-          <div class="track-artist">${escHtml(t.artist)}${t.genre ? ` · <span class="badge badge-genre" style="padding:1px 5px;font-size:10px">${escHtml(t.genre)}</span>` : ''}</div>
+          <div class="track-artist">
+            ${escHtml(t.artist)}
+            ${t.album ? ` · <span style="color:var(--muted)">${escHtml(t.album)}</span>` : ''}
+            ${t.genre ? ` · <span class="badge badge-genre" style="padding:1px 5px;font-size:10px">${escHtml(t.genre)}</span>` : ''}
+          </div>
         </div>
-        <div class="track-actions">
+        <div class="track-actions" style="display:flex;align-items:center;gap:4px">
+          ${t.duration_ms ? `<span style="font-size:11px;color:var(--muted)">${fmtDuration(t.duration_ms)}</span>` : ''}
           <button class="btn btn-icon btn-ghost" style="color:#f87171;font-size:12px" title="Remove"
             onclick="deleteTrack('${t.id}','${playlistId}')">✕</button>
         </div>
@@ -1926,104 +1954,233 @@ document.getElementById('signup-password').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('btn-signup').click();
 });
 
-// ── Import from text ─────────────────────────────────────────────────
-function parseTrackList(text) {
-  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+// ── Import ───────────────────────────────────────────────────────────
+let importedTracks = [];
+let currentImportTab = 'csv';
+
+function switchImportTab(tab) {
+  currentImportTab = tab;
+  document.getElementById('import-tab-csv').classList.toggle('active', tab === 'csv');
+  document.getElementById('import-tab-text').classList.toggle('active', tab === 'text');
+  document.getElementById('import-panel-csv').style.display = tab === 'csv' ? '' : 'none';
+  document.getElementById('import-panel-text').style.display = tab === 'text' ? '' : 'none';
+  importedTracks = [];
+  renderImportPreview([]);
+  document.getElementById('btn-import-confirm').disabled = true;
+}
+
+// ── CSV Parser ────────────────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (!lines.length) return [];
+
+  // Parse header
+  const header = parseCSVRow(lines[0]).map(h => h.toLowerCase().trim());
+  const colIdx = {
+    trackName:   findCol(header, ['track name','title','name']),
+    artist:      findCol(header, ['artist name','artist','artists']),
+    album:       findCol(header, ['album name','album']),
+    duration:    findCol(header, ['duration (ms)','duration_ms','duration']),
+    spotifyUri:  findCol(header, ['spotify uri','spotify_uri','uri']),
+    releaseDate: findCol(header, ['release date','release_date']),
+  };
+
   const tracks = [];
-  for (const line of lines) {
-    // Skip obvious headers/numbers like "1." or "#1"
-    const clean = line.replace(/^[\d]+[.)]\s*/, '').trim();
-    if (!clean) continue;
-
-    let artist = '', trackName = '';
-
-    // Try separators: " - ", " — ", " – ", ": "
-    const sepMatch = clean.match(/^(.+?)\s*[-—–:]\s*(.+)$/);
-    if (sepMatch) {
-      artist    = sepMatch[1].trim();
-      trackName = sepMatch[2].trim();
-    } else {
-      // No separator — treat whole line as track name
-      trackName = clean;
-      artist    = '';
-    }
-
-    // Skip if too short
-    if (trackName.length < 1) continue;
-    tracks.push({ artist, track_name: trackName });
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCSVRow(lines[i]);
+    const trackName = colIdx.trackName >= 0 ? (cols[colIdx.trackName] || '').trim() : '';
+    const artist    = colIdx.artist    >= 0 ? (cols[colIdx.artist]    || '').trim() : '';
+    if (!trackName) continue;
+    tracks.push({
+      track_name:   trackName,
+      artist:       artist,
+      album:        colIdx.album       >= 0 ? (cols[colIdx.album]       || '').trim() : '',
+      duration_ms:  colIdx.duration    >= 0 ? parseInt(cols[colIdx.duration] || 0) || null : null,
+      spotify_uri:  colIdx.spotifyUri  >= 0 ? (cols[colIdx.spotifyUri]  || '').trim() : '',
+      release_date: colIdx.releaseDate >= 0 ? (cols[colIdx.releaseDate] || '').trim() : '',
+    });
   }
   return tracks;
 }
 
+function findCol(header, names) {
+  for (const n of names) {
+    const idx = header.findIndex(h => h.includes(n));
+    if (idx >= 0) return idx;
+  }
+  return -1;
+}
+
+function parseCSVRow(line) {
+  const cols = [];
+  let cur = '', inQuote = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      if (inQuote && line[i+1] === '"') { cur += '"'; i++; }
+      else inQuote = !inQuote;
+    } else if (c === ',' && !inQuote) {
+      cols.push(cur); cur = '';
+    } else {
+      cur += c;
+    }
+  }
+  cols.push(cur);
+  return cols;
+}
+
+// ── Text Parser ───────────────────────────────────────────────────────
+function parseTrackList(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const tracks = [];
+  for (const line of lines) {
+    const clean = line.replace(/^[\d]+[.)]\s*/, '').trim();
+    if (!clean) continue;
+    let artist = '', trackName = '';
+    const sepMatch = clean.match(/^(.+?)\s*[-\u2014\u2013:]\s*(.+)$/);
+    if (sepMatch) {
+      artist    = sepMatch[1].trim();
+      trackName = sepMatch[2].trim();
+    } else {
+      trackName = clean;
+    }
+    if (!trackName) continue;
+    tracks.push({ artist, track_name: trackName, album: '', duration_ms: null, spotify_uri: '', release_date: '' });
+  }
+  return tracks;
+}
+
+// ── Format duration ───────────────────────────────────────────────────
+function fmtDuration(ms) {
+  if (!ms) return '';
+  const s = Math.round(ms / 1000);
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+
+// ── Preview renderer ──────────────────────────────────────────────────
 function renderImportPreview(tracks) {
-  const preview = document.getElementById('import-preview');
-  const countEl = document.getElementById('import-preview-count');
-  const listEl  = document.getElementById('import-preview-list');
+  const preview  = document.getElementById('import-preview');
+  const countEl  = document.getElementById('import-preview-count');
+  const listEl   = document.getElementById('import-preview-list');
+  const confirmBtn = document.getElementById('btn-import-confirm');
 
   if (!tracks.length) {
     preview.style.display = 'none';
+    confirmBtn.disabled = true;
     return;
   }
 
-  countEl.textContent = `${tracks.length} track${tracks.length !== 1 ? 's' : ''} found`;
-  listEl.innerHTML = tracks.slice(0, 20).map((t, i) => `
-    <div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);display:flex;gap:8px">
-      <span style="color:var(--muted);min-width:20px">${i + 1}</span>
-      <span><span style="color:var(--text)">${escHtml(t.track_name)}</span>${t.artist ? ` <span style="color:var(--muted)">· ${escHtml(t.artist)}</span>` : ''}</span>
-    </div>`).join('') +
-    (tracks.length > 20 ? `<div style="font-size:12px;color:var(--muted);padding:6px 0">+ ${tracks.length - 20} more…</div>` : '');
+  confirmBtn.disabled = false;
+  countEl.textContent = tracks.length + ' track' + (tracks.length !== 1 ? 's' : '') + ' found';
+  listEl.innerHTML = tracks.slice(0, 25).map((t, i) =>
+    '<div style="font-size:12px;padding:5px 0;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center">' +
+      '<span style="color:var(--muted);min-width:22px">' + (i+1) + '</span>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escHtml(t.track_name) + '</div>' +
+        '<div style="color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
+          (t.artist ? escHtml(t.artist) : '') +
+          (t.album  ? ' · ' + escHtml(t.album) : '') +
+        '</div>' +
+      '</div>' +
+      (t.duration_ms ? '<span style="color:var(--muted);font-size:11px;flex-shrink:0">' + fmtDuration(t.duration_ms) + '</span>' : '') +
+    '</div>'
+  ).join('') + (tracks.length > 25 ? '<div style="font-size:12px;color:var(--muted);padding:6px 0">+ ' + (tracks.length - 25) + ' more…</div>' : '');
   preview.style.display = '';
 }
 
-// Live preview as user types
-document.getElementById('import-text').addEventListener('input', () => {
-  const text   = document.getElementById('import-text').value;
-  const tracks = parseTrackList(text);
-  renderImportPreview(tracks);
+// ── CSV file input ────────────────────────────────────────────────────
+document.getElementById('csv-drop-zone').addEventListener('click', () => {
+  document.getElementById('csv-file-input').click();
+});
+document.getElementById('csv-file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('csv-file-name').textContent = '📄 ' + file.name;
+    document.getElementById('csv-file-name').style.display = '';
+    importedTracks = parseCSV(ev.target.result);
+    renderImportPreview(importedTracks);
+  };
+  reader.readAsText(file, 'UTF-8');
 });
 
-// Open import modal
+// Drag & drop file
+document.getElementById('csv-drop-zone').addEventListener('dragover', e => {
+  e.preventDefault();
+  e.currentTarget.style.borderColor = 'var(--primary)';
+});
+document.getElementById('csv-drop-zone').addEventListener('dragleave', e => {
+  e.currentTarget.style.borderColor = '';
+});
+document.getElementById('csv-drop-zone').addEventListener('drop', e => {
+  e.preventDefault();
+  e.currentTarget.style.borderColor = '';
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('csv-file-name').textContent = '📄 ' + file.name;
+    document.getElementById('csv-file-name').style.display = '';
+    importedTracks = parseCSV(ev.target.result);
+    renderImportPreview(importedTracks);
+  };
+  reader.readAsText(file, 'UTF-8');
+});
+
+// ── Text input live preview ───────────────────────────────────────────
+document.getElementById('import-text').addEventListener('input', () => {
+  importedTracks = parseTrackList(document.getElementById('import-text').value);
+  renderImportPreview(importedTracks);
+});
+
+// ── Open import modal ─────────────────────────────────────────────────
 document.getElementById('btn-import-text').addEventListener('click', () => {
+  importedTracks = [];
   document.getElementById('import-text').value = '';
+  document.getElementById('csv-file-input').value = '';
+  document.getElementById('csv-file-name').style.display = 'none';
   document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('btn-import-confirm').disabled = true;
+  switchImportTab('csv');
   openModal('overlay-import');
 });
 
-// Confirm import
+// ── Confirm import ────────────────────────────────────────────────────
 document.getElementById('btn-import-confirm').addEventListener('click', async () => {
-  const text   = document.getElementById('import-text').value;
-  const tracks = parseTrackList(text);
-  if (!tracks.length) { showToast('No tracks found — check the format'); return; }
+  if (currentImportTab === 'text') {
+    importedTracks = parseTrackList(document.getElementById('import-text').value);
+  }
+  if (!importedTracks.length) { showToast('No tracks found'); return; }
   if (!currentPlaylist) return;
 
   setLoading('btn-import-confirm', true);
   try {
-    // Get current max position
     const { data: existing } = await sbClient
-      .from('playlist_tracks')
-      .select('position')
+      .from('playlist_tracks').select('position')
       .eq('playlist_id', currentPlaylist.id)
-      .order('position', { ascending: false })
-      .limit(1);
+      .order('position', { ascending: false }).limit(1);
     let startPos = existing?.length ? (existing[0].position + 1) : 0;
 
-    // Insert all tracks
-    const rows = tracks.map((t, i) => ({
-      playlist_id: currentPlaylist.id,
-      artist:      t.artist,
-      track_name:  t.track_name,
-      genre:       null,
-      position:    startPos + i
+    const rows = importedTracks.map((t, i) => ({
+      playlist_id:  currentPlaylist.id,
+      artist:       t.artist       || '',
+      track_name:   t.track_name,
+      album:        t.album        || null,
+      duration_ms:  t.duration_ms  || null,
+      spotify_uri:  t.spotify_uri  || null,
+      release_date: t.release_date || null,
+      genre:        null,
+      position:     startPos + i
     }));
 
-    // Insert in batches of 50
     for (let i = 0; i < rows.length; i += 50) {
       const { error } = await sbClient.from('playlist_tracks').insert(rows.slice(i, i + 50));
       if (error) throw error;
     }
 
     closeModal('overlay-import');
-    showToast(`✅ ${tracks.length} track${tracks.length !== 1 ? 's' : ''} imported!`);
+    showToast('✅ ' + importedTracks.length + ' tracks imported!');
     await loadPlaylistTracks(currentPlaylist.id);
     await loadPlaylists();
   } catch (err) {
