@@ -1069,8 +1069,10 @@
         <div id="detail-tracks-list">
           <div class="loading-dots"><span></span><span></span><span></span></div>
         </div>
-        <div style="margin-top:12px">
-          <button class="btn btn-primary w-full" id="btn-add-track-to-playlist">+ Add Track</button>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn btn-primary" id="btn-add-track-to-playlist" style="flex:1">+ Add Track</button>
+          <button class="btn btn-ghost btn-sm" id="btn-export-json" title="Export JSON">JSON</button>
+          <button class="btn btn-ghost btn-sm" id="btn-export-csv" title="Export CSV">CSV</button>
         </div>
       </div>
     </div>
@@ -1830,6 +1832,54 @@ document.getElementById('signin-password').addEventListener('keydown', e => {
 });
 document.getElementById('signup-password').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('btn-signup').click();
+});
+
+// ── Export ───────────────────────────────────────────────────────────
+async function getTracksForExport(playlistId) {
+  const { data } = await sbClient
+    .from('playlist_tracks')
+    .select('*')
+    .eq('playlist_id', playlistId)
+    .order('position', { ascending: true });
+  return data || [];
+}
+
+function downloadFile(filename, content, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('btn-export-json').addEventListener('click', async () => {
+  if (!currentPlaylist) return;
+  const tracks = await getTracksForExport(currentPlaylist.id);
+  const payload = {
+    name: currentPlaylist.name,
+    description: currentPlaylist.description || '',
+    exported_at: new Date().toISOString(),
+    tracks: tracks.map(t => ({ artist: t.artist, track_name: t.track_name, genre: t.genre || '' }))
+  };
+  const filename = (currentPlaylist.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'playlist') + '.json';
+  downloadFile(filename, JSON.stringify(payload, null, 2), 'application/json');
+  showToast('📥 JSON exported');
+});
+
+document.getElementById('btn-export-csv').addEventListener('click', async () => {
+  if (!currentPlaylist) return;
+  const tracks = await getTracksForExport(currentPlaylist.id);
+  const rows = ['artist,track_name,genre', ...tracks.map(t =>
+    [`"${(t.artist||'').replace(/"/g,'""')}"`,
+     `"${(t.track_name||'').replace(/"/g,'""')}"`,
+     `"${(t.genre||'').replace(/"/g,'""')}"`].join(',')
+  )];
+  const filename = (currentPlaylist.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'playlist') + '.csv';
+  downloadFile(filename, rows.join('
+'), 'text/csv');
+  showToast('📥 CSV exported');
 });
 
 // ── Public playlist: load ─────────────────────────────────────────────
