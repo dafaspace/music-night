@@ -916,9 +916,8 @@
     <div class="public-content" id="public-tracks">
       <div class="loading-dots"><span></span><span></span><span></span></div>
     </div>
-    <div style="text-align:center;padding:24px 16px 40px;border-top:1px solid var(--border);margin-top:8px">
-      <div style="font-family:Bebas Neue,cursive;font-size:14px;letter-spacing:1px;color:var(--muted);margin-bottom:8px">CREATE YOUR OWN PLAYLIST</div>
-      <button class="btn btn-primary" id="btn-public-create" style="width:200px">Get Started Free</button>
+    <div style="text-align:center;padding:20px 16px 40px;border-top:1px solid var(--border);margin-top:8px">
+      <button class="btn btn-primary" id="btn-public-create" style="width:220px">Get Started, It's Free</button>
     </div>
   </div>
 
@@ -934,10 +933,6 @@
     </div>
     <div style="padding:16px" id="profile-playlists">
       <div class="loading-dots"><span></span><span></span><span></span></div>
-    </div>
-    <div style="text-align:center;padding:16px 16px 40px;border-top:1px solid var(--border);margin-top:8px">
-      <div style="font-family:Bebas Neue,cursive;font-size:14px;letter-spacing:1px;color:var(--muted);margin-bottom:8px">CREATE YOUR OWN PLAYLIST</div>
-      <button class="btn btn-primary" id="btn-profile-create" style="width:200px">Get Started Free</button>
     </div>
   </div>
 
@@ -1086,6 +1081,10 @@
         </div>
         <div class="divider"></div>
         <div style="font-family:Bebas Neue,cursive;font-size:13px;letter-spacing:0.5px;color:var(--muted);margin-bottom:10px">Streaming Links <span style="font-family:DM Sans;font-size:11px;letter-spacing:0;text-transform:none">(optional — adds an embedded player)</span></div>
+        <div class="form-group">
+          <label>🟢 Spotify URL</label>
+          <input type="url" id="playlist-spotify-url" placeholder="https://open.spotify.com/playlist/..." />
+        </div>
         <div class="form-group">
           <label>🎵 Apple Music URL</label>
           <input type="url" id="playlist-apple-url" placeholder="https://music.apple.com/..." />
@@ -1282,6 +1281,9 @@
         <button class="btn btn-ghost" data-close="overlay-confirm">Cancel</button>
         <button class="btn btn-primary" id="btn-confirm-action" style="background:#dc2626">Delete</button>
       </div>
+    <div style="text-align:center;padding:20px 16px 40px;border-top:1px solid var(--border);margin-top:8px">
+      <button class="btn btn-primary" id="btn-profile-create" style="width:220px">Get Started, It's Free</button>
+    </div>
     </div>
   </div>
 
@@ -1415,6 +1417,7 @@ document.getElementById('btn-new-playlist').addEventListener('click', () => {
   document.getElementById('playlist-name-input').value = '';
   document.getElementById('playlist-desc-input').value = '';
   document.getElementById('playlist-public-toggle').checked = false;
+  document.getElementById('playlist-spotify-url').value = '';
   document.getElementById('playlist-apple-url').value = '';
   document.getElementById('playlist-deezer-url').value = '';
   document.getElementById('playlist-soundcloud-url').value = '';
@@ -1752,6 +1755,7 @@ document.getElementById('btn-save-playlist').addEventListener('click', async () 
   if (!name) { showToast('Please enter a playlist name'); return; }
   const desc = document.getElementById('playlist-desc-input').value.trim();
   const isPublic = document.getElementById('playlist-public-toggle').checked;
+  const spotifyUrl = document.getElementById('playlist-spotify-url').value.trim() || null;
   const appleUrl = document.getElementById('playlist-apple-url').value.trim() || null;
   const deezerUrl = document.getElementById('playlist-deezer-url').value.trim() || null;
   const soundcloudUrl = document.getElementById('playlist-soundcloud-url').value.trim() || null;
@@ -1761,7 +1765,7 @@ document.getElementById('btn-save-playlist').addEventListener('click', async () 
     if (currentPlaylist) {
       // Update
       const updates = { name, description: desc, is_public: isPublic, updated_at: new Date().toISOString(),
-        apple_music_url: appleUrl, deezer_url: deezerUrl, soundcloud_url: soundcloudUrl };
+        spotify_url: spotifyUrl, apple_music_url: appleUrl, deezer_url: deezerUrl, soundcloud_url: soundcloudUrl };
       // Generate slug if making public for first time
       if (isPublic && !currentPlaylist.public_slug) {
         updates.public_slug = generateSlug();
@@ -1780,6 +1784,7 @@ document.getElementById('btn-save-playlist').addEventListener('click', async () 
         description: desc,
         is_public: isPublic,
         public_slug: isPublic ? generateSlug() : null,
+        spotify_url: spotifyUrl,
         apple_music_url: appleUrl,
         deezer_url: deezerUrl,
         soundcloud_url: soundcloudUrl
@@ -1806,6 +1811,7 @@ function openEditPlaylist(id) {
   document.getElementById('playlist-name-input').value = p.name;
   document.getElementById('playlist-desc-input').value = p.description || '';
   document.getElementById('playlist-public-toggle').checked = p.is_public;
+  document.getElementById('playlist-spotify-url').value = p.spotify_url || '';
   document.getElementById('playlist-apple-url').value = p.apple_music_url || '';
   document.getElementById('playlist-deezer-url').value = p.deezer_url || '';
   document.getElementById('playlist-soundcloud-url').value = p.soundcloud_url || '';
@@ -2774,11 +2780,19 @@ async function loadPublicPlaylist(slug) {
     const embedDiv = document.getElementById('public-spotify-embed');
     let embedHtml = '';
 
+    // Spotify embed — from imported ID or manually entered URL
+    let spotifyEmbedSrc = null;
     if (pl.spotify_playlist_id) {
+      spotifyEmbedSrc = `https://open.spotify.com/embed/playlist/${pl.spotify_playlist_id}?utm_source=generator&theme=0`;
+    } else if (pl.spotify_url) {
+      const sm = pl.spotify_url.match(/spotify\.com\/(playlist|album|track)\/([A-Za-z0-9]+)/);
+      if (sm) spotifyEmbedSrc = `https://open.spotify.com/embed/${sm[1]}/${sm[2]}?utm_source=generator&theme=0`;
+    }
+    if (spotifyEmbedSrc) {
       embedHtml += `
         <div style="margin-bottom:12px">
           <div style="font-family:Bebas Neue,cursive;font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">🟢 SPOTIFY</div>
-          <iframe src="https://open.spotify.com/embed/playlist/${pl.spotify_playlist_id}?utm_source=generator&theme=0"
+          <iframe src="${spotifyEmbedSrc}"
             style="border-radius:12px;width:100%;border:none" height="352"
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
         </div>`;
