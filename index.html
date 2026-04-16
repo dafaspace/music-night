@@ -1419,6 +1419,69 @@ const STREAMING_PLATFORMS = [
 const TOP_PLATFORMS = 5;
 let platformsExpanded = false;
 
+// ── Odesli (song.link) integration ───────────────────────────────────
+const ODESLI_WORKER = 'https://music-night-odesli.dafa4me.workers.dev/';
+const odesliCache = new Map();
+
+const ODESLI_PLATFORM_MAP = {
+  spotify:      'spotify',
+  appleMusic:   'apple',
+  youtubeMusic: 'youtube',
+  amazon:       'amazon',
+  amazonMusic:  'amazon',
+  deezer:       'deezer',
+  tidal:        'tidal',
+  soundcloud:   'soundcloud',
+  yandex:       'yandex',
+};
+
+async function fetchOdesliLinks(spotifyUri) {
+  if (!spotifyUri) return null;
+  if (odesliCache.has(spotifyUri)) return odesliCache.get(spotifyUri);
+  try {
+    const spotifyUrl = spotifyUri.startsWith('http')
+      ? spotifyUri
+      : 'https://open.spotify.com/track/' + spotifyUri.split(':').pop();
+    const res = await fetch(ODESLI_WORKER + '?url=' + encodeURIComponent(spotifyUrl));
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.error) return null;
+    const links = {};
+    for (const [platform, info] of Object.entries(data.linksByPlatform || {})) {
+      links[platform] = info.url;
+    }
+    odesliCache.set(spotifyUri, links);
+    return links;
+  } catch (e) {
+    console.warn('odesli error:', e.message);
+    return null;
+  }
+}
+
+function buildPlatformLinksHtml(artist, trackName, odesliLinks, showAll = false) {
+  const list = showAll ? STREAMING_PLATFORMS : STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS);
+  return list.map(p => {
+    let href = null;
+    if (odesliLinks) {
+      if (odesliLinks[p.id]) href = odesliLinks[p.id];
+      for (const [oKey, mKey] of Object.entries(ODESLI_PLATFORM_MAP)) {
+        if (mKey === p.id && odesliLinks[oKey]) { href = odesliLinks[oKey]; break; }
+      }
+    }
+    if (!href) href = p.url(artist, trackName);
+    const isExact = !!href && !href.includes('/search') && !href.includes('q=') && !href.includes('text=');
+    return `<a href="${href}" target="_blank" rel="noopener" class="platform-btn"${isExact ? ' style="border-color:rgba(124,58,237,0.4)"' : ''}>
+      ${p.icon} ${p.name}${isExact ? ' <span style="font-size:9px;color:#a78bfa;margin-left:2px">✓</span>' : ''}
+    </a>`;
+  }).join('');
+}
+
+function fmtDuration(ms) {
+  if (!ms) return '';
+  const s = Math.round(ms / 1000);
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+
 // ── Platform links renderer ───────────────────────────────────────────
 function renderPlatformLinks(artist, track, containerId, showAll = false) {
   const container = document.getElementById(containerId);
@@ -1814,11 +1877,9 @@ function renderTrackList(tracks, playlistId) {
   }
 
   container.innerHTML = tracks.map((t, i) => {
-    const topLinks = STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS)
-      .map(pl => `<a href="${pl.url(t.artist, t.track_name)}" target="_blank" rel="noopener" class="platform-btn">${pl.icon} ${pl.name}</a>`)
-      .join('');
+    const topLinks = buildPlatformLinksHtml(t.artist, t.track_name, odesliCache.get(t.spotify_uri) || null, false);
     return `
-    <div class="track-item" data-track-id="${t.id}">
+    <div class="track-item" data-track-id="${t.id}" data-spotify-uri="${escHtml(t.spotify_uri || '')}">
       <div class="track-header">
         <span class="drag-handle" title="Drag to reorder">⠿</span>
         <div class="track-num">${i + 1}</div>
@@ -1842,6 +1903,23 @@ function renderTrackList(tracks, playlistId) {
       </div>
     </div>`;
   }).join('');
+
+  // Fetch odesli links in background for tracks with spotify_uri
+  const uriTracks = tracks.filter(t => t.spotify_uri);
+  if (uriTracks.length) {
+    // Stagger requests to avoid rate limiting (10 req/min = 1 per 6s)
+    uriTracks.forEach((t, idx) => {
+      setTimeout(async () => {
+        const links = await fetchOdesliLinks(t.spotify_uri);
+        if (!links) return;
+        const el = container.querySelector(`[data-track-id="${t.id}"]`);
+        if (!el) return;
+        const linksDiv = el.querySelector('.platform-links');
+        const expandBtn = el.querySelector('.platform-expand');
+        if (linksDiv) linksDiv.innerHTML = buildPlatformLinksHtml(t.artist, t.track_name, links, expandBtn?.dataset.expanded === '1');
+      }, idx * 6500);
+    });
+  }
 
   // Init Sortable
   sortableInstance = Sortable.create(container, {
