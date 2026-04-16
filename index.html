@@ -2013,7 +2013,7 @@ async function sha256(plain) {
 async function spotifyLogin() {
   const verifier  = generateRandomString(64);
   const challenge = await sha256(verifier);
-  sessionStorage.setItem('spotify_verifier', verifier);
+  localStorage.setItem('spotify_verifier', verifier);
 
   const params = new URLSearchParams({
     client_id:             SPOTIFY_CLIENT_ID,
@@ -2028,7 +2028,7 @@ async function spotifyLogin() {
 }
 
 async function spotifyExchangeToken(code) {
-  const verifier = sessionStorage.getItem('spotify_verifier');
+  const verifier = localStorage.getItem('spotify_verifier');
   if (!verifier) throw new Error('No verifier found');
 
   const res = await fetch('https://accounts.spotify.com/api/token', {
@@ -2044,8 +2044,8 @@ async function spotifyExchangeToken(code) {
   });
   if (!res.ok) throw new Error('Token exchange failed');
   const data = await res.json();
-  sessionStorage.setItem('spotify_token', data.access_token);
-  sessionStorage.removeItem('spotify_verifier');
+  localStorage.setItem('spotify_token', data.access_token);
+  localStorage.removeItem('spotify_verifier');
   return data.access_token;
 }
 
@@ -2108,7 +2108,7 @@ function renderSpotifyPlaylists(playlists) {
 
 // ── Spotify: import selected playlist ────────────────────────────────
 async function importSpotifyPlaylist(spotifyId, name, total) {
-  const token = sessionStorage.getItem('spotify_token');
+  const token = localStorage.getItem('spotify_token');
   if (!token) return;
 
   document.getElementById('spotify-step-select').style.display = 'none';
@@ -2159,7 +2159,7 @@ async function importSpotifyPlaylist(spotifyId, name, total) {
 
 // ── Spotify: open modal ───────────────────────────────────────────────
 document.getElementById('btn-spotify-import').addEventListener('click', () => {
-  const token = sessionStorage.getItem('spotify_token');
+  const token = localStorage.getItem('spotify_token');
   document.getElementById('spotify-step-connect').style.display = token ? 'none' : '';
   document.getElementById('spotify-step-select').style.display = 'none';
   document.getElementById('spotify-step-importing').style.display = 'none';
@@ -2182,7 +2182,7 @@ async function loadSpotifyPlaylists(token) {
     renderSpotifyPlaylists(playlists);
   } catch (err) {
     showToast('Failed to load Spotify playlists');
-    sessionStorage.removeItem('spotify_token');
+    localStorage.removeItem('spotify_token');
     document.getElementById('spotify-step-connect').style.display = '';
     document.getElementById('spotify-step-select').style.display = 'none';
   }
