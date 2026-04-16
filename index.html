@@ -2011,9 +2011,18 @@ async function sha256(plain) {
 }
 
 async function spotifyLogin() {
-  const verifier  = generateRandomString(64);
-  const challenge = await sha256(verifier);
+  const verifier = generateRandomString(64);
+  // Save BEFORE any async operation to ensure it persists
   localStorage.setItem('spotify_verifier', verifier);
+  localStorage.setItem('spotify_verifier_ts', Date.now().toString());
+
+  // Compute challenge synchronously-ish
+  const challenge = await sha256(verifier);
+
+  // Verify it was saved (paranoia check)
+  if (!localStorage.getItem('spotify_verifier')) {
+    localStorage.setItem('spotify_verifier', verifier);
+  }
 
   const params = new URLSearchParams({
     client_id:             SPOTIFY_CLIENT_ID,
@@ -2024,6 +2033,9 @@ async function spotifyLogin() {
     code_challenge:        challenge,
     state:                 'spotify_import'
   });
+
+  // Small delay to ensure localStorage write is committed
+  await new Promise(r => setTimeout(r, 100));
   window.location.href = 'https://accounts.spotify.com/authorize?' + params;
 }
 
