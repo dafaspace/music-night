@@ -1827,6 +1827,17 @@ function openPlaylistDetail(id) {
 }
 
 // ── Playlists: edit button inside detail modal ────────────────────────
+document.getElementById('btn-add-track-to-playlist').addEventListener('click', () => {
+  if (!currentPlaylist) return;
+  closeModal('overlay-playlist-detail');
+  showTab('search');
+  // Pre-select this playlist in the search tab dropdown
+  const sel = document.getElementById('search-playlist-select');
+  if (sel) sel.value = currentPlaylist.id;
+  // Focus artist input
+  setTimeout(() => document.getElementById('search-artist')?.focus(), 100);
+});
+
 document.getElementById('btn-detail-edit').addEventListener('click', () => {
   closeModal('overlay-playlist-detail');
   if (currentPlaylist) openEditPlaylist(currentPlaylist.id);
