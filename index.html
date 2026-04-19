@@ -2747,6 +2747,7 @@ async function loadPublicPlaylist(slug) {
 
     // Load author name
     let authorName = '';
+    let authorUsername = '';
     try {
       const { data: profile } = await sbClient
         .from('profiles')
@@ -2754,6 +2755,7 @@ async function loadPublicPlaylist(slug) {
         .eq('id', pl.user_id)
         .maybeSingle();
       authorName = profile?.display_name || '';
+      authorUsername = profile?.username || '';
     } catch (_) {}
 
     // Load tracks
@@ -2767,8 +2769,11 @@ async function loadPublicPlaylist(slug) {
 
     // Render header
     document.getElementById('public-playlist-name').textContent = pl.name;
-    document.getElementById('public-playlist-meta').textContent =
-      `${trackList.length} track${trackList.length !== 1 ? 's' : ''}${authorName ? ' · by ' + authorName : ''}`;
+    const byPart = authorName
+      ? ` · by ${authorName}${authorUsername ? ` <a href="?u=${authorUsername}" style="color:#a78bfa;text-decoration:none;font-family:DM Sans,sans-serif">@${authorUsername}</a>` : ''}`
+      : '';
+    document.getElementById('public-playlist-meta').innerHTML =
+      `${trackList.length} track${trackList.length !== 1 ? 's' : ''}${byPart}`;
 
     if (pl.description) {
       const descEl = document.getElementById('public-desc');
