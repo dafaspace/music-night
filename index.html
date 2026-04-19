@@ -389,11 +389,7 @@
       color: var(--muted);
       border: 1px solid var(--border);
     }
-    .badge-genre {
-      background: rgba(245,197,24,0.1);
-      color: var(--accent);
-      border: 1px solid rgba(245,197,24,0.25);
-    }
+
 
     /* ── Track Item ─────────────────────────────────────────────────── */
     .track-item {
@@ -475,6 +471,26 @@
       align-self: center;
     }
     .platform-expand:hover { text-decoration: underline; }
+
+    /* ── Genre Pills ────────────────────────────────────────────────── */
+    .genre-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .genre-pill {
+      font-family: 'DM Sans', sans-serif; font-size: 12px;
+      padding: 4px 10px; border-radius: 20px; cursor: pointer;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+      color: #aaa; transition: all 0.15s;
+    }
+    .genre-pill:hover { border-color: rgba(124,58,237,0.4); color: var(--text); }
+    .genre-pill.active {
+      background: rgba(124,58,237,0.2); border-color: rgba(124,58,237,0.6);
+      color: #c4b5fd;
+    }
+    .badge-genre {
+      background: rgba(124,58,237,0.15); color: #c4b5fd;
+      border: 1px solid rgba(124,58,237,0.3);
+      border-radius: 20px; padding: 1px 7px; font-size: 10px;
+      font-family: 'DM Sans', sans-serif;
+    }
 
     /* ── Autocomplete ───────────────────────────────────────────────── */
     .ac-wrap { position: relative; }
@@ -990,7 +1006,21 @@
       </div>
       <div class="form-group">
         <label>Genre <span class="text-muted" style="font-family:DM Sans;font-size:11px;letter-spacing:0">(optional)</span></label>
-        <input type="text" id="search-genre" placeholder="e.g. Alternative Rock" autocomplete="off" />
+        <div class="genre-pills" id="genre-pills">
+          <button type="button" class="genre-pill" data-genre="Rock">Rock</button>
+          <button type="button" class="genre-pill" data-genre="Pop">Pop</button>
+          <button type="button" class="genre-pill" data-genre="Jazz">Jazz</button>
+          <button type="button" class="genre-pill" data-genre="Electronic">Electronic</button>
+          <button type="button" class="genre-pill" data-genre="Hip-Hop">Hip-Hop</button>
+          <button type="button" class="genre-pill" data-genre="Classical">Classical</button>
+          <button type="button" class="genre-pill" data-genre="R&B">R&B</button>
+          <button type="button" class="genre-pill" data-genre="Folk">Folk</button>
+          <button type="button" class="genre-pill" data-genre="Metal">Metal</button>
+          <button type="button" class="genre-pill" data-genre="Indie">Indie</button>
+          <button type="button" class="genre-pill" data-genre="Ambient">Ambient</button>
+          <button type="button" class="genre-pill" data-genre="Soul">Soul</button>
+        </div>
+        <input type="text" id="search-genre" placeholder="Or type custom tag…" autocomplete="off" style="margin-top:8px" />
       </div>
 
       <!-- Platform preview -->
@@ -1570,7 +1600,7 @@ document.getElementById('btn-expand-platforms').addEventListener('click', () => 
 document.getElementById('btn-share-track').addEventListener('click', async () => {
   const artist = document.getElementById('search-artist').value.trim();
   const track  = document.getElementById('search-track').value.trim();
-  const genre  = document.getElementById('search-genre').value.trim();
+  const genre  = getGenreValue();
   if (!artist || !track) return;
 
   setLoading('btn-share-track', true);
@@ -1603,7 +1633,7 @@ document.getElementById('btn-share-track').addEventListener('click', async () =>
 document.getElementById('btn-add-track').addEventListener('click', async () => {
   const artist    = document.getElementById('search-artist').value.trim();
   const track     = document.getElementById('search-track').value.trim();
-  const genre     = document.getElementById('search-genre').value.trim();
+  const genre     = getGenreValue();
   const playlistId = document.getElementById('search-playlist-select').value;
 
   if (!artist || !track) { showToast('Enter artist and track name'); return; }
@@ -1635,7 +1665,7 @@ document.getElementById('btn-add-track').addEventListener('click', async () => {
     showToast('✅ Added to playlist');
     document.getElementById('search-artist').value = '';
     document.getElementById('search-track').value = '';
-    document.getElementById('search-genre').value = '';
+    resetGenre();
     updateSearchPreview();
     await loadPlaylists();
   } catch (err) {
@@ -1965,7 +1995,7 @@ function renderTrackList(tracks, playlistId) {
           <div class="track-artist">
             ${escHtml(t.artist)}
             ${t.album ? ` · <span style="color:var(--muted)">${escHtml(t.album)}</span>` : ''}
-            ${t.genre ? ` · <span class="badge badge-genre" style="padding:1px 5px;font-size:10px">${escHtml(t.genre)}</span>` : ''}
+            ${t.genre ? `${renderGenreBadges(t.genre) ? ' · ' + renderGenreBadges(t.genre) : ''}` : ''}
           </div>
         </div>
         <div class="track-actions" style="display:flex;align-items:center;gap:4px">
@@ -2073,6 +2103,30 @@ async function deleteTrack(trackId, playlistId) {
 function escHtml(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ── Genre helpers ────────────────────────────────────────────────────
+function renderGenreBadges(genre) {
+  if (!genre) return '';
+  return genre.split(',').map(g => g.trim()).filter(Boolean)
+    .map(g => `<span class="badge badge-genre">${escHtml(g)}</span>`).join(' ');
+}
+function getGenreValue() {
+  const active = [...document.querySelectorAll('.genre-pill.active')].map(el => el.dataset.genre);
+  const custom = document.getElementById('search-genre').value.trim();
+  if (custom) active.push(custom);
+  return active.join(',') || null;
+}
+function resetGenre() {
+  document.querySelectorAll('.genre-pill.active').forEach(el => el.classList.remove('active'));
+  document.getElementById('search-genre').value = '';
+}
+
+// Genre pill toggle
+document.getElementById('genre-pills').addEventListener('click', e => {
+  const pill = e.target.closest('.genre-pill');
+  if (!pill) return;
+  pill.classList.toggle('active');
+});
 
 // ── Search preview trigger ────────────────────────────────────────────
 function updateSearchPreview() {
@@ -3009,7 +3063,7 @@ async function loadPublicPlaylist(slug) {
             <div class="track-num">${i + 1}</div>
             <div class="track-info">
               <div class="track-name">${escHtml(t.track_name)}</div>
-              <div class="track-artist">${escHtml(t.artist)}${t.genre ? ` · <span class="badge badge-genre" style="padding:1px 5px;font-size:10px">${escHtml(t.genre)}</span>` : ''}</div>
+              <div class="track-artist">${escHtml(t.artist)}${t.genre ? `${renderGenreBadges(t.genre) ? ' · ' + renderGenreBadges(t.genre) : ''}` : ''}</div>
             </div>
           </div>
           <div class="platform-links" style="margin-top:8px">${topLinks}</div>
