@@ -476,6 +476,26 @@
     }
     .platform-expand:hover { text-decoration: underline; }
 
+    /* ── Autocomplete ───────────────────────────────────────────────── */
+    .ac-wrap { position: relative; }
+    .ac-dropdown {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 200;
+      background: #1a1a2e; border: 1px solid rgba(124,58,237,0.3);
+      border-radius: 10px; margin-top: 4px; overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .ac-item {
+      padding: 10px 14px; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover, .ac-item.ac-active { background: rgba(124,58,237,0.15); }
+    .ac-item-sub { font-size: 11px; color: var(--muted); }
+    .ac-loading { padding: 10px 14px; font-size: 12px; color: var(--muted);
+      font-family: 'DM Sans', sans-serif; }
+
     /* ── Search Tab ─────────────────────────────────────────────────── */
     .search-bar {
       display: flex;
@@ -956,11 +976,17 @@
       </div>
       <div class="form-group">
         <label>Artist</label>
-        <input type="text" id="search-artist" placeholder="e.g. Radiohead" autocomplete="off" />
+        <div class="ac-wrap">
+          <input type="text" id="search-artist" placeholder="e.g. Radiohead" autocomplete="off" />
+          <div class="ac-dropdown" id="ac-artist" style="display:none"></div>
+        </div>
       </div>
       <div class="form-group">
         <label>Track Name</label>
-        <input type="text" id="search-track" placeholder="e.g. Creep" autocomplete="off" />
+        <div class="ac-wrap">
+          <input type="text" id="search-track" placeholder="e.g. Creep" autocomplete="off" />
+          <div class="ac-dropdown" id="ac-track" style="display:none"></div>
+        </div>
       </div>
       <div class="form-group">
         <label>Genre <span class="text-muted" style="font-family:DM Sans;font-size:11px;letter-spacing:0">(optional)</span></label>
@@ -1432,15 +1458,15 @@ const STREAMING_PLATFORMS = [
   { id: 'spotify',     name: 'Spotify',       icon: '🟢', url: (a,t) => `https://open.spotify.com/search/${enc(a)}%20${enc(t)}` },
   { id: 'apple',       name: 'Apple Music',   icon: '🎵', url: (a,t) => `https://music.apple.com/search?term=${enc(a)}+${enc(t)}` },
   { id: 'youtube',     name: 'YouTube Music', icon: '🔴', url: (a,t) => `https://music.youtube.com/search?q=${enc(a)}+${enc(t)}` },
-  { id: 'amazon',      name: 'Amazon Music',  icon: '🟠', url: (a,t) => `https://music.amazon.com/search/${enc(a)}+${enc(t)}` },
-  { id: 'deezer',      name: 'Deezer',        icon: '🟣', url: (a,t) => `https://www.deezer.com/search/${enc(a)}%20${enc(t)}` },
-  { id: 'tidal',       name: 'Tidal',         icon: '⬛', url: (a,t) => `https://tidal.com/browse/search?q=${enc(a)}+${enc(t)}` },
-  { id: 'qobuz',       name: 'Qobuz',         icon: '🔵', url: (a,t) => `https://www.qobuz.com/search?q=${enc(a)}+${enc(t)}` },
-  { id: 'soundcloud',  name: 'SoundCloud',    icon: '🟧', url: (a,t) => `https://soundcloud.com/search?q=${enc(a)}+${enc(t)}` },
   { id: 'bandcamp',    name: 'Bandcamp',      icon: '🔵', url: (a,t) => `https://bandcamp.com/search?q=${enc(a)}+${enc(t)}` },
-  { id: 'lastfm',      name: 'Last.fm',       icon: '🔴', url: (a,t) => `https://www.last.fm/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'tidal',       name: 'Tidal',         icon: '⬛', url: (a,t) => `https://tidal.com/browse/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'deezer',      name: 'Deezer',        icon: '🟣', url: (a,t) => `https://www.deezer.com/search/${enc(a)}%20${enc(t)}` },
+  { id: 'amazon',      name: 'Amazon Music',  icon: '🟠', url: (a,t) => `https://music.amazon.com/search/${enc(a)}+${enc(t)}` },
+  { id: 'soundcloud',  name: 'SoundCloud',    icon: '🟧', url: (a,t) => `https://soundcloud.com/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'qobuz',       name: 'Qobuz',         icon: '🔵', url: (a,t) => `https://www.qobuz.com/search?q=${enc(a)}+${enc(t)}` },
   { id: 'yandex',      name: 'Yandex Music',  icon: '🟡', url: (a,t) => `https://music.yandex.com/search?text=${enc(a)}+${enc(t)}` },
   { id: 'vk',          name: 'VK Music',      icon: '🔵', url: (a,t) => `https://vk.com/audio?q=${enc(a)}+${enc(t)}` },
+  { id: 'lastfm',      name: 'Last.fm',       icon: '🔴', url: (a,t) => `https://www.last.fm/search?q=${enc(a)}+${enc(t)}` },
   { id: 'iheart',      name: 'iHeartRadio',   icon: '🫀', url: (a,t) => `https://www.iheart.com/search/${enc(a)}%20${enc(t)}/` },
   { id: 'jiosaavn',    name: 'JioSaavn',      icon: '🎶', url: (a,t) => `https://www.jiosaavn.com/search/${enc(a)}-${enc(t)}` },
   { id: 'kkbox',       name: 'KKBOX',         icon: '🎵', url: (a,t) => `https://www.kkbox.com/tw/tc/search.html?q=${enc(a)}+${enc(t)}` },
@@ -1450,7 +1476,7 @@ const STREAMING_PLATFORMS = [
   { id: 'musicbrainz', name: 'MusicBrainz',   icon: '🧠', url: (a,t) => `https://musicbrainz.org/search?query=${enc(a)}+${enc(t)}&type=recording` },
 ];
 
-const TOP_PLATFORMS = 5;
+const TOP_PLATFORMS = 8;
 let platformsExpanded = false;
 
 // ── Odesli (song.link) integration ───────────────────────────────────
@@ -2063,6 +2089,100 @@ function updateSearchPreview() {
 }
 document.getElementById('search-artist').addEventListener('input', updateSearchPreview);
 document.getElementById('search-track').addEventListener('input', updateSearchPreview);
+
+// ── MusicBrainz Autocomplete ──────────────────────────────────────────
+let acArtistTimer = null, acTrackTimer = null;
+let acSelectedArtist = '';
+
+function acShow(id, html) {
+  const el = document.getElementById(id);
+  el.innerHTML = html;
+  el.style.display = '';
+}
+function acHide(id) {
+  const el = document.getElementById(id);
+  el.style.display = 'none';
+  el.innerHTML = '';
+}
+
+// Artist autocomplete
+document.getElementById('search-artist').addEventListener('input', function() {
+  clearTimeout(acArtistTimer);
+  acHide('ac-track');
+  const q = this.value.trim();
+  if (q.length < 2) { acHide('ac-artist'); return; }
+  acShow('ac-artist', '<div class="ac-loading">Searching…</div>');
+  acArtistTimer = setTimeout(async () => {
+    try {
+      const res = await fetch(`https://musicbrainz.org/ws/2/artist?query=${encodeURIComponent(q)}&limit=6&fmt=json`, {
+        headers: { 'User-Agent': 'MusicNight/1.0 (dafaspace.github.io/music-night)' }
+      });
+      const data = await res.json();
+      const artists = data.artists || [];
+      if (!artists.length) { acHide('ac-artist'); return; }
+      acShow('ac-artist', artists.map((a, i) => `
+        <div class="ac-item" data-val="${escHtml(a.name)}" tabindex="-1">
+          <span>${escHtml(a.name)}</span>
+          ${a['life-span']?.begin ? `<span class="ac-item-sub">${a.country || ''} · ${a['life-span'].begin.slice(0,4)}</span>` : ''}
+        </div>`).join(''));
+      document.getElementById('ac-artist').querySelectorAll('.ac-item').forEach(el => {
+        el.addEventListener('mousedown', e => {
+          e.preventDefault();
+          const val = el.dataset.val;
+          document.getElementById('search-artist').value = val;
+          acSelectedArtist = val;
+          acHide('ac-artist');
+          document.getElementById('search-track').focus();
+        });
+      });
+    } catch { acHide('ac-artist'); }
+  }, 400);
+});
+
+// Track autocomplete
+document.getElementById('search-track').addEventListener('input', function() {
+  clearTimeout(acTrackTimer);
+  const q = this.value.trim();
+  const artist = document.getElementById('search-artist').value.trim();
+  if (q.length < 2 || !artist) { acHide('ac-track'); return; }
+  acShow('ac-track', '<div class="ac-loading">Searching…</div>');
+  acTrackTimer = setTimeout(async () => {
+    try {
+      const query = `recording:"${q}" AND artist:"${artist}"`;
+      const res = await fetch(`https://musicbrainz.org/ws/2/recording?query=${encodeURIComponent(query)}&limit=6&fmt=json`, {
+        headers: { 'User-Agent': 'MusicNight/1.0 (dafaspace.github.io/music-night)' }
+      });
+      const data = await res.json();
+      const recs = data.recordings || [];
+      if (!recs.length) { acHide('ac-track'); return; }
+      // Deduplicate by title
+      const seen = new Set();
+      const unique = recs.filter(r => { if (seen.has(r.title)) return false; seen.add(r.title); return true; });
+      acShow('ac-track', unique.map(r => {
+        const artistCredit = r['artist-credit']?.[0]?.artist?.name || artist;
+        const release = r.releases?.[0]?.title || '';
+        return `<div class="ac-item" data-title="${escHtml(r.title)}" data-artist="${escHtml(artistCredit)}" tabindex="-1">
+          <span>${escHtml(r.title)}</span>
+          ${release ? `<span class="ac-item-sub">${escHtml(release)}</span>` : ''}
+        </div>`;
+      }).join(''));
+      document.getElementById('ac-track').querySelectorAll('.ac-item').forEach(el => {
+        el.addEventListener('mousedown', e => {
+          e.preventDefault();
+          document.getElementById('search-track').value = el.dataset.title;
+          document.getElementById('search-artist').value = el.dataset.artist;
+          acHide('ac-track');
+          updateSearchPreview();
+        });
+      });
+    } catch { acHide('ac-track'); }
+  }, 400);
+});
+
+// Hide dropdowns on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.ac-wrap')) { acHide('ac-artist'); acHide('ac-track'); }
+});
 
 // ── Username: save ───────────────────────────────────────────────────
 document.getElementById('btn-save-username').addEventListener('click', async () => {
