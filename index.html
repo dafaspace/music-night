@@ -995,7 +995,9 @@
         <div style="display:flex;gap:8px">
           <input type="text" id="paste-link-input" placeholder="https://open.spotify.com/track/…" autocomplete="off" style="flex:1" />
           <button class="btn btn-secondary btn-sm" id="btn-parse-link" style="white-space:nowrap">↵ Fill</button>
+          <button class="btn btn-secondary btn-sm" id="btn-audd" title="Identify song" style="white-space:nowrap;font-size:16px;padding:0 10px">🎤</button>
         </div>
+        <div id="audd-status" style="display:none;font-size:11px;color:#a78bfa;font-family:DM Sans;margin-top:6px;text-align:center"></div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin:12px 0">
         <div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>
@@ -1040,12 +1042,18 @@
         </div>
         <div id="new-playlist-inline-form" style="display:none;margin-bottom:12px">
           <input type="text" id="new-playlist-inline-name" placeholder="Playlist name…" autocomplete="off" style="margin-bottom:8px" />
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <label style="font-size:12px;color:var(--muted);font-family:DM Sans;display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="checkbox" id="new-playlist-inline-public" style="accent-color:#7c3aed" />
+              Make public
+            </label>
+          </div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-primary btn-sm" id="btn-create-playlist-inline" style="flex:1">Create</button>
             <button class="btn btn-ghost btn-sm" id="btn-cancel-playlist-inline">Cancel</button>
           </div>
         </div>
-        <button class="btn btn-primary" id="btn-add-track">+ Add to Playlist</button>
+        <button class="btn btn-primary" id="btn-add-track" disabled style="opacity:0.4;cursor:not-allowed">+ Add to Playlist</button>
       </div>
 
       <div id="search-empty" style="padding:24px 0">
@@ -1672,11 +1680,7 @@ function fmtDuration(ms) {
 function renderPlatformLinks(artist, track, containerId, showAll = false) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  const list = showAll ? STREAMING_PLATFORMS : STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS);
-  container.innerHTML = list.map(p => `
-    <a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn">
-      ${p.icon} ${p.name}
-    </a>`).join('');
+  container.innerHTML = buildPlatformLinksHtml(artist, track, null, showAll, pendingDirectUrls);
 }
 
 // ── Search: expand/collapse platforms ────────────────────────────────
@@ -1760,6 +1764,9 @@ document.getElementById('btn-add-track').addEventListener('click', async () => {
     showToast('✅ Added to playlist');
     document.getElementById('search-artist').value = '';
     document.getElementById('search-track').value = '';
+    document.getElementById('search-playlist-select').value = '';
+    const addBtn = document.getElementById('btn-add-track');
+    addBtn.disabled = true; addBtn.style.opacity = '0.4'; addBtn.style.cursor = 'not-allowed';
     resetGenre();
     updateSearchPreview();
     await loadPlaylists();
@@ -2199,6 +2206,20 @@ function escHtml(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── Add to Playlist button: enable only when playlist selected ───────
+document.getElementById('search-playlist-select').addEventListener('change', function() {
+  const btn = document.getElementById('btn-add-track');
+  if (this.value) {
+    btn.disabled = false;
+    btn.style.opacity = '';
+    btn.style.cursor = '';
+  } else {
+    btn.disabled = true;
+    btn.style.opacity = '0.4';
+    btn.style.cursor = 'not-allowed';
+  }
+});
+
 // ── Inline new playlist ──────────────────────────────────────────────
 document.getElementById('btn-new-playlist-inline').addEventListener('click', () => {
   document.getElementById('new-playlist-inline-form').style.display = '';
@@ -2215,11 +2236,12 @@ document.getElementById('btn-cancel-playlist-inline').addEventListener('click', 
 document.getElementById('btn-create-playlist-inline').addEventListener('click', async () => {
   const name = document.getElementById('new-playlist-inline-name').value.trim();
   if (!name) { showToast('Enter a playlist name'); return; }
+  const isPublic = document.getElementById('new-playlist-inline-public').checked;
   setLoading('btn-create-playlist-inline', true);
   try {
     const { data, error } = await sbClient
       .from('music_playlists')
-      .insert({ user_id: currentUser.id, name, is_public: false, public_slug: generateSlug() })
+      .insert({ user_id: currentUser.id, name, is_public: isPublic, public_slug: generateSlug() })
       .select().single();
     if (error) throw error;
     await loadPlaylists();
@@ -2232,6 +2254,96 @@ document.getElementById('btn-create-playlist-inline').addEventListener('click', 
     showToast('❌ ' + e.message);
   } finally {
     setLoading('btn-create-playlist-inline', false);
+  }
+});
+
+// ── AudD Music Recognition ───────────────────────────────────────────
+const AUDD_TOKEN = 'ac0579244d601709446cf43a16f4753f';
+let auddRecording = false;
+let auddMediaRecorder = null;
+let auddChunks = [];
+
+function auddStatus(msg) {
+  const el = document.getElementById('audd-status');
+  if (msg) { el.textContent = msg; el.style.display = ''; }
+  else { el.style.display = 'none'; el.textContent = ''; }
+}
+
+document.getElementById('btn-audd').addEventListener('click', async () => {
+  if (auddRecording) return;
+
+  const btn = document.getElementById('btn-audd');
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    auddRecording = true;
+    auddChunks = [];
+    btn.textContent = '⏹';
+    btn.style.color = '#f87171';
+    auddStatus('🎤 Listening… (10 sec)');
+
+    auddMediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    auddMediaRecorder.ondataavailable = e => { if (e.data.size > 0) auddChunks.push(e.data); };
+
+    auddMediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      btn.textContent = '🎤';
+      btn.style.color = '';
+      auddStatus('🔍 Identifying…');
+
+      try {
+        const blob = new Blob(auddChunks, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('file', blob, 'recording.webm');
+        formData.append('api_token', AUDD_TOKEN);
+        formData.append('return', 'apple_music,spotify,deezer');
+
+        const res = await fetch('https://api.audd.io/', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (data.status !== 'success' || !data.result) {
+          auddStatus('❌ Song not recognized');
+          setTimeout(() => auddStatus(''), 3000);
+          return;
+        }
+
+        const r = data.result;
+        document.getElementById('search-artist').value = r.artist || '';
+        document.getElementById('search-track').value = r.title || '';
+
+        // Save direct URLs
+        pendingDirectUrls = {};
+        if (r.spotify?.external_urls?.spotify) pendingDirectUrls.spotify = r.spotify.external_urls.spotify;
+        if (r.apple_music?.url) pendingDirectUrls.appleMusic = r.apple_music.url;
+        if (r.deezer?.link) pendingDirectUrls.deezer = r.deezer.link;
+
+        updateSearchPreview();
+        auddStatus(`✅ ${r.artist} — ${r.title}`);
+        setTimeout(() => auddStatus(''), 4000);
+
+      } catch (e) {
+        auddStatus('❌ Error: ' + e.message);
+        setTimeout(() => auddStatus(''), 3000);
+      }
+      auddRecording = false;
+    };
+
+    auddMediaRecorder.start();
+    // Auto-stop after 10 seconds
+    setTimeout(() => {
+      if (auddMediaRecorder?.state === 'recording') auddMediaRecorder.stop();
+    }, 10000);
+
+  } catch (e) {
+    auddRecording = false;
+    btn.textContent = '🎤';
+    btn.style.color = '';
+    if (e.name === 'NotAllowedError') {
+      auddStatus('❌ Microphone access denied');
+    } else {
+      auddStatus('❌ ' + e.message);
+    }
+    setTimeout(() => auddStatus(''), 3000);
   }
 });
 
