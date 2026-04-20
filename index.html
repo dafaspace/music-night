@@ -2385,6 +2385,7 @@ document.getElementById('btn-audd').addEventListener('click', async () => {
         auddStatus('❌ Error: ' + e.message);
         setTimeout(() => auddStatus(''), 3000);
         auddRecording = false;
+      }
     };
 
     auddMediaRecorder.start();
