@@ -2309,7 +2309,20 @@ document.getElementById('btn-audd').addEventListener('click', async () => {
     auddMediaRecorder.onstop = async () => {
       stream.getTracks().forEach(t => t.stop());
       btn.classList.remove('recording');
-      auddStatus('Shazam who? Hold on…');
+      const thinkingPhrases = [
+        "Give me a sec...",
+        "Hmm, I know this one...",
+        "It's on the tip of my tongue...",
+        "Let me tune in...",
+        "Reading the room...",
+        "Catching the vibe...",
+        "Almost got it...",
+        "Digging through the archives...",
+        "The melody is familiar...",
+        "Hold on, I've heard this before...",
+        "Working my magic...",
+      ];
+      auddStatus(thinkingPhrases[Math.floor(Math.random() * thinkingPhrases.length)]);
 
       try {
         const blob = new Blob(auddChunks, { type: 'audio/webm' });
@@ -2322,8 +2335,22 @@ document.getElementById('btn-audd').addEventListener('click', async () => {
         const data = await res.json();
 
         if (data.status !== 'success' || !data.result) {
-          auddStatus('❌ Song not recognized');
-          setTimeout(() => auddStatus(''), 3000);
+          const failPhrases = [
+            "I'm dancing too hard to hear! Again?",
+            "Too much noise — try again?",
+            "Let's try again, shall we?",
+            "I'm lost in the noise",
+            "I missed that. Sing it louder?",
+            "My ears are failing me. One more time?",
+            "I can almost hear it... stay close",
+            "Bring me closer, don't be shy!",
+            "Don't stop the music! I'm almost there",
+            "A rare find! Let me try one more time?",
+            "Lean in! I'm catching the vibe",
+          ];
+          auddStatus('❌ ' + failPhrases[Math.floor(Math.random() * failPhrases.length)]);
+          setTimeout(() => auddStatus(''), 4000);
+          auddRecording = false;
           return;
         }
 
@@ -2351,14 +2378,13 @@ document.getElementById('btn-audd').addEventListener('click', async () => {
           "Spot on! I love this one too",
           "Ta-da! Here it is",
         ];
-        auddStatus(successPhrases[Math.floor(Math.random() * successPhrases.length)]);
+        auddStatus('✅ ' + successPhrases[Math.floor(Math.random() * successPhrases.length)]);
         setTimeout(() => auddStatus(''), 4000);
 
       } catch (e) {
         auddStatus('❌ Error: ' + e.message);
         setTimeout(() => auddStatus(''), 3000);
-      }
-      auddRecording = false;
+        auddRecording = false;
     };
 
     auddMediaRecorder.start();
