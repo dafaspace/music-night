@@ -1013,16 +1013,17 @@
           <input type="text" id="paste-link-input" placeholder="https://open.spotify.com/track/…" autocomplete="off" style="flex:1" />
           <button class="btn btn-secondary btn-sm" id="btn-parse-link" style="white-space:nowrap">↵ Fill</button>
         </div>
-        <div style="margin-top:12px;text-align:center">
+        <div style="margin-top:16px;text-align:center">
+          <div style="font-size:11px;color:var(--muted);font-family:DM Sans;margin-bottom:10px;letter-spacing:0.3px">or let it hear</div>
           <button id="btn-audd" title="Identify song playing nearby" style="
-            width:64px;height:64px;border-radius:50%;border:none;cursor:pointer;
-            background:rgba(124,58,237,0.15);
-            border:1.5px solid rgba(124,58,237,0.4);
-            color:#c4b5fd;font-size:22px;
+            width:68px;height:68px;border-radius:50%;border:none;cursor:pointer;
+            background:rgba(124,58,237,0.12);
+            border:1.5px solid rgba(124,58,237,0.35);
+            color:#c4b5fd;font-size:26px;
             display:inline-flex;align-items:center;justify-content:center;
-            transition:all 0.2s;position:relative;
-          ">🎤</button>
-          <div id="audd-status" style="font-size:11px;color:#a78bfa;font-family:DM Sans;margin-top:8px;min-height:16px"></div>
+            transition:all 0.2s;
+          ">👂</button>
+          <div id="audd-status" style="font-size:11px;color:#a78bfa;font-family:DM Sans;margin-top:10px;min-height:16px"></div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin:12px 0">
@@ -1048,7 +1049,7 @@
       <div id="genre-pills" style="display:none"></div>
 
       <!-- Platform preview -->
-      <div id="search-preview" style="display:none">
+      <div id="search-preview" style="display:none;padding-bottom:80px">
         <div class="divider"></div>
         <div class="section-header">
           <span class="section-title">Open In</span>
@@ -1067,17 +1068,8 @@
           </div>
         </div>
         <div id="new-playlist-inline-form" style="display:none;margin-bottom:12px">
-          <input type="text" id="new-playlist-inline-name" placeholder="Playlist name…" autocomplete="off" style="margin-bottom:8px" />
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <label style="font-size:12px;color:var(--muted);font-family:DM Sans;display:flex;align-items:center;gap:6px;cursor:pointer">
-              <input type="checkbox" id="new-playlist-inline-public" style="accent-color:#7c3aed" />
-              Make public
-            </label>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-primary btn-sm" id="btn-create-playlist-inline" style="flex:1">Create</button>
-            <button class="btn btn-ghost btn-sm" id="btn-cancel-playlist-inline">Cancel</button>
-          </div>
+          <input type="hidden" id="new-playlist-inline-name" />
+          <input type="hidden" id="new-playlist-inline-public" />
         </div>
         <button class="btn btn-primary" id="btn-add-track" disabled style="opacity:0.4;cursor:not-allowed">+ Add to Playlist</button>
       </div>
@@ -1980,9 +1972,19 @@ document.getElementById('btn-save-playlist').addEventListener('click', async () 
         deezer_url: deezerUrl,
         soundcloud_url: soundcloudUrl
       };
-      const { error } = await sbClient.from('music_playlists').insert(newPl);
+      const { data: created, error } = await sbClient.from('music_playlists').insert(newPl).select().single();
       if (error) throw error;
       showToast('✅ Playlist created');
+      closeModal('overlay-playlist');
+      await loadPlaylists();
+      // If opened from Search tab — auto-select the new playlist
+      if (searchTabNewPlaylist && created) {
+        document.getElementById('search-playlist-select').value = created.id;
+        const btn = document.getElementById('btn-add-track');
+        btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
+      }
+      searchTabNewPlaylist = false;
+      return;
     }
     closeModal('overlay-playlist');
     await loadPlaylists();
@@ -2254,40 +2256,20 @@ document.getElementById('search-playlist-select').addEventListener('change', fun
 });
 
 // ── Inline new playlist ──────────────────────────────────────────────
+// "+ New" on Search tab opens the same modal as Playlists tab
+// After creation, auto-selects the new playlist in the select
+let searchTabNewPlaylist = false;
 document.getElementById('btn-new-playlist-inline').addEventListener('click', () => {
-  document.getElementById('new-playlist-inline-form').style.display = '';
-  document.getElementById('new-playlist-inline-name').focus();
-  document.getElementById('btn-new-playlist-inline').style.display = 'none';
-});
-
-document.getElementById('btn-cancel-playlist-inline').addEventListener('click', () => {
-  document.getElementById('new-playlist-inline-form').style.display = 'none';
-  document.getElementById('new-playlist-inline-name').value = '';
-  document.getElementById('btn-new-playlist-inline').style.display = '';
-});
-
-document.getElementById('btn-create-playlist-inline').addEventListener('click', async () => {
-  const name = document.getElementById('new-playlist-inline-name').value.trim();
-  if (!name) { showToast('Enter a playlist name'); return; }
-  const isPublic = document.getElementById('new-playlist-inline-public').checked;
-  setLoading('btn-create-playlist-inline', true);
-  try {
-    const { data, error } = await sbClient
-      .from('music_playlists')
-      .insert({ user_id: currentUser.id, name, is_public: isPublic, public_slug: generateSlug() })
-      .select().single();
-    if (error) throw error;
-    await loadPlaylists();
-    document.getElementById('search-playlist-select').value = data.id;
-    document.getElementById('new-playlist-inline-form').style.display = 'none';
-    document.getElementById('new-playlist-inline-name').value = '';
-    document.getElementById('btn-new-playlist-inline').style.display = '';
-    showToast('✅ Playlist created');
-  } catch (e) {
-    showToast('❌ ' + e.message);
-  } finally {
-    setLoading('btn-create-playlist-inline', false);
-  }
+  searchTabNewPlaylist = true;
+  document.getElementById('modal-playlist-title').textContent = 'New Playlist';
+  document.getElementById('playlist-name-input').value = '';
+  document.getElementById('playlist-desc-input').value = '';
+  document.getElementById('playlist-public-toggle').checked = false;
+  document.getElementById('playlist-spotify-url').value = '';
+  document.getElementById('playlist-apple-url').value = '';
+  document.getElementById('playlist-deezer-url').value = '';
+  document.getElementById('playlist-soundcloud-url').value = '';
+  openModal('overlay-playlist');
 });
 
 // ── AudD Music Recognition ───────────────────────────────────────────
@@ -2312,7 +2294,7 @@ document.getElementById('btn-audd').addEventListener('click', async () => {
     auddRecording = true;
     auddChunks = [];
     btn.classList.add('recording');
-    auddStatus('Listening…');
+    auddStatus('I\'m all ears…');
 
     auddMediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
     auddMediaRecorder.ondataavailable = e => { if (e.data.size > 0) auddChunks.push(e.data); };
@@ -2320,7 +2302,7 @@ document.getElementById('btn-audd').addEventListener('click', async () => {
     auddMediaRecorder.onstop = async () => {
       stream.getTracks().forEach(t => t.stop());
       btn.classList.remove('recording');
-      auddStatus('Identifying…');
+      auddStatus('Let me think…');
 
       try {
         const blob = new Blob(auddChunks, { type: 'audio/webm' });
@@ -2369,9 +2351,9 @@ document.getElementById('btn-audd').addEventListener('click', async () => {
     auddRecording = false;
     btn.classList.remove('recording');
     if (e.name === 'NotAllowedError') {
-      auddStatus('❌ Microphone access denied');
+      auddStatus('Mic access denied — check browser settings');
     } else {
-      auddStatus('❌ ' + e.message);
+      auddStatus('Something went wrong, try again');
     }
     setTimeout(() => auddStatus(''), 3000);
   }
