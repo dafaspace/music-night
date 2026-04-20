@@ -1074,10 +1074,8 @@
         </div>
       </div>
       <div id="shared-discover" style="display:none">
-        <div class="empty-state">
-          <div class="empty-state-icon">🔭</div>
-          <div class="empty-state-title">Coming Soon</div>
-          <p>Discover public playlists from the community.</p>
+        <div id="discover-list">
+          <div class="loading-dots"><span></span><span></span><span></span></div>
         </div>
       </div>
     </div>
@@ -1445,8 +1443,66 @@ document.querySelectorAll('.shared-tab-btn').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('shared-my-public').style.display = btn.dataset.sharedTab === 'my-public' ? '' : 'none';
     document.getElementById('shared-discover').style.display = btn.dataset.sharedTab === 'discover' ? '' : 'none';
+    if (btn.dataset.sharedTab === 'discover') loadDiscover();
   });
 });
+
+// ── Discover ──────────────────────────────────────────────────────────
+let discoverLoaded = false;
+async function loadDiscover() {
+  if (discoverLoaded) return;
+  const container = document.getElementById('discover-list');
+  container.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+  try {
+    const { data: playlists, error } = await sbClient
+      .from('music_playlists')
+      .select('*, profiles(display_name, username)')
+      .eq('is_public', true)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+
+    // Load track counts
+    const ids = playlists.map(p => p.id);
+    const { data: tracks } = await sbClient
+      .from('playlist_tracks')
+      .select('playlist_id')
+      .in('playlist_id', ids);
+
+    const countMap = {};
+    (tracks || []).forEach(t => { countMap[t.playlist_id] = (countMap[t.playlist_id] || 0) + 1; });
+
+    if (!playlists.length) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔭</div><div class="empty-state-title">No public playlists yet</div></div>';
+      return;
+    }
+
+    const base = 'https://dafaspace.github.io/music-night/';
+    container.innerHTML = playlists.map(p => {
+      const count = countMap[p.id] || 0;
+      const author = p.profiles?.display_name || '';
+      const username = p.profiles?.username || '';
+      const authorHtml = author
+        ? `· by ${escHtml(author)}${username ? ` <a href="?u=${escHtml(username)}" style="color:#a78bfa;text-decoration:none">@${escHtml(username)}</a>` : ''}`
+        : '';
+      return `
+        <div class="card" style="cursor:pointer" onclick="window.location.href='?p=${p.public_slug}'">
+          <div class="card-header">
+            <div>
+              <div class="card-title">${escHtml(p.name)}</div>
+              <div class="card-meta">${count} track${count !== 1 ? 's' : ''} ${authorHtml}</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();copyPublicLink('${p.public_slug}')">Copy Link</button>
+          </div>
+          ${p.description ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">${escHtml(p.description)}</div>` : ''}
+        </div>`;
+    }).join('');
+    discoverLoaded = true;
+  } catch (err) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>${escHtml(err.message)}</p></div>`;
+  }
+}
 
 // ── Account modal ─────────────────────────────────────────────────────
 document.getElementById('btn-avatar').addEventListener('click', () => openModal('overlay-account'));
