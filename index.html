@@ -1453,7 +1453,7 @@ document.querySelectorAll('.shared-tab-btn').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('shared-my-public').style.display = btn.dataset.sharedTab === 'my-public' ? '' : 'none';
     document.getElementById('shared-discover').style.display = btn.dataset.sharedTab === 'discover' ? '' : 'none';
-    if (btn.dataset.sharedTab === 'discover') loadDiscover();
+    if (btn.dataset.sharedTab === 'discover') { discoverLoaded = false; loadDiscover(); }
   });
 });
 
