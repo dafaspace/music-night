@@ -2244,30 +2244,28 @@ document.getElementById('btn-parse-link').addEventListener('click', async () => 
   btn.disabled = true;
   pendingDirectUrls = null;
   try {
-    // Fetch meta and odesli in parallel
-    const [metaRes, odesliRes] = await Promise.allSettled([
-      fetch(`https://music-night-odesli.dafa4me.workers.dev/meta?url=${encodeURIComponent(raw)}`).then(r => r.json()),
-      fetch(`https://music-night-odesli.dafa4me.workers.dev/?url=${encodeURIComponent(raw)}`).then(r => r.json()),
-    ]);
+    // Fetch meta first
+    const metaRes = await fetch(`https://music-night-odesli.dafa4me.workers.dev/meta?url=${encodeURIComponent(raw)}`).then(r => r.json());
 
-    const meta = metaRes.status === 'fulfilled' ? metaRes.value : null;
-    const odesli = odesliRes.status === 'fulfilled' ? odesliRes.value : null;
-
-    if (!meta || meta.error) { showToast('❌ Could not parse link'); return; }
-    if (meta.artist) document.getElementById('search-artist').value = meta.artist;
-    if (meta.track)  document.getElementById('search-track').value  = meta.track;
+    if (!metaRes || metaRes.error) { showToast('❌ Could not parse link'); return; }
+    if (metaRes.artist) document.getElementById('search-artist').value = metaRes.artist;
+    if (metaRes.track)  document.getElementById('search-track').value  = metaRes.track;
     document.getElementById('paste-link-input').value = '';
-
-    // Extract direct URLs from odesli response
-    if (odesli && odesli.linksByPlatform) {
-      pendingDirectUrls = {};
-      for (const [platform, info] of Object.entries(odesli.linksByPlatform)) {
-        if (info.url) pendingDirectUrls[platform] = info.url;
-      }
-    }
-
     updateSearchPreview();
-    showToast(pendingDirectUrls ? '✅ Filled with direct links!' : '✅ Filled!');
+    showToast('✅ Filled!');
+
+    // Fetch odesli in background with delay to avoid rate limit
+    setTimeout(async () => {
+      try {
+        const odesli = await fetch(`https://music-night-odesli.dafa4me.workers.dev/?url=${encodeURIComponent(raw)}`).then(r => r.json());
+        if (odesli && odesli.linksByPlatform) {
+          pendingDirectUrls = {};
+          for (const [platform, info] of Object.entries(odesli.linksByPlatform)) {
+            if (info.url) pendingDirectUrls[platform] = info.url;
+          }
+        }
+      } catch (_) {}
+    }, 3000);
   } catch (e) {
     showToast('❌ Could not parse link');
   } finally {
