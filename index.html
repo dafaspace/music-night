@@ -1359,6 +1359,7 @@ const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 // ── State ─────────────────────────────────────────────────────────────
 let sbClient = null;
 let currentUser = null;
+let pendingDirectUrls = null; // from odesli after paste link
 let playlists = [];
 let currentPlaylist = null;
 let confirmCallback = null;
@@ -1596,6 +1597,17 @@ const ODESLI_PLATFORM_MAP = {
   soundcloud:   'soundcloud',
   yandex:       'yandex',
 };
+// Reverse map: our platform id → odesli key
+const ODESLI_PLATFORM_MAP_REVERSE = {
+  spotify:    'spotify',
+  apple:      'appleMusic',
+  youtube:    'youtubeMusic',
+  amazon:     'amazonMusic',
+  deezer:     'deezer',
+  tidal:      'tidal',
+  soundcloud: 'soundcloud',
+  yandex:     'yandex',
+};
 
 async function fetchOdesliLinks(spotifyUri) {
   // Disabled until API key obtained — uncomment below when ready
@@ -1623,18 +1635,27 @@ async function fetchOdesliLinks(spotifyUri) {
   }
 }
 
-function buildPlatformLinksHtml(artist, trackName, odesliLinks, showAll = false) {
+function buildPlatformLinksHtml(artist, trackName, odesliLinks, showAll = false, directUrls = null) {
   const list = showAll ? STREAMING_PLATFORMS : STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS);
   return list.map(p => {
     let href = null;
-    if (odesliLinks) {
+    // 1. Direct URLs from saved odesli data (most accurate)
+    if (directUrls) {
+      // odesli uses platform keys like 'spotify', 'appleMusic', 'youtubeMusic', etc.
+      const odesliKey = ODESLI_PLATFORM_MAP_REVERSE[p.id];
+      if (odesliKey && directUrls[odesliKey]) href = directUrls[odesliKey];
+      if (!href && directUrls[p.id]) href = directUrls[p.id];
+    }
+    // 2. Odesli cache from spotify_uri
+    if (!href && odesliLinks) {
       if (odesliLinks[p.id]) href = odesliLinks[p.id];
       for (const [oKey, mKey] of Object.entries(ODESLI_PLATFORM_MAP)) {
         if (mKey === p.id && odesliLinks[oKey]) { href = odesliLinks[oKey]; break; }
       }
     }
+    // 3. Fallback to search
     if (!href) href = p.url(artist, trackName);
-    const isExact = !!href && !href.includes('/search') && !href.includes('q=') && !href.includes('text=');
+    const isExact = !!href && !href.includes('/search') && !href.includes('q=') && !href.includes('text=') && !href.includes('query=');
     return `<a href="${href}" target="_blank" rel="noopener" class="platform-btn"${isExact ? ' style="border-color:rgba(124,58,237,0.4)"' : ''}>
       ${p.icon} ${p.name}${isExact ? ' <span style="font-size:9px;color:#a78bfa;margin-left:2px">✓</span>' : ''}
     </a>`;
@@ -1730,8 +1751,10 @@ document.getElementById('btn-add-track').addEventListener('click', async () => {
       artist,
       track_name: track,
       genre: genre || null,
-      position: nextPos
+      position: nextPos,
+      direct_urls: pendingDirectUrls || null,
     });
+    pendingDirectUrls = null;
     if (error) throw error;
 
     showToast('✅ Added to playlist');
@@ -2056,7 +2079,7 @@ function renderTrackList(tracks, playlistId) {
   }
 
   container.innerHTML = tracks.map((t, i) => {
-    const topLinks = buildPlatformLinksHtml(t.artist, t.track_name, odesliCache.get(t.spotify_uri) || null, false);
+    const topLinks = buildPlatformLinksHtml(t.artist, t.track_name, odesliCache.get(t.spotify_uri) || null, false, t.direct_urls || null);
     return `
     <div class="track-item" data-track-id="${t.id}" data-spotify-uri="${escHtml(t.spotify_uri || '')}">
       <div class="track-header">
@@ -2219,15 +2242,32 @@ document.getElementById('btn-parse-link').addEventListener('click', async () => 
   const btn = document.getElementById('btn-parse-link');
   btn.textContent = '…';
   btn.disabled = true;
+  pendingDirectUrls = null;
   try {
-    const res = await fetch(`https://music-night-odesli.dafa4me.workers.dev/meta?url=${encodeURIComponent(raw)}`);
-    const data = await res.json();
-    if (data.error) { showToast('❌ ' + data.error); return; }
-    if (data.artist) document.getElementById('search-artist').value = data.artist;
-    if (data.track)  document.getElementById('search-track').value  = data.track;
+    // Fetch meta and odesli in parallel
+    const [metaRes, odesliRes] = await Promise.allSettled([
+      fetch(`https://music-night-odesli.dafa4me.workers.dev/meta?url=${encodeURIComponent(raw)}`).then(r => r.json()),
+      fetch(`https://music-night-odesli.dafa4me.workers.dev/?url=${encodeURIComponent(raw)}`).then(r => r.json()),
+    ]);
+
+    const meta = metaRes.status === 'fulfilled' ? metaRes.value : null;
+    const odesli = odesliRes.status === 'fulfilled' ? odesliRes.value : null;
+
+    if (!meta || meta.error) { showToast('❌ Could not parse link'); return; }
+    if (meta.artist) document.getElementById('search-artist').value = meta.artist;
+    if (meta.track)  document.getElementById('search-track').value  = meta.track;
     document.getElementById('paste-link-input').value = '';
+
+    // Extract direct URLs from odesli response
+    if (odesli && odesli.linksByPlatform) {
+      pendingDirectUrls = {};
+      for (const [platform, info] of Object.entries(odesli.linksByPlatform)) {
+        if (info.url) pendingDirectUrls[platform] = info.url;
+      }
+    }
+
     updateSearchPreview();
-    showToast('✅ Filled!');
+    showToast(pendingDirectUrls ? '✅ Filled with direct links!' : '✅ Filled!');
   } catch (e) {
     showToast('❌ Could not parse link');
   } finally {
