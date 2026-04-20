@@ -1031,9 +1031,19 @@
         <div class="divider"></div>
         <div class="form-group">
           <label>Add to Playlist</label>
-          <select id="search-playlist-select">
-            <option value="">— Select playlist —</option>
-          </select>
+          <div style="display:flex;gap:8px">
+            <select id="search-playlist-select" style="flex:1">
+              <option value="">— Select playlist —</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" id="btn-new-playlist-inline" style="white-space:nowrap">+ New</button>
+          </div>
+        </div>
+        <div id="new-playlist-inline-form" style="display:none;margin-bottom:12px">
+          <input type="text" id="new-playlist-inline-name" placeholder="Playlist name…" autocomplete="off" style="margin-bottom:8px" />
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" id="btn-create-playlist-inline" style="flex:1">Create</button>
+            <button class="btn btn-ghost btn-sm" id="btn-cancel-playlist-inline">Cancel</button>
+          </div>
         </div>
         <button class="btn btn-primary" id="btn-add-track">+ Add to Playlist</button>
       </div>
@@ -1456,7 +1466,7 @@ async function loadDiscover() {
   try {
     const { data: playlists, error } = await sbClient
       .from('music_playlists')
-      .select('*, profiles(display_name, username)')
+      .select('*')
       .eq('is_public', true)
       .order('created_at', { ascending: false })
       .limit(50);
@@ -1473,6 +1483,15 @@ async function loadDiscover() {
     const countMap = {};
     (tracks || []).forEach(t => { countMap[t.playlist_id] = (countMap[t.playlist_id] || 0) + 1; });
 
+    // Load profiles separately
+    const userIds = [...new Set(playlists.map(p => p.user_id))];
+    const { data: profilesData } = await sbClient
+      .from('profiles')
+      .select('id, display_name, username')
+      .in('id', userIds);
+    const profileMap = {};
+    (profilesData || []).forEach(p => { profileMap[p.id] = p; });
+
     if (!playlists.length) {
       container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔭</div><div class="empty-state-title">No public playlists yet</div></div>';
       return;
@@ -1481,8 +1500,9 @@ async function loadDiscover() {
     const base = 'https://dafaspace.github.io/music-night/';
     container.innerHTML = playlists.map(p => {
       const count = countMap[p.id] || 0;
-      const author = p.profiles?.display_name || '';
-      const username = p.profiles?.username || '';
+      const profile = profileMap[p.user_id] || {};
+      const author = profile.display_name || '';
+      const username = profile.username || '';
       const authorHtml = author
         ? `· by ${escHtml(author)}${username ? ` <a href="?u=${escHtml(username)}" style="color:#a78bfa;text-decoration:none">@${escHtml(username)}</a>` : ''}`
         : '';
@@ -1538,7 +1558,7 @@ const enc = s => encodeURIComponent(String(s).trim());
 
 const STREAMING_PLATFORMS = [
   { id: 'spotify',     name: 'Spotify',       icon: '🟢', url: (a,t) => `https://open.spotify.com/search/${enc(a)}%20${enc(t)}` },
-  { id: 'apple',       name: 'Apple Music',   icon: '🎵', url: (a,t) => `https://music.apple.com/search?term=${enc(a)}+${enc(t)}` },
+  { id: 'apple',       name: 'Apple Music',   icon: '🎵', url: (a,t) => `https://music.apple.com/search?term=${enc(a)}%20${enc(t)}` },
   { id: 'youtube',     name: 'YouTube Music', icon: '🔴', url: (a,t) => `https://music.youtube.com/search?q=${enc(a)}+${enc(t)}` },
   { id: 'bandcamp',    name: 'Bandcamp',      icon: '🔵', url: (a,t) => `https://bandcamp.com/search?q=${enc(a)}+${enc(t)}` },
   { id: 'tidal',       name: 'Tidal',         icon: '⬛', url: (a,t) => `https://tidal.com/browse/search?q=${enc(a)}+${enc(t)}` },
@@ -2155,6 +2175,42 @@ async function deleteTrack(trackId, playlistId) {
 function escHtml(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ── Inline new playlist ──────────────────────────────────────────────
+document.getElementById('btn-new-playlist-inline').addEventListener('click', () => {
+  document.getElementById('new-playlist-inline-form').style.display = '';
+  document.getElementById('new-playlist-inline-name').focus();
+  document.getElementById('btn-new-playlist-inline').style.display = 'none';
+});
+
+document.getElementById('btn-cancel-playlist-inline').addEventListener('click', () => {
+  document.getElementById('new-playlist-inline-form').style.display = 'none';
+  document.getElementById('new-playlist-inline-name').value = '';
+  document.getElementById('btn-new-playlist-inline').style.display = '';
+});
+
+document.getElementById('btn-create-playlist-inline').addEventListener('click', async () => {
+  const name = document.getElementById('new-playlist-inline-name').value.trim();
+  if (!name) { showToast('Enter a playlist name'); return; }
+  setLoading('btn-create-playlist-inline', true);
+  try {
+    const { data, error } = await sbClient
+      .from('music_playlists')
+      .insert({ user_id: currentUser.id, name, is_public: false, public_slug: generateSlug() })
+      .select().single();
+    if (error) throw error;
+    await loadPlaylists();
+    document.getElementById('search-playlist-select').value = data.id;
+    document.getElementById('new-playlist-inline-form').style.display = 'none';
+    document.getElementById('new-playlist-inline-name').value = '';
+    document.getElementById('btn-new-playlist-inline').style.display = '';
+    showToast('✅ Playlist created');
+  } catch (e) {
+    showToast('❌ ' + e.message);
+  } finally {
+    setLoading('btn-create-playlist-inline', false);
+  }
+});
 
 // ── Paste link parser ────────────────────────────────────────────────
 document.getElementById('btn-parse-link').addEventListener('click', async () => {
