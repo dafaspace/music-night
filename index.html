@@ -990,6 +990,18 @@
       <div class="section-header">
         <span class="section-title">Add a Track</span>
       </div>
+      <div class="form-group" id="paste-link-group">
+        <label>Paste a link <span class="text-muted" style="font-family:DM Sans;font-size:11px;letter-spacing:0">(Spotify, SoundCloud, YouTube, Tidal)</span></label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="paste-link-input" placeholder="https://open.spotify.com/track/…" autocomplete="off" style="flex:1" />
+          <button class="btn btn-secondary btn-sm" id="btn-parse-link" style="white-space:nowrap">↵ Fill</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin:12px 0">
+        <div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>
+        <span style="font-size:11px;color:var(--muted);font-family:DM Sans">or enter manually</span>
+        <div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>
+      </div>
       <div class="form-group">
         <label>Artist</label>
         <div class="ac-wrap">
@@ -2103,6 +2115,35 @@ async function deleteTrack(trackId, playlistId) {
 function escHtml(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ── Paste link parser ────────────────────────────────────────────────
+document.getElementById('btn-parse-link').addEventListener('click', async () => {
+  const raw = document.getElementById('paste-link-input').value.trim();
+  if (!raw) return;
+  const btn = document.getElementById('btn-parse-link');
+  btn.textContent = '…';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`https://music-night-odesli.dafa4me.workers.dev/meta?url=${encodeURIComponent(raw)}`);
+    const data = await res.json();
+    if (data.error) { showToast('❌ ' + data.error); return; }
+    if (data.artist) document.getElementById('search-artist').value = data.artist;
+    if (data.track)  document.getElementById('search-track').value  = data.track;
+    document.getElementById('paste-link-input').value = '';
+    updateSearchPreview();
+    showToast('✅ Filled!');
+  } catch (e) {
+    showToast('❌ Could not parse link');
+  } finally {
+    btn.textContent = '↵ Fill';
+    btn.disabled = false;
+  }
+});
+
+// Allow pressing Enter in paste field
+document.getElementById('paste-link-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-parse-link').click();
+});
 
 // ── Genre helpers ────────────────────────────────────────────────────
 function renderGenreBadges(genre) {
