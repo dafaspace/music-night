@@ -1016,24 +1016,8 @@
           <div class="ac-dropdown" id="ac-track" style="display:none"></div>
         </div>
       </div>
-      <div class="form-group">
-        <label>Genre <span class="text-muted" style="font-family:DM Sans;font-size:11px;letter-spacing:0">(optional)</span></label>
-        <div class="genre-pills" id="genre-pills">
-          <button type="button" class="genre-pill" data-genre="Rock">Rock</button>
-          <button type="button" class="genre-pill" data-genre="Pop">Pop</button>
-          <button type="button" class="genre-pill" data-genre="Jazz">Jazz</button>
-          <button type="button" class="genre-pill" data-genre="Electronic">Electronic</button>
-          <button type="button" class="genre-pill" data-genre="Hip-Hop">Hip-Hop</button>
-          <button type="button" class="genre-pill" data-genre="Classical">Classical</button>
-          <button type="button" class="genre-pill" data-genre="R&B">R&B</button>
-          <button type="button" class="genre-pill" data-genre="Folk">Folk</button>
-          <button type="button" class="genre-pill" data-genre="Metal">Metal</button>
-          <button type="button" class="genre-pill" data-genre="Indie">Indie</button>
-          <button type="button" class="genre-pill" data-genre="Ambient">Ambient</button>
-          <button type="button" class="genre-pill" data-genre="Soul">Soul</button>
-        </div>
-        <input type="text" id="search-genre" placeholder="Or type custom tag…" autocomplete="off" style="margin-top:8px" />
-      </div>
+      <input type="hidden" id="search-genre" />
+      <div id="genre-pills" style="display:none"></div>
 
       <!-- Platform preview -->
       <div id="search-preview" style="display:none">
@@ -2173,7 +2157,7 @@ document.getElementById('genre-pills').addEventListener('click', e => {
 function updateSearchPreview() {
   const artist = document.getElementById('search-artist').value.trim();
   const track  = document.getElementById('search-track').value.trim();
-  const hasInput = artist && track;
+  const hasInput = artist || track;
   document.getElementById('search-preview').style.display = hasInput ? '' : 'none';
   document.getElementById('search-empty').style.display  = hasInput ? 'none' : '';
   if (hasInput) {
