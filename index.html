@@ -889,6 +889,91 @@
     .direct-links-field input:focus { border-color: rgba(124,58,237,0.4); }
     .direct-links-field input::placeholder { color: var(--muted); }
 
+    /* ── Public footer ──────────────────────────────────────────────── */
+    .public-footer {
+      text-align: center;
+      padding: 28px 16px 44px;
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
+    .public-footer-cta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    .public-footer-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .public-footer-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: rgba(255,255,255,0.03);
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .public-footer-btn:hover {
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      border-color: rgba(255,255,255,0.2);
+    }
+    .public-footer-btn.coffee-btn {
+      border-color: rgba(255,169,77,0.25);
+      color: #d4976a;
+    }
+    .public-footer-btn.coffee-btn:hover {
+      background: rgba(255,169,77,0.08);
+      border-color: rgba(255,169,77,0.5);
+      color: #f0a96a;
+    }
+    .coffee-icon {
+      display: inline-block;
+      font-size: 16px;
+      animation: coffee-wobble 2.5s ease-in-out 1.5s 1;
+    }
+    @keyframes coffee-wobble {
+      0%   { transform: rotate(0deg); }
+      15%  { transform: rotate(-12deg); }
+      30%  { transform: rotate(10deg); }
+      45%  { transform: rotate(-8deg); }
+      60%  { transform: rotate(6deg); }
+      75%  { transform: rotate(-4deg); }
+      100% { transform: rotate(0deg); }
+    }
+    .public-footer-hint {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      color: rgba(255,255,255,0.2);
+      letter-spacing: 0.2px;
+    }
+    .public-footer-join {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding-top: 4px;
+    }
+    .public-footer-join p {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0;
+    }
+    .public-footer-join-btns {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
     /* ── Scrollbar ──────────────────────────────────────────────────── */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -998,12 +1083,6 @@
       <div id="public-desc" style="font-size:13px;color:var(--muted);margin-top:6px;display:none"></div>
       <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
         <button class="btn btn-secondary btn-sm" id="btn-public-copy">🔗 Copy Link</button>
-        <button class="btn btn-ghost btn-sm" id="btn-public-signin">Sign In →</button>
-        <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener"
-          class="btn btn-sm"
-          style="background:rgba(255,94,91,0.12);border:1px solid rgba(255,94,91,0.35);color:#ff6b6b;text-decoration:none">
-          ☕ Support
-        </a>
       </div>
     </div>
     <!-- Spotify embed (shown if playlist was imported from Spotify) -->
@@ -1021,8 +1100,30 @@
     <div class="public-content" id="public-tracks">
       <div class="loading-dots"><span></span><span></span><span></span></div>
     </div>
-    <div style="text-align:center;padding:20px 16px 40px;border-top:1px solid var(--border);margin-top:8px">
-      <button class="btn btn-primary" id="btn-public-create" style="width:220px">Get Started, It's Free</button>
+    <!-- Footer -->
+    <div class="public-footer">
+      <div class="public-footer-cta">
+        <!-- Bug + Coffee row -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+          <div class="public-footer-actions">
+            <a href="mailto:feedback@dafaspace.com?subject=Music Night bug report" class="public-footer-btn" title="Report a bug">
+              🐛 Found a bug?
+            </a>
+            <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn" title="Buy me a coffee">
+              <span class="coffee-icon">☕</span> Want to say thanks?
+            </a>
+          </div>
+          <div class="public-footer-hint">developed by dafaspace · music night</div>
+        </div>
+        <!-- Get started / sign in -->
+        <div class="public-footer-join">
+          <p>Make your own playlist — share anywhere</p>
+          <div class="public-footer-join-btns">
+            <button class="btn btn-primary btn-sm" id="btn-public-create">Get Started</button>
+            <a id="link-public-signin" style="font-size:12px;color:var(--muted);cursor:pointer">Sign in</a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1032,17 +1133,31 @@
       <div class="public-header-logo"><span>MUSIC</span> NIGHT</div>
       <div class="public-playlist-name" id="profile-name">Loading…</div>
       <div class="public-playlist-meta" id="profile-meta"></div>
-      <div style="margin-top:14px;display:flex;gap:8px;justify-content:center">
-        <button class="btn btn-ghost btn-sm" id="btn-profile-signin">Sign In →</button>
-        <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener"
-          class="btn btn-sm"
-          style="background:rgba(255,94,91,0.12);border:1px solid rgba(255,94,91,0.35);color:#ff6b6b;text-decoration:none">
-          ☕ Support
-        </a>
-      </div>
     </div>
     <div style="padding:16px" id="profile-playlists">
       <div class="loading-dots"><span></span><span></span><span></span></div>
+    </div>
+    <div class="public-footer">
+      <div class="public-footer-cta">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+          <div class="public-footer-actions">
+            <a href="mailto:feedback@dafaspace.com?subject=Music Night bug report" class="public-footer-btn" title="Report a bug">
+              🐛 Found a bug?
+            </a>
+            <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn">
+              <span class="coffee-icon">☕</span> Want to say thanks?
+            </a>
+          </div>
+          <div class="public-footer-hint">developed by dafaspace · music night</div>
+        </div>
+        <div class="public-footer-join">
+          <p>Make your own playlist — share anywhere</p>
+          <div class="public-footer-join-btns">
+            <button class="btn btn-primary btn-sm" id="btn-profile-create">Get Started</button>
+            <a id="link-profile-signin" style="font-size:12px;color:var(--muted);cursor:pointer">Sign in</a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1120,7 +1235,7 @@
           <button class="btn btn-ghost btn-sm" id="btn-share-track">🔗 Share Track</button>
         </div>
         <div class="platform-links" id="search-platform-links"></div>
-        <button class="platform-expand" id="btn-expand-platforms" style="margin-top:4px">+ Show all platforms</button>
+        <button class="platform-expand" id="btn-expand-platforms" style="margin-top:4px">+ More platforms</button>
         <div class="divider"></div>
         <div class="form-group">
           <label>Add to Playlist</label>
@@ -1431,9 +1546,6 @@
         <button class="btn btn-ghost" data-close="overlay-confirm">Cancel</button>
         <button class="btn btn-primary" id="btn-confirm-action" style="background:#dc2626">Delete</button>
       </div>
-    <div style="text-align:center;padding:20px 16px 40px;border-top:1px solid var(--border);margin-top:8px">
-      <button class="btn btn-primary" id="btn-profile-create" style="width:220px">Get Started, It's Free</button>
-    </div>
     </div>
   </div>
 
@@ -1675,8 +1787,8 @@ const STREAMING_PLATFORMS = [
   { id: 'apple',       name: 'Apple Music',   icon: SVG_ICONS.apple,       url: (a,t) => `https://music.apple.com/search?term=${enc(a)}%20${enc(t)}` },
   { id: 'youtube',     name: 'YouTube Music', icon: SVG_ICONS.youtube,     url: (a,t) => `https://music.youtube.com/search?q=${enc(a)}+${enc(t)}` },
   { id: 'bandcamp',    name: 'Bandcamp',      icon: SVG_ICONS.bandcamp,    url: (a,t) => `https://bandcamp.com/search?q=${enc(a)}+${enc(t)}` },
-  { id: 'tidal',       name: 'Tidal',         icon: SVG_ICONS.tidal,       url: (a,t) => `https://tidal.com/browse/search?q=${enc(a)}+${enc(t)}` },
   { id: 'deezer',      name: 'Deezer',        icon: SVG_ICONS.deezer,      url: (a,t) => `https://www.deezer.com/search/${enc(a)}%20${enc(t)}` },
+  { id: 'tidal',       name: 'Tidal',         icon: SVG_ICONS.tidal,       url: (a,t) => `https://tidal.com/browse/search?q=${enc(a)}+${enc(t)}` },
   { id: 'amazon',      name: 'Amazon Music',  icon: SVG_ICONS.amazon,      url: (a,t) => `https://music.amazon.com/search/${enc(a)}+${enc(t)}` },
   { id: 'soundcloud',  name: 'SoundCloud',    icon: SVG_ICONS.soundcloud,  url: (a,t) => `https://soundcloud.com/search?q=${enc(a)}+${enc(t)}` },
   { id: 'qobuz',       name: 'Qobuz',         icon: SVG_ICONS.qobuz,       url: (a,t) => `https://www.qobuz.com/search?q=${enc(a)}+${enc(t)}` },
@@ -1692,7 +1804,7 @@ const STREAMING_PLATFORMS = [
   { id: 'musicbrainz', name: 'MusicBrainz',   icon: SVG_ICONS.musicbrainz, url: (a,t) => `https://musicbrainz.org/search?query=${enc(a)}+${enc(t)}&type=recording` },
 ];
 
-const TOP_PLATFORMS = 8;
+const TOP_PLATFORMS = 4;
 let platformsExpanded = false;
 
 // ── Odesli (song.link) integration ───────────────────────────────────
@@ -1822,7 +1934,7 @@ document.getElementById('btn-expand-platforms').addEventListener('click', () => 
   const track  = document.getElementById('search-track').value.trim();
   renderPlatformLinks(artist, track, 'search-platform-links', platformsExpanded);
   document.getElementById('btn-expand-platforms').textContent =
-    platformsExpanded ? '− Show fewer' : '+ Show all platforms';
+    platformsExpanded ? '− Less' : '+ More platforms';
 });
 
 // ── Search: share single track link ──────────────────────────────────
@@ -2260,7 +2372,7 @@ function renderTrackList(tracks, playlistId) {
       </div>
       <div class="platform-links" style="margin-top:8px">${topLinks}</div>
       <div style="margin-top:4px;display:flex;align-items:center;gap:10px">
-        <button class="platform-expand" onclick="toggleTrackPlatforms(this,'${escHtml(t.artist)}','${escHtml(t.track_name)}')">+ All platforms</button>
+        <button class="platform-expand" onclick="toggleTrackPlatforms(this,'${escHtml(t.artist)}','${escHtml(t.track_name)}')">+ More</button>
       </div>
       <div class="direct-links-wrap">
         <button class="direct-links-toggle" onclick="toggleDirectLinks(this,'${t.id}')">
@@ -2355,12 +2467,12 @@ function toggleTrackPlatforms(btn, artist, track) {
   if (expanded) {
     linksDiv.innerHTML = STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS)
       .map(p => `<a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn"><span style="display:inline-flex;align-items:center;gap:5px">${p.icon}<span>${p.name}</span></span></a>`).join('');
-    btn.textContent = '+ All platforms';
+    btn.textContent = '+ More';
     btn.dataset.expanded = '0';
   } else {
     linksDiv.innerHTML = STREAMING_PLATFORMS
       .map(p => `<a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn"><span style="display:inline-flex;align-items:center;gap:5px">${p.icon}<span>${p.name}</span></span></a>`).join('');
-    btn.textContent = '− Fewer';
+    btn.textContent = '− Less';
     btn.dataset.expanded = '1';
   }
 }
@@ -2710,7 +2822,7 @@ function updateSearchPreview() {
   document.getElementById('search-empty').style.display  = hasInput ? 'none' : '';
   if (hasInput) {
     platformsExpanded = false;
-    document.getElementById('btn-expand-platforms').textContent = '+ Show all platforms';
+    document.getElementById('btn-expand-platforms').textContent = '+ More platforms';
     renderPlatformLinks(artist, track, 'search-platform-links', false);
   }
 }
@@ -3517,7 +3629,7 @@ async function loadPublicPlaylist(slug) {
     // Render header
     document.getElementById('public-playlist-name').textContent = pl.name;
     const byPart = authorName
-      ? ` · by ${authorName}${authorUsername ? ` <a href="?u=${authorUsername}" style="color:#a78bfa;text-decoration:none;font-family:DM Sans,sans-serif">@${authorUsername}</a>` : ''}`
+      ? ` · shared by ${authorName}${authorUsername ? ` <a href="?u=${authorUsername}" style="color:#a78bfa;text-decoration:none;font-family:DM Sans,sans-serif">@${authorUsername}</a>` : ''}`
       : '';
     document.getElementById('public-playlist-meta').innerHTML =
       `${trackList.length} track${trackList.length !== 1 ? 's' : ''}${byPart}`;
@@ -3641,7 +3753,7 @@ async function loadPublicPlaylist(slug) {
           </div>
           <div class="platform-links" style="margin-top:8px">${topLinks}</div>
           <div style="margin-top:4px">
-            <button class="platform-expand" onclick="toggleTrackPlatforms(this,'${escHtml(t.artist)}','${escHtml(t.track_name)}')">+ All platforms</button>
+            <button class="platform-expand" onclick="toggleTrackPlatforms(this,'${escHtml(t.artist)}','${escHtml(t.track_name)}')">+ More</button>
           </div>
         </div>`;
     }).join('');
@@ -3661,7 +3773,8 @@ async function loadPublicPlaylist(slug) {
 document.getElementById('btn-public-copy').addEventListener('click', () => {
   navigator.clipboard.writeText(window.location.href).then(() => showToast('🔗 Link copied!'));
 });
-document.getElementById('btn-public-signin').addEventListener('click', () => {
+const _pubSignin = document.getElementById('link-public-signin');
+if (_pubSignin) _pubSignin.addEventListener('click', () => {
   window.location.href = window.location.pathname;
 });
 document.getElementById('btn-public-create').addEventListener('click', () => {
@@ -3743,10 +3856,12 @@ async function loadUserProfile(username) {
   }
 }
 
-document.getElementById('btn-profile-signin').addEventListener('click', () => {
+const _profSignin = document.getElementById('link-profile-signin');
+if (_profSignin) _profSignin.addEventListener('click', () => {
   window.location.href = window.location.pathname;
 });
-document.getElementById('btn-profile-create').addEventListener('click', () => {
+const _profCreate = document.getElementById('btn-profile-create');
+if (_profCreate) _profCreate.addEventListener('click', () => {
   window.location.href = window.location.pathname;
 });
 
