@@ -981,8 +981,8 @@
       font-size: 13px;
       cursor: pointer;
       text-decoration: none;
-      border: 1px solid var(--border);
-      color: var(--muted);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: rgba(255,255,255,0.45);
       background: rgba(255,255,255,0.03);
       transition: border-color 0.2s, color 0.2s, background 0.2s;
       min-width: 148px;
@@ -990,17 +990,17 @@
     }
     .public-footer-btn:hover {
       background: rgba(255,255,255,0.06);
-      color: var(--text);
-      border-color: rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.7);
+      border-color: rgba(255,255,255,0.25);
     }
     .public-footer-btn.coffee-btn {
-      border-color: rgba(255,169,77,0.25);
-      color: #d4976a;
+      border-color: rgba(255,255,255,0.14);
+      color: rgba(255,255,255,0.45);
     }
     .public-footer-btn.coffee-btn:hover {
-      background: rgba(255,169,77,0.08);
-      border-color: rgba(255,169,77,0.5);
-      color: #f0a96a;
+      background: rgba(255,169,77,0.07);
+      border-color: rgba(255,169,77,0.4);
+      color: #e0a265;
     }
     .coffee-icon {
       display: inline-block;
@@ -1038,6 +1038,9 @@
       display: flex;
       gap: 8px;
       align-items: center;
+    }
+    .public-footer-join-btns .btn {
+      min-width: 110px;
     }
 
     /* ── Scrollbar ──────────────────────────────────────────────────── */
@@ -1186,7 +1189,7 @@
           <p>Make your own playlist — share anywhere</p>
           <div class="public-footer-join-btns">
             <button class="btn btn-primary btn-sm" id="btn-public-create">Get Started</button>
-            <a id="link-public-signin" style="font-size:12px;color:var(--muted);cursor:pointer">Sign in</a>
+            <button class="btn btn-ghost btn-sm" id="link-public-signin">Sign In</button>
           </div>
         </div>
       </div>
@@ -1220,7 +1223,7 @@
           <p>Make your own playlist — share anywhere</p>
           <div class="public-footer-join-btns">
             <button class="btn btn-primary btn-sm" id="btn-profile-create">Get Started</button>
-            <a id="link-profile-signin" style="font-size:12px;color:var(--muted);cursor:pointer">Sign in</a>
+            <button class="btn btn-ghost btn-sm" id="link-profile-signin">Sign In</button>
           </div>
         </div>
       </div>
