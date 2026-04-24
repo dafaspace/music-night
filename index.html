@@ -975,7 +975,9 @@
       display: inline-flex;
       align-items: center;
       gap: 7px;
-      padding: 8px 16px;
+      padding: 0 18px;
+      height: 38px;
+      line-height: 1;
       border-radius: 20px;
       font-family: 'DM Sans', sans-serif;
       font-size: 13px;
@@ -985,8 +987,9 @@
       color: rgba(255,255,255,0.45);
       background: rgba(255,255,255,0.03);
       transition: border-color 0.2s, color 0.2s, background 0.2s;
-      
       justify-content: center;
+      box-sizing: border-box;
+      white-space: nowrap;
     }
     .public-footer-btn:hover {
       background: rgba(255,255,255,0.06);
@@ -1004,7 +1007,8 @@
     }
     .coffee-icon {
       display: inline-block;
-      font-size: 16px;
+      font-size: 14px;
+      line-height: 1;
       animation: coffee-wobble 2.5s ease-in-out 1.5s 1;
     }
     @keyframes coffee-wobble {
@@ -1179,7 +1183,7 @@
               🔧 Found a bug?
             </a>
             <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn" title="Buy me a coffee">
-              <span class="coffee-icon">☕</span> Say thanks?
+              <span class="coffee-icon">☕</span> Buy me a coffee
             </a>
           </div>
           <div class="public-footer-hint">developed by dafaspace · music night</div>
@@ -1214,7 +1218,7 @@
               🔧 Found a bug?
             </a>
             <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn">
-              <span class="coffee-icon">☕</span> Say thanks?
+              <span class="coffee-icon">☕</span> Buy me a coffee
             </a>
           </div>
           <div class="public-footer-hint">developed by dafaspace · music night</div>
