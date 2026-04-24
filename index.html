@@ -842,6 +842,53 @@
     }
     .sortable-drag { opacity: 0.9; }
 
+    /* ── Direct Links Editor ────────────────────────────────────────── */
+    .direct-links-wrap {
+      margin-top: 8px;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+    }
+    .direct-links-toggle {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      color: #a78bfa;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 0;
+    }
+    .direct-links-toggle:hover { text-decoration: underline; }
+    .direct-links-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .direct-links-field label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+    .direct-links-field input {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      padding: 6px 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .direct-links-field input:focus { border-color: rgba(124,58,237,0.4); }
+    .direct-links-field input::placeholder { color: var(--muted); }
+
     /* ── Scrollbar ──────────────────────────────────────────────────── */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -952,6 +999,11 @@
       <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
         <button class="btn btn-secondary btn-sm" id="btn-public-copy">🔗 Copy Link</button>
         <button class="btn btn-ghost btn-sm" id="btn-public-signin">Sign In →</button>
+        <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener"
+          class="btn btn-sm"
+          style="background:rgba(255,94,91,0.12);border:1px solid rgba(255,94,91,0.35);color:#ff6b6b;text-decoration:none">
+          ☕ Support
+        </a>
       </div>
     </div>
     <!-- Spotify embed (shown if playlist was imported from Spotify) -->
@@ -982,6 +1034,11 @@
       <div class="public-playlist-meta" id="profile-meta"></div>
       <div style="margin-top:14px;display:flex;gap:8px;justify-content:center">
         <button class="btn btn-ghost btn-sm" id="btn-profile-signin">Sign In →</button>
+        <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener"
+          class="btn btn-sm"
+          style="background:rgba(255,94,91,0.12);border:1px solid rgba(255,94,91,0.35);color:#ff6b6b;text-decoration:none">
+          ☕ Support
+        </a>
       </div>
     </div>
     <div style="padding:16px" id="profile-playlists">
@@ -1590,26 +1647,49 @@ document.getElementById('btn-new-playlist').addEventListener('click', () => {
 // ── Streaming Platforms ───────────────────────────────────────────────
 const enc = s => encodeURIComponent(String(s).trim());
 
+// SVG icons from Simple Icons (simpleicons.org)
+const SVG_ICONS = {
+  spotify: `<svg width="13" height="13" viewBox="0 0 168 168" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="84" cy="84" r="84" fill="#1DB954"/><path d="M120.7 116.4c-1.6 2.7-5.1 3.5-7.7 1.9-21.2-13-47.9-15.9-79.3-8.7-3 .7-6.1-1.2-6.8-4.2-.7-3 1.2-6.1 4.2-6.8 34.4-7.9 64-4.5 87.8 10.1 2.7 1.6 3.5 5.1 1.9 7.7zm10.2-22.8c-2 3.4-6.4 4.5-9.8 2.5-24.3-14.9-61.3-19.3-90-10.5-3.7 1.1-7.6-1-8.7-4.7-1.1-3.7 1-7.6 4.7-8.7 32.8-10 73.5-5.1 101.3 12 3.4 2 4.5 6.4 2.5 9.8zm.9-23.8c-29.1-17.3-77.2-18.9-105-10.5-4.5 1.4-9.2-1.2-10.5-5.6-1.4-4.5 1.2-9.2 5.6-10.5 31.9-9.7 84.9-7.8 118.4 12.1 4 2.4 5.4 7.6 3 11.6-2.4 4.1-7.6 5.4-11.6 3z" fill="white"/></svg>`,
+  apple: `<svg width="13" height="13" viewBox="0 0 16 16" style="display:inline-block;vertical-align:middle;flex-shrink:0"><defs><linearGradient id="apm" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f984a0"/><stop offset="100%" stop-color="#d3001a"/></linearGradient></defs><rect width="16" height="16" rx="3.5" fill="url(#apm)"/><path fill-rule="evenodd" d="M10.9 2.5 6.13 3.46a.5.5 0 0 0-.46.49v5.95c0 .14-.01.27-.1.39-.1.11-.22.15-.35.18l-.31.06c-.5.1-.91.56-.91 1.1 0 .6.5 1.1 1.1 1.1.17 0 .34-.04.5-.12.43-.2.72-.64.72-1.13V5.2l3.83-.77v3.96c0 .14-.01.28-.1.39-.1.12-.22.15-.35.18l-.31.06c-.5.1-.91.56-.91 1.1 0 .6.5 1.1 1.1 1.1.17 0 .34-.04.5-.12.43-.2.72-.64.72-1.13V3.0a.5.5 0 0 0-.6-.49z" fill="white"/></svg>`,
+  youtube: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="5" fill="#FF0000"/><path d="M21.6 7.2s-.2-1.4-.8-2c-.8-.8-1.7-.8-2.1-.9C16.2 4 12 4 12 4s-4.2 0-6.7.3c-.4.1-1.3.1-2.1.9-.6.6-.8 2-.8 2S2 8.8 2 10.4v1.5c0 1.6.2 3.2.2 3.2s.2 1.4.8 2c.8.8 1.8.8 2.3.8C7 18 12 18 12 18s4.2 0 6.7-.3c.4-.1 1.3-.1 2.1-.9.6-.6.8-2 .8-2s.2-1.6.2-3.2v-1.5c0-1.6-.2-3.2-.2-3.2zm-12.4 6.5V8.3l5.7 2.7-5.7 2.7z" fill="white"/></svg>`,
+  bandcamp: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#1DA0C3"/><path d="M0 18.75l7.437-13.5H24l-7.438 13.5z" fill="white"/></svg>`,
+  tidal: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#000"/><path d="M12 3l3 3-3 3-3-3zm-6 6l3 3-3 3-3-3zm12 0l3 3-3 3-3-3zm-6 6l3 3-3 3-3-3z" fill="white"/></svg>`,
+  deezer: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#A238FF"/><rect x="3" y="14" width="3" height="7" rx="1" fill="white"/><rect x="7.5" y="11" width="3" height="10" rx="1" fill="white"/><rect x="12" y="8" width="3" height="13" rx="1" fill="white"/><rect x="16.5" y="5" width="3" height="16" rx="1" fill="white"/></svg>`,
+  amazon: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#232F3E"/><path d="M13.5 12c0 .7-.1 1.3-.4 1.8-.3.5-.7.9-1.2 1.1-.5.3-1.1.4-1.7.4-.9 0-1.7-.3-2.3-.9-.6-.6-.9-1.4-.9-2.4 0-.6.1-1.2.4-1.7.3-.5.7-.9 1.2-1.1.5-.3 1.1-.4 1.7-.4.6 0 1.1.1 1.6.4.5.3.9.7 1.2 1.2.3.5.4 1 .4 1.6zm2.5 3.7c-1.1 1-2.6 1.5-4.3 1.5-2 0-3.6-.7-4.9-2-.1-.1 0-.3.1-.2 1.4 1 3 1.5 4.8 1.5 1.2 0 2.5-.2 3.7-.7.2-.1.3.1.2.2l-.1.1c-.1 0-.2.1-.3.1l-.1.1c-.1 0-.1.1-.1.1v-.2l.1-.1c.5-.2.8-.4.9-.5zm1.7-1.1c-.2.2-.5.1-.4-.2.4-1 .4-3.1 0-4.1 0-.1 0-.2.1-.2s.3 0 .3.1c.4 1 .4 3.2 0 4.4z" fill="#FF9900"/></svg>`,
+  soundcloud: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#FF5500"/><path d="M1.5 13.5c0 1.4 1.1 2.5 2.5 2.5h14c1.4 0 2.5-1.1 2.5-2.5 0-1.2-.8-2.2-2-2.4V11c0-2.2-1.8-4-4-4-1 0-1.9.4-2.6 1C11.5 6.7 10.6 6 9.5 6 8 6 6.9 7 6.7 8.4 5.9 8.6 5 9.5 5 10.5V11c-1.2.2-2 1.2-2 2.4h.5c0-.8.6-1.5 1.5-1.5h14c.9 0 1.5.7 1.5 1.5s-.6 1.5-1.5 1.5H4c-.9 0-1.5-.7-1.5-1.5z" fill="white"/></svg>`,
+  qobuz: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#002660"/><text x="3" y="17" font-size="13" font-weight="bold" fill="white" font-family="sans-serif">Q</text></svg>`,
+  yandex: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#FC3F1D"/><text x="5" y="17" font-size="13" font-weight="bold" fill="white" font-family="sans-serif">Y</text></svg>`,
+  vk: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#0077FF"/><path d="M12.9 16.6h1.4s.4 0 .6-.3c.2-.2.2-.6.2-.6s0-1.8.8-2.1c.8-.2 1.8 1.8 2.9 2.5.8.6 1.4.4 1.4.4l2.8-.1s1.5-.1.8-1.2c-.1-.2-.4-.7-2-2.2-1.7-1.6-1.4-1.3.6-4 1.2-1.7 1.7-2.7 1.5-3.1-.2-.4-1.1-.3-1.1-.3l-3.2.1s-.2 0-.4.1c-.1.1-.2.3-.2.3s-.5 1.3-1.1 2.4c-1.4 2.3-1.9 2.4-2.1 2.3-.5-.3-.4-1.3-.4-2v-1.3c0-1.9-.3-2.7-1.6-3.1-.5-.1-.8-.2-2-.2-1.5 0-2.8.1-3.5.4-.5.2-.8.6-.6.6s.7.1 1 .5c.4.5.4 1.5.4 1.5s.2 2.2-.5 2.5c-.5.2-1.2-.3-2.6-2.4C6.4 8.7 5.8 7.4 5.8 7.4s-.1-.3-.3-.4c-.2-.1-.5-.2-.5-.2l-3 .1s-.5 0-.6.2c-.1.2 0 .6 0 .6S3 11.5 5.8 14.6c2.6 2.9 5.5 2.7 5.5 2.7h1.6z" fill="white"/></svg>`,
+  lastfm: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#D51007"/><path d="M10.5 15.3l-.7-1.9s-1.1 1.2-2.7 1.2c-1.4 0-2.4-1.2-2.4-3.2 0-2.5 1.3-3.4 2.5-3.4 1.8 0 2.4 1.2 2.9 2.6l.7 2.1c.7 2 2 3.2 5.8 3.2 2.7 0 4.5-.8 4.5-2.9 0-1.7-1-2.6-2.8-3l-1.4-.3c-.9-.2-1.2-.6-1.2-1.2 0-.7.5-1.1 1.4-1.1.9 0 1.4.4 1.5 1.2l1.9-.2c-.2-1.7-1.3-2.4-3.3-2.4-1.7 0-3.3.6-3.3 2.7 0 1.3.6 2.1 2.2 2.5l1.5.4c1.1.3 1.6.7 1.6 1.4 0 .8-.8 1.1-2.3 1.1-2.2 0-3.1-.7-3.6-2.1l-.7-2.1C10.5 8.4 9.2 7 6.6 7 3.8 7 2 8.9 2 11.5c0 2.5 1.4 4.9 4.7 4.9 2.1 0 3.8-1.1 3.8-1.1z" fill="white"/></svg>`,
+  iheart: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#C6002B"/><path d="M12 18.5L5.5 11.5c-.9-1-.9-2.6 0-3.5.9-1 2.4-1 3.3 0l.7.8.7-.8c.9-1 2.4-1 3.3 0l.7.8.7-.8c.9-1 2.4-1 3.3 0 .9 1 .9 2.5 0 3.5L12 18.5z" fill="white"/></svg>`,
+  jiosaavn: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#2BC5B4"/><text x="4" y="17" font-size="11" font-weight="bold" fill="white" font-family="sans-serif">JIO</text></svg>`,
+  kkbox: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#009BDA"/><text x="3" y="17" font-size="10" font-weight="bold" fill="white" font-family="sans-serif">KK</text></svg>`,
+  melon: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#00CD3C"/><text x="3" y="17" font-size="9" font-weight="bold" fill="white" font-family="sans-serif">MEL</text></svg>`,
+  netease: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#C20C0C"/><path d="M12 4a8 8 0 1 0 0 16A8 8 0 0 0 12 4zm0 2.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 1.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" fill="white"/></svg>`,
+  genius: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#FFFF64"/><path d="M12 3C7 3 3 7 3 12s4 9 9 9c1.4 0 2.7-.3 3.9-.9L20 21l-1.1-4.1C19.6 15.5 20 13.8 20 12c0-5-4-9-8-9zm0 16c-3.9 0-7-3.1-7-7s3.1-7 7-7 7 3.1 7 7c0 1.5-.5 3-1.3 4.1l.8 2.9-2.9-.8C14.4 18.7 13.2 19 12 19z" fill="#333"/></svg>`,
+  musicbrainz: `<svg width="13" height="13" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect width="24" height="24" rx="4" fill="#BA478F"/><text x="5" y="17" font-size="11" font-weight="bold" fill="white" font-family="sans-serif">MB</text></svg>`,
+};
+
 const STREAMING_PLATFORMS = [
-  { id: 'spotify',     name: 'Spotify',       icon: '🟢', url: (a,t) => `https://open.spotify.com/search/${enc(a)}%20${enc(t)}` },
-  { id: 'apple',       name: 'Apple Music',   icon: '🎵', url: (a,t) => `https://music.apple.com/search?term=${enc(a)}%20${enc(t)}` },
-  { id: 'youtube',     name: 'YouTube Music', icon: '🔴', url: (a,t) => `https://music.youtube.com/search?q=${enc(a)}+${enc(t)}` },
-  { id: 'bandcamp',    name: 'Bandcamp',      icon: '🔵', url: (a,t) => `https://bandcamp.com/search?q=${enc(a)}+${enc(t)}` },
-  { id: 'tidal',       name: 'Tidal',         icon: '⬛', url: (a,t) => `https://tidal.com/browse/search?q=${enc(a)}+${enc(t)}` },
-  { id: 'deezer',      name: 'Deezer',        icon: '🟣', url: (a,t) => `https://www.deezer.com/search/${enc(a)}%20${enc(t)}` },
-  { id: 'amazon',      name: 'Amazon Music',  icon: '🟠', url: (a,t) => `https://music.amazon.com/search/${enc(a)}+${enc(t)}` },
-  { id: 'soundcloud',  name: 'SoundCloud',    icon: '🟧', url: (a,t) => `https://soundcloud.com/search?q=${enc(a)}+${enc(t)}` },
-  { id: 'qobuz',       name: 'Qobuz',         icon: '🔵', url: (a,t) => `https://www.qobuz.com/search?q=${enc(a)}+${enc(t)}` },
-  { id: 'yandex',      name: 'Yandex Music',  icon: '🟡', url: (a,t) => `https://music.yandex.com/search?text=${enc(a)}+${enc(t)}` },
-  { id: 'vk',          name: 'VK Music',      icon: '🔵', url: (a,t) => `https://vk.com/audio?q=${enc(a)}+${enc(t)}` },
-  { id: 'lastfm',      name: 'Last.fm',       icon: '🔴', url: (a,t) => `https://www.last.fm/search?q=${enc(a)}+${enc(t)}` },
-  { id: 'iheart',      name: 'iHeartRadio',   icon: '🫀', url: (a,t) => `https://www.iheart.com/search/${enc(a)}%20${enc(t)}/` },
-  { id: 'jiosaavn',    name: 'JioSaavn',      icon: '🎶', url: (a,t) => `https://www.jiosaavn.com/search/${enc(a)}-${enc(t)}` },
-  { id: 'kkbox',       name: 'KKBOX',         icon: '🎵', url: (a,t) => `https://www.kkbox.com/tw/tc/search.html?q=${enc(a)}+${enc(t)}` },
-  { id: 'melon',       name: 'MelOn',         icon: '🍈', url: (a,t) => `https://www.melon.com/search/total/index.htm?q=${enc(a)}+${enc(t)}` },
-  { id: 'netease',     name: 'NetEase Music', icon: '🎵', url: (a,t) => `https://music.163.com/#/search/m/?s=${enc(a)}+${enc(t)}` },
-  { id: 'genius',      name: 'Genius',        icon: '💡', url: (a,t) => `https://genius.com/search?q=${enc(a)}+${enc(t)}` },
-  { id: 'musicbrainz', name: 'MusicBrainz',   icon: '🧠', url: (a,t) => `https://musicbrainz.org/search?query=${enc(a)}+${enc(t)}&type=recording` },
+  { id: 'spotify',     name: 'Spotify',       icon: SVG_ICONS.spotify,     url: (a,t) => `https://open.spotify.com/search/${enc(a)}%20${enc(t)}` },
+  { id: 'apple',       name: 'Apple Music',   icon: SVG_ICONS.apple,       url: (a,t) => `https://music.apple.com/search?term=${enc(a)}%20${enc(t)}` },
+  { id: 'youtube',     name: 'YouTube Music', icon: SVG_ICONS.youtube,     url: (a,t) => `https://music.youtube.com/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'bandcamp',    name: 'Bandcamp',      icon: SVG_ICONS.bandcamp,    url: (a,t) => `https://bandcamp.com/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'tidal',       name: 'Tidal',         icon: SVG_ICONS.tidal,       url: (a,t) => `https://tidal.com/browse/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'deezer',      name: 'Deezer',        icon: SVG_ICONS.deezer,      url: (a,t) => `https://www.deezer.com/search/${enc(a)}%20${enc(t)}` },
+  { id: 'amazon',      name: 'Amazon Music',  icon: SVG_ICONS.amazon,      url: (a,t) => `https://music.amazon.com/search/${enc(a)}+${enc(t)}` },
+  { id: 'soundcloud',  name: 'SoundCloud',    icon: SVG_ICONS.soundcloud,  url: (a,t) => `https://soundcloud.com/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'qobuz',       name: 'Qobuz',         icon: SVG_ICONS.qobuz,       url: (a,t) => `https://www.qobuz.com/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'yandex',      name: 'Yandex Music',  icon: SVG_ICONS.yandex,      url: (a,t) => `https://music.yandex.com/search?text=${enc(a)}+${enc(t)}` },
+  { id: 'vk',          name: 'VK Music',      icon: SVG_ICONS.vk,          url: (a,t) => `https://vk.com/audio?q=${enc(a)}+${enc(t)}` },
+  { id: 'lastfm',      name: 'Last.fm',       icon: SVG_ICONS.lastfm,      url: (a,t) => `https://www.last.fm/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'iheart',      name: 'iHeartRadio',   icon: SVG_ICONS.iheart,      url: (a,t) => `https://www.iheart.com/search/${enc(a)}%20${enc(t)}/` },
+  { id: 'jiosaavn',    name: 'JioSaavn',      icon: SVG_ICONS.jiosaavn,    url: (a,t) => `https://www.jiosaavn.com/search/${enc(a)}-${enc(t)}` },
+  { id: 'kkbox',       name: 'KKBOX',         icon: SVG_ICONS.kkbox,       url: (a,t) => `https://www.kkbox.com/tw/tc/search.html?q=${enc(a)}+${enc(t)}` },
+  { id: 'melon',       name: 'MelOn',         icon: SVG_ICONS.melon,       url: (a,t) => `https://www.melon.com/search/total/index.htm?q=${enc(a)}+${enc(t)}` },
+  { id: 'netease',     name: 'NetEase Music', icon: SVG_ICONS.netease,     url: (a,t) => `https://music.163.com/#/search/m/?s=${enc(a)}+${enc(t)}` },
+  { id: 'genius',      name: 'Genius',        icon: SVG_ICONS.genius,      url: (a,t) => `https://genius.com/search?q=${enc(a)}+${enc(t)}` },
+  { id: 'musicbrainz', name: 'MusicBrainz',   icon: SVG_ICONS.musicbrainz, url: (a,t) => `https://musicbrainz.org/search?query=${enc(a)}+${enc(t)}&type=recording` },
 ];
 
 const TOP_PLATFORMS = 8;
@@ -1641,6 +1721,33 @@ const ODESLI_PLATFORM_MAP_REVERSE = {
   soundcloud: 'soundcloud',
   yandex:     'yandex',
 };
+
+// ── track_links cache (Supabase) ──────────────────────────────────────
+// Normalise key: lowercase, trim
+function normKey(str) { return String(str || '').toLowerCase().trim(); }
+
+async function trackLinksCacheGet(artist, trackName) {
+  try {
+    const { data } = await sbClient
+      .from('track_links')
+      .select('direct_urls, audd_result')
+      .eq('artist', normKey(artist))
+      .eq('track_name', normKey(trackName))
+      .maybeSingle();
+    return data || null;
+  } catch (_) { return null; }
+}
+
+async function trackLinksCacheSet(artist, trackName, fields) {
+  try {
+    await sbClient.from('track_links').upsert({
+      artist:     normKey(artist),
+      track_name: normKey(trackName),
+      updated_at: new Date().toISOString(),
+      ...fields
+    }, { onConflict: 'artist,track_name' });
+  } catch (e) { console.warn('track_links upsert:', e.message); }
+}
 
 async function fetchOdesliLinks(spotifyUri) {
   // Disabled until API key obtained — uncomment below when ready
@@ -1690,7 +1797,7 @@ function buildPlatformLinksHtml(artist, trackName, odesliLinks, showAll = false,
     if (!href) href = p.url(artist, trackName);
     const isExact = !!href && !href.includes('/search') && !href.includes('q=') && !href.includes('text=') && !href.includes('query=');
     return `<a href="${href}" target="_blank" rel="noopener" class="platform-btn"${isExact ? ' style="border-color:rgba(124,58,237,0.4)"' : ''}>
-      ${p.icon} ${p.name}${isExact ? ' <span style="font-size:9px;color:#a78bfa;margin-left:2px">✓</span>' : ''}
+      <span style="display:inline-flex;align-items:center;gap:5px">${p.icon}<span>${p.name}</span>${isExact ? '<span style="font-size:9px;color:#a78bfa">✓</span>' : ''}</span>
     </a>`;
   }).join('');
 }
@@ -2129,6 +2236,9 @@ function renderTrackList(tracks, playlistId) {
 
   container.innerHTML = tracks.map((t, i) => {
     const topLinks = buildPlatformLinksHtml(t.artist, t.track_name, odesliCache.get(t.spotify_uri) || null, false, t.direct_urls || null);
+    const du = t.direct_urls || {};
+    // Check if any manual direct links saved
+    const hasDirectLinks = du.spotify || du.appleMusic || du.youtubeMusic || du.bandcamp || du.tidal || du.deezer;
     return `
     <div class="track-item" data-track-id="${t.id}" data-spotify-uri="${escHtml(t.spotify_uri || '')}">
       <div class="track-header">
@@ -2149,8 +2259,35 @@ function renderTrackList(tracks, playlistId) {
         </div>
       </div>
       <div class="platform-links" style="margin-top:8px">${topLinks}</div>
-      <div style="margin-top:4px">
+      <div style="margin-top:4px;display:flex;align-items:center;gap:10px">
         <button class="platform-expand" onclick="toggleTrackPlatforms(this,'${escHtml(t.artist)}','${escHtml(t.track_name)}')">+ All platforms</button>
+      </div>
+      <div class="direct-links-wrap">
+        <button class="direct-links-toggle" onclick="toggleDirectLinks(this,'${t.id}')">
+          ${hasDirectLinks ? '✏️ Edit direct links' : '+ Add direct links'}
+        </button>
+        <div class="direct-links-panel" style="display:none">
+          <div class="direct-links-grid">
+            ${[
+              { id: 'spotify',     key: 'spotify',      label: 'Spotify',       ph: 'open.spotify.com/track/…' },
+              { id: 'apple',       key: 'appleMusic',   label: 'Apple Music',   ph: 'music.apple.com/…' },
+              { id: 'youtube',     key: 'youtubeMusic', label: 'YouTube Music', ph: 'music.youtube.com/…' },
+              { id: 'bandcamp',    key: 'bandcamp',     label: 'Bandcamp',      ph: 'artist.bandcamp.com/…' },
+              { id: 'tidal',       key: 'tidal',        label: 'Tidal',         ph: 'tidal.com/browse/…' },
+              { id: 'deezer',      key: 'deezer',       label: 'Deezer',        ph: 'deezer.com/track/…' },
+            ].map(p => `
+              <div class="direct-links-field">
+                <label>${SVG_ICONS[p.id]} ${p.label}</label>
+                <input type="url" placeholder="${p.ph}"
+                  data-platform-key="${p.key}"
+                  value="${escHtml(du[p.key] || '')}" />
+              </div>`).join('')}
+          </div>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" onclick="saveDirectLinks('${t.id}','${playlistId}',this)">Save links</button>
+            <button class="direct-links-toggle" onclick="toggleDirectLinks(this.closest('.track-item').querySelector('.direct-links-toggle'),'${t.id}')">Cancel</button>
+          </div>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -2217,12 +2354,12 @@ function toggleTrackPlatforms(btn, artist, track) {
   const linksDiv = btn.closest('.track-item').querySelector('.platform-links');
   if (expanded) {
     linksDiv.innerHTML = STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS)
-      .map(p => `<a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn">${p.icon} ${p.name}</a>`).join('');
+      .map(p => `<a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn"><span style="display:inline-flex;align-items:center;gap:5px">${p.icon}<span>${p.name}</span></span></a>`).join('');
     btn.textContent = '+ All platforms';
     btn.dataset.expanded = '0';
   } else {
     linksDiv.innerHTML = STREAMING_PLATFORMS
-      .map(p => `<a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn">${p.icon} ${p.name}</a>`).join('');
+      .map(p => `<a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn"><span style="display:inline-flex;align-items:center;gap:5px">${p.icon}<span>${p.name}</span></span></a>`).join('');
     btn.textContent = '− Fewer';
     btn.dataset.expanded = '1';
   }
@@ -2241,6 +2378,68 @@ async function deleteTrack(trackId, playlistId) {
       showToast('Error: ' + err.message);
     }
   });
+}
+
+// ── Direct links: toggle panel ────────────────────────────────────────
+function toggleDirectLinks(btn, trackId) {
+  const item = btn.closest('.track-item') || document.querySelector(`[data-track-id="${trackId}"]`);
+  if (!item) return;
+  const panel = item.querySelector('.direct-links-panel');
+  const toggleBtn = item.querySelector('.direct-links-toggle');
+  if (!panel) return;
+  const open = panel.style.display === 'none' || !panel.style.display;
+  panel.style.display = open ? '' : 'none';
+  if (toggleBtn) toggleBtn.textContent = open ? '− Close' : (item.querySelector('[data-platform-key]')?.value ? '✏️ Edit direct links' : '+ Add direct links');
+}
+
+// ── Direct links: save to DB ──────────────────────────────────────────
+async function saveDirectLinks(trackId, playlistId, saveBtn) {
+  const item = document.querySelector(`[data-track-id="${trackId}"]`);
+  if (!item) return;
+  const inputs = item.querySelectorAll('[data-platform-key]');
+  const direct_urls = {};
+  inputs.forEach(inp => {
+    const val = inp.value.trim();
+    if (val) direct_urls[inp.dataset.platformKey] = val;
+  });
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = '…';
+  try {
+    const { error } = await sbClient
+      .from('playlist_tracks')
+      .update({ direct_urls: Object.keys(direct_urls).length ? direct_urls : null })
+      .eq('id', trackId);
+    if (error) throw error;
+
+    // Also cache to track_links table
+    const trackName = item.querySelector('.track-name')?.textContent;
+    const artist    = item.querySelector('.track-artist')?.textContent?.split('·')[0]?.trim();
+    if (artist && trackName && currentUser) {
+      trackLinksCacheSet(artist, trackName, { direct_urls });
+    }
+
+    // Refresh platform links
+    const linksDiv = item.querySelector('.platform-links');
+    const expandBtn = item.querySelector('.platform-expand');
+    if (linksDiv) {
+      const showAll = expandBtn?.dataset.expanded === '1';
+      linksDiv.innerHTML = buildPlatformLinksHtml(
+        artist || '', trackName || '', null, showAll, direct_urls
+      );
+    }
+
+    showToast('✅ Direct links saved');
+    // Close panel
+    const panel = item.querySelector('.direct-links-panel');
+    if (panel) panel.style.display = 'none';
+    const toggleBtn = item.querySelector('.direct-links-toggle');
+    if (toggleBtn) toggleBtn.textContent = Object.keys(direct_urls).length ? '✏️ Edit direct links' : '+ Add direct links';
+  } catch (err) {
+    showToast('Error: ' + err.message);
+  }
+  saveBtn.disabled = false;
+  saveBtn.textContent = 'Save links';
 }
 
 // ── Utility: escape HTML ──────────────────────────────────────────────
@@ -2330,6 +2529,9 @@ document.getElementById('btn-audd').addEventListener('click', async () => {
         formData.append('file', blob, 'recording.webm');
         formData.append('api_token', AUDD_TOKEN);
         formData.append('return', 'apple_music,spotify,deezer');
+        formData.append('file', blob, 'recording.webm');
+        formData.append('api_token', AUDD_TOKEN);
+        formData.append('return', 'apple_music,spotify,deezer');
 
         const res = await fetch('https://api.audd.io/', { method: 'POST', body: formData });
         const data = await res.json();
@@ -2363,6 +2565,15 @@ document.getElementById('btn-audd').addEventListener('click', async () => {
         if (r.spotify?.external_urls?.spotify) pendingDirectUrls.spotify = r.spotify.external_urls.spotify;
         if (r.apple_music?.url) pendingDirectUrls.appleMusic = r.apple_music.url;
         if (r.deezer?.link) pendingDirectUrls.deezer = r.deezer.link;
+
+        // Cache to track_links table (saves AudD credits next time)
+        if (r.artist && r.title && currentUser) {
+          trackLinksCacheSet(r.artist, r.title, {
+            audd_result: r,
+            audd_cached_at: new Date().toISOString(),
+            direct_urls: Object.keys(pendingDirectUrls).length ? pendingDirectUrls : null,
+          });
+        }
 
         updateSearchPreview();
         const successPhrases = [
@@ -2425,6 +2636,15 @@ document.getElementById('btn-parse-link').addEventListener('click', async () => 
     updateSearchPreview();
     showToast('✅ Filled!');
 
+    // Check track_links cache first
+    if (metaRes.artist && metaRes.track) {
+      const cached = await trackLinksCacheGet(metaRes.artist, metaRes.track);
+      if (cached?.direct_urls && Object.keys(cached.direct_urls).length) {
+        pendingDirectUrls = cached.direct_urls;
+        renderPlatformLinks(metaRes.artist, metaRes.track, 'search-platform-links', platformsExpanded);
+      }
+    }
+
     // Fetch odesli in background with delay to avoid rate limit
     setTimeout(async () => {
       try {
@@ -2433,6 +2653,13 @@ document.getElementById('btn-parse-link').addEventListener('click', async () => 
           pendingDirectUrls = {};
           for (const [platform, info] of Object.entries(odesli.linksByPlatform)) {
             if (info.url) pendingDirectUrls[platform] = info.url;
+          }
+          // Cache to track_links
+          const a = document.getElementById('search-artist').value.trim();
+          const t = document.getElementById('search-track').value.trim();
+          if (a && t && currentUser) {
+            trackLinksCacheSet(a, t, { direct_urls: pendingDirectUrls });
+            renderPlatformLinks(a, t, 'search-platform-links', platformsExpanded);
           }
         }
       } catch (_) {}
