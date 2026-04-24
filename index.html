@@ -904,54 +904,84 @@
       font-size: 13px;
       transition: color 0.15s, background 0.15s;
     }
-    .feedback-topbar-btn:hover {
-      color: var(--text);
-      background: rgba(255,255,255,0.05);
-    }
+    .feedback-topbar-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
     #feedback-icon { font-size: 14px; transition: all 0.2s; }
 
     /* ── Feedback modal ─────────────────────────────────────────────── */
-    #overlay-feedback .modal { padding-bottom: 24px; }
+    .feedback-modal {
+      background: #13131f;
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 14px;
+      padding: 20px;
+      width: 100%;
+      max-width: 360px;
+    }
+    .feedback-modal-label {
+      color: #555;
+      font-size: 11px;
+      margin-bottom: 5px;
+      font-family: 'Bebas Neue', cursive;
+      letter-spacing: 1px;
+    }
     .fb-type-btn {
       flex: 1;
-      padding: 8px 6px;
+      padding: 7px;
       border-radius: 8px;
       background: transparent;
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.15);
       color: #aaa;
       font-family: 'DM Sans', sans-serif;
       font-size: 12px;
       cursor: pointer;
       transition: all 0.15s;
     }
-    .fb-type-btn:hover {
-      border-color: rgba(124,58,237,0.4);
-      color: var(--text);
-    }
-    .fb-type-btn.active {
-      background: rgba(124,58,237,0.15);
-      border-color: var(--primary);
-      color: #a78bfa;
-    }
-    #fb-replies-wrap {
-      display: none;
-      margin-bottom: 14px;
-    }
-    .fb-reply-item {
-      margin-bottom: 10px;
-      padding: 10px;
-      background: rgba(255,255,255,0.03);
+    .feedback-textarea {
+      width: 100%;
+      min-height: 90px;
+      margin-bottom: 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.06);
-      position: relative;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      padding: 10px 12px;
+      outline: none;
+      resize: vertical;
+      box-sizing: border-box;
     }
-    .fb-reply-item .reply-block {
-      margin-top: 8px;
-      padding: 8px;
-      background: rgba(124,58,237,0.06);
-      border-radius: 6px;
-      border-left: 2px solid var(--primary);
+    .feedback-textarea:focus { border-color: rgba(124,58,237,0.4); }
+    .feedback-textarea::placeholder { color: #555; }
+    .fb-btn-cancel {
+      flex: 1;
+      min-width: 80px;
+      padding: 10px;
+      border-radius: 9px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #aaa;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 14px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.15s;
     }
+    .fb-btn-cancel:hover { background: rgba(255,255,255,0.08); color: #ccc; }
+    .fb-btn-send {
+      flex: 2;
+      padding: 10px;
+      border-radius: 9px;
+      background: var(--primary);
+      border: none;
+      color: #fff;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 14px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .fb-btn-send:hover { opacity: 0.88; }
+    .fb-btn-send:disabled { opacity: 0.5; cursor: default; }
 
     /* ── Public footer ──────────────────────────────────────────────── */
     .public-footer {
@@ -1182,8 +1212,8 @@
             <a href="mailto:feedback@dafaspace.com?subject=Music Night bug report" class="public-footer-btn" title="Report a bug">
               🔧 Found a bug?
             </a>
-            <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn" title="Buy me a coffee">
-              <span class="coffee-icon">☕</span> Buy me a coffee
+            <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn" title="Wanna say thanks?">
+              <span class="coffee-icon">☕</span> Wanna say thanks?
             </a>
           </div>
           <div class="public-footer-hint">developed by dafaspace · music night</div>
@@ -1218,7 +1248,7 @@
               🔧 Found a bug?
             </a>
             <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn">
-              <span class="coffee-icon">☕</span> Buy me a coffee
+              <span class="coffee-icon">☕</span> Wanna say thanks?
             </a>
           </div>
           <div class="public-footer-hint">developed by dafaspace · music night</div>
@@ -1627,31 +1657,23 @@
   </div>
 
   <!-- Feedback Modal -->
-  <div class="overlay" id="overlay-feedback">
-    <div class="modal">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <span class="modal-title">Feedback</span>
-        <button class="modal-close" data-close="overlay-feedback">✕</button>
-      </div>
-      <div class="modal-body" style="padding-bottom:24px">
-        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">
-          Spotted a bug or have an idea? I read everything personally.
-        </p>
-        <label class="form-label" style="margin-bottom:8px;display:block">Type</label>
-        <div style="display:flex;gap:8px;margin-bottom:16px">
-          <button class="fb-type-btn" id="fb-type-bug"   onclick="setFbType('bug')">🔧 Bug</button>
-          <button class="fb-type-btn" id="fb-type-idea"  onclick="setFbType('idea')">💡 Idea</button>
-          <button class="fb-type-btn active" id="fb-type-other" onclick="setFbType('other')">💬 Other</button>
+  <div id="overlay-feedback" class="overlay" style="display:none" onclick="closeFeedback()">
+    <div style="padding:20px;width:100%;display:flex;justify-content:center;cursor:default" onclick="event.stopPropagation()">
+      <div class="feedback-modal">
+        <div style="font-family:'Bebas Neue',cursive;color:var(--primary);font-size:12px;letter-spacing:2px;margin-bottom:3px">FEEDBACK</div>
+        <div style="font-family:'Bebas Neue',cursive;font-size:19px;margin-bottom:14px;line-height:1.2">Share a thought or report a bug</div>
+        <div class="feedback-modal-label">Type</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <button id="fb-type-bug"   onclick="setFbType('bug')"   class="fb-type-btn">🔧 Bug</button>
+          <button id="fb-type-idea"  onclick="setFbType('idea')"  class="fb-type-btn">💡 Idea</button>
+          <button id="fb-type-other" onclick="setFbType('other')" class="fb-type-btn">💬 Other</button>
         </div>
-        <label class="form-label" style="margin-bottom:8px;display:block">Message</label>
-        <textarea id="fb-message" class="form-input"
-          placeholder="Tell me what's on your mind…"
-          style="min-height:90px;resize:vertical;margin-bottom:16px"></textarea>
-        <div id="fb-replies-wrap"></div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost" data-close="overlay-feedback">Cancel</button>
-          <button class="btn btn-primary" id="fb-submit-btn" onclick="submitFeedback()">Send</button>
+        <div class="feedback-modal-label">Message</div>
+        <textarea id="fb-message" class="feedback-textarea" placeholder="Tell me what's on your mind…"></textarea>
+        <div id="fb-replies" style="display:none;margin-bottom:14px"></div>
+        <div style="display:flex;gap:9px">
+          <button class="fb-btn-cancel" onclick="closeFeedback()">Cancel</button>
+          <button class="fb-btn-send" id="fb-submit-btn" onclick="submitFeedback()">SEND</button>
         </div>
       </div>
     </div>
@@ -1849,7 +1871,11 @@ function openFeedback() {
   document.getElementById('fb-message').value = '';
   setFbType('other');
   loadFeedbackReplies();
-  openModal('overlay-feedback');
+  document.getElementById('overlay-feedback').style.display = 'flex';
+}
+
+function closeFeedback() {
+  document.getElementById('overlay-feedback').style.display = 'none';
 }
 
 function setFeedbackUnread(has) {
@@ -1862,7 +1888,9 @@ function setFbType(type) {
   ['bug', 'idea', 'other'].forEach(t => {
     const btn = document.getElementById('fb-type-' + t);
     if (!btn) return;
-    btn.classList.toggle('active', t === type);
+    btn.style.background     = t === type ? 'rgba(124,58,237,0.15)' : 'transparent';
+    btn.style.borderColor    = t === type ? '#7c3aed'               : 'rgba(255,255,255,0.15)';
+    btn.style.color          = t === type ? '#a78bfa'               : '#aaa';
   });
 }
 
@@ -1887,21 +1915,20 @@ async function submitFeedback() {
   const message = document.getElementById('fb-message').value.trim();
   if (!message) { showToast('Please write something first'); return; }
   const btn = document.getElementById('fb-submit-btn');
-  btn.textContent = '…'; btn.disabled = true;
+  btn.textContent = 'SENDING…'; btn.disabled = true;
   try {
     const displayName = currentUser.user_metadata?.display_name || currentUser.email?.split('@')[0] || '';
     const { data, error } = await sbClient.from('feedback').insert({
-      user_id:    currentUser.id,
-      user_email: currentUser.email || '',
-      user_name:  displayName,
-      type:       _fbType,
+      user_id:     currentUser.id,
+      user_email:  currentUser.email || '',
+      user_name:   displayName,
+      type:        _fbType,
       message,
       app_version: '1.0.0',
       user_agent:  navigator.userAgent,
       app:         'music-night'
     }).select();
     if (error) throw new Error(error.message);
-    // Telegram notify via worker
     const inserted = data?.[0];
     if (inserted?.id) {
       fetch(MUSIC_NIGHT_WORKER + '/feedback-notify', {
@@ -1909,57 +1936,55 @@ async function submitFeedback() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           feedback_id: inserted.id,
-          type: _fbType,
+          type:        _fbType,
           message,
-          user_name: displayName || currentUser.email?.split('@')[0] || 'someone',
-          app: 'Music Night'
+          user_name:   displayName || currentUser.email?.split('@')[0] || 'someone',
+          app:         'Music Night'
         })
       }).catch(() => {});
     }
     document.getElementById('fb-message').value = '';
     showToast('Got it! I read everything personally 🙏');
-    closeModal('overlay-feedback');
+    closeFeedback();
   } catch (e) {
     showToast('Could not send: ' + e.message);
   }
-  btn.textContent = 'Send'; btn.disabled = false;
+  btn.textContent = 'SEND'; btn.disabled = false;
 }
 
 async function loadFeedbackReplies() {
-  const wrap = document.getElementById('fb-replies-wrap');
-  if (!wrap || !currentUser) return;
+  const el = document.getElementById('fb-replies');
+  if (!el || !currentUser) return;
   try {
     const { data, error } = await sbClient.from('feedback')
       .select('id, type, message, reply, replied_at, read_by_user, created_at')
       .eq('user_id', currentUser.id)
       .order('created_at', { ascending: false })
       .limit(10);
-    if (error || !data?.length) { wrap.style.display = 'none'; return; }
-    // Mark unread as read
+    if (error || !data?.length) { el.style.display = 'none'; return; }
     const unread = data.filter(f => f.reply && !f.read_by_user);
     if (unread.length) {
       await sbClient.from('feedback').update({ read_by_user: true }).in('id', unread.map(f => f.id));
-      setFeedbackUnread(false);
     }
+    setFeedbackUnread(false);
     const typeEmoji = { bug: '🔧', idea: '💡', other: '💬' };
-    wrap.style.display = 'block';
-    wrap.innerHTML = `
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Your previous messages</div>
+    el.style.display = 'block';
+    el.innerHTML = `
+      <div style="color:#555;font-size:11px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Your previous messages</div>
       ${data.map(f => `
-        <div class="fb-reply-item">
+        <div style="margin-bottom:10px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-            <div style="font-size:11px;color:var(--muted)">${typeEmoji[f.type] || '💬'} ${new Date(f.created_at).toLocaleDateString('en-GB')}</div>
-            <button onclick="deleteFeedback('${f.id}')" style="background:none;border:none;color:#444;cursor:pointer;font-size:16px;padding:0">×</button>
+            <div style="font-size:11px;color:#555">${typeEmoji[f.type] || '💬'} ${new Date(f.created_at).toLocaleDateString('en-GB')}</div>
+            <button onclick="deleteFeedback('${f.id}')" style="background:none;border:none;color:#444;cursor:pointer;font-size:16px;line-height:1;padding:0">×</button>
           </div>
           <div style="font-size:13px;color:#ccc">${escHtml(f.message)}</div>
           ${f.reply ? `
-            <div class="reply-block">
-              <div style="font-size:10px;color:var(--primary);margin-bottom:3px">Reply from Daniel</div>
+            <div style="margin-top:8px;padding:8px;background:rgba(124,58,237,0.06);border-radius:6px;border-left:2px solid #7c3aed">
+              <div style="font-size:10px;color:#a78bfa;margin-bottom:3px">Reply from Daniel</div>
               <div style="font-size:12px;color:#ddd">${escHtml(f.reply)}</div>
             </div>` : ''}
-        </div>`).join('')}
-      <div style="border-top:1px solid var(--border);margin:12px 0 16px"></div>`;
-  } catch (_) { wrap.style.display = 'none'; }
+        </div>`).join('')}`;
+  } catch (_) { el.style.display = 'none'; }
 }
 
 // ── Confirm modal ─────────────────────────────────────────────────────
