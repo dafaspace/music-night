@@ -906,6 +906,47 @@
     }
     .feedback-topbar-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
     #feedback-icon { font-size: 14px; transition: all 0.2s; }
+    .feedback-badge {
+      display: none;
+      position: absolute;
+      top: -3px; right: -3px;
+      width: 8px; height: 8px;
+      background: #a78bfa;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #a78bfa;
+      animation: badge-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes badge-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.6; }
+    }
+    .feedback-badge.visible { display: block; }
+    /* ── Feedback reply card ─────────────────────────────────────────── */
+    .fb-reply-card {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(167,139,250,0.05));
+      border-radius: 8px;
+      border: 1px solid rgba(124,58,237,0.25);
+      position: relative;
+    }
+    .fb-reply-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, #7c3aed, #a78bfa);
+      border-radius: 3px 0 0 3px;
+    }
+    .fb-reply-label {
+      font-size: 10px;
+      color: #a78bfa;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .fb-reply-text { font-size: 12px; color: #e2e2e2; line-height: 1.5; }
 
     /* ── Feedback modal ─────────────────────────────────────────────── */
     .feedback-modal {
@@ -1274,7 +1315,10 @@
       <div class="topbar-logo"><span>MUSIC</span> NIGHT</div>
       <div class="topbar-actions">
         <button class="feedback-topbar-btn" id="btn-open-feedback" title="Feedback">
-          <span id="feedback-icon">✉</span>
+          <span style="position:relative;display:inline-flex">
+            <span id="feedback-icon">✉</span>
+            <span id="feedback-badge" class="feedback-badge"></span>
+          </span>
           <span id="feedback-label" style="font-size:11px;color:var(--muted)">Feedback</span>
         </button>
         <button class="avatar-btn" id="btn-avatar" title="Account">U</button>
@@ -1880,8 +1924,8 @@ function closeFeedback() {
 }
 
 function setFeedbackUnread(has) {
-  const icon = document.getElementById('feedback-icon');
-  if (icon) icon.textContent = has ? '📩' : '✉';
+  const badge = document.getElementById('feedback-badge');
+  if (badge) badge.classList.toggle('visible', has);
 }
 
 function setFbType(type) {
@@ -1893,6 +1937,23 @@ function setFbType(type) {
     btn.style.borderColor    = t === type ? '#7c3aed'               : 'rgba(255,255,255,0.15)';
     btn.style.color          = t === type ? '#a78bfa'               : '#aaa';
   });
+}
+
+function startFeedbackRealtime() {
+  if (!currentUser || !sbClient) return;
+  sbClient.channel('feedback-replies-' + currentUser.id)
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'feedback',
+      filter: `user_id=eq.${currentUser.id}`
+    }, (payload) => {
+      if (payload.new?.reply && !payload.new?.read_by_user) {
+        setFeedbackUnread(true);
+        showToast('💬 You have a new reply!', 4000);
+      }
+    })
+    .subscribe();
 }
 
 async function checkFeedbackBadge() {
@@ -1984,9 +2045,9 @@ async function loadFeedbackReplies() {
           </div>
           <div style="font-size:13px;color:#ccc">${escHtml(f.message)}</div>
           ${f.reply ? `
-            <div style="margin-top:8px;padding:8px;background:rgba(124,58,237,0.06);border-radius:6px;border-left:2px solid #7c3aed">
-              <div style="font-size:10px;color:#a78bfa;margin-bottom:3px">Reply from Daniel</div>
-              <div style="font-size:12px;color:#ddd">${escHtml(f.reply)}</div>
+            <div class="fb-reply-card">
+              <div class="fb-reply-label">↩ Reply from Daniel</div>
+              <div class="fb-reply-text">${escHtml(f.reply)}</div>
             </div>` : ''}
         </div>`).join('')}`;
   } catch (_) { el.style.display = 'none'; }
@@ -3249,6 +3310,7 @@ async function onSignedIn(user) {
   sbClient.from('profiles').upsert({ id: user.id, display_name: name }, { onConflict: 'id', ignoreDuplicates: true }).then(() => {});
   await loadPlaylists();
   checkFeedbackBadge();
+  startFeedbackRealtime();
 }
 
 // ── Auth: Sign In ─────────────────────────────────────────────────────
