@@ -911,7 +911,16 @@
       line-height: 1;
       vertical-align: text-bottom;
     }
-    #feedback-icon { font-size: 26px; display: block; line-height: 1; }
+    #feedback-icon { font-size: 26px; display: block; line-height: 1; transition: color 0.2s, text-shadow 0.2s; }
+    #feedback-icon.unread {
+      color: #c4b5fd;
+      text-shadow: 0 0 10px rgba(167,139,250,0.7), 0 0 20px rgba(167,139,250,0.3);
+      animation: icon-glow 1.8s ease-in-out infinite;
+    }
+    @keyframes icon-glow {
+      0%, 100% { text-shadow: 0 0 8px rgba(167,139,250,0.6); }
+      50% { text-shadow: 0 0 16px rgba(167,139,250,0.9), 0 0 28px rgba(167,139,250,0.4); }
+    }
     .feedback-badge {
       display: none;
       position: absolute;
@@ -1129,6 +1138,24 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
+    /* ── Input with icon ──────────────────────────────────────────────── */
+    .input-icon-wrap {
+      position: relative;
+    }
+    .input-icon-wrap .input-icon {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+    .input-icon-wrap input {
+      padding-left: 34px !important;
+    }
+
     /* ── Utility ────────────────────────────────────────────────────── */
     .flex { display: flex; }
     .flex-center { display: flex; align-items: center; justify-content: center; }
@@ -1256,7 +1283,7 @@
         <!-- Bug + Coffee row -->
         <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
           <div class="public-footer-actions">
-            <a href="mailto:feedback@dafaspace.com?subject=Music Night bug report" class="public-footer-btn" title="Report a bug">
+            <a href="/cdn-cgi/l/email-protection#98fefdfdfcfaf9fbf3d8fcf9fef9ebe8f9fbfdb6fbf7f5a7ebedfaf2fdfbeca5d5edebf1fbb8d6f1fff0ecb8faedffb8eafde8f7eaec" class="public-footer-btn" title="Report a bug">
               🔧 Found a bug?
             </a>
             <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn" title="Wanna say thanks?">
@@ -1291,7 +1318,7 @@
       <div class="public-footer-cta">
         <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
           <div class="public-footer-actions">
-            <a href="mailto:feedback@dafaspace.com?subject=Music Night bug report" class="public-footer-btn" title="Report a bug">
+            <a href="/cdn-cgi/l/email-protection#44222121202625272f042025222537342527216a272b297b3731262e212730790931372d27640a2d232c3064263123643621342b3630" class="public-footer-btn" title="Report a bug">
               🔧 Found a bug?
             </a>
             <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn">
@@ -1339,7 +1366,10 @@
       <div class="form-group" id="paste-link-group">
         <label>Paste a link <span class="text-muted" style="font-family:DM Sans;font-size:11px;letter-spacing:0">(Spotify, Apple Music, YouTube, Deezer, SoundCloud, Tidal)</span></label>
         <div style="display:flex;gap:8px">
-          <input type="text" id="paste-link-input" placeholder="https://open.spotify.com/track/…" autocomplete="off" style="flex:1" />
+          <div class="input-icon-wrap" style="flex:1">
+            <span class="input-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+            <input type="text" id="paste-link-input" placeholder="https://open.spotify.com/track/…" autocomplete="off" />
+          </div>
           <button class="btn btn-secondary btn-sm" id="btn-parse-link" style="white-space:nowrap">↵ Fill</button>
         </div>
         <div style="margin-top:16px;text-align:center">
@@ -1369,14 +1399,16 @@
       </div>
       <div class="form-group">
         <label>Artist</label>
-        <div class="ac-wrap">
+        <div class="ac-wrap input-icon-wrap">
+          <span class="input-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
           <input type="text" id="search-artist" placeholder="e.g. Radiohead" autocomplete="off" />
           <div class="ac-dropdown" id="ac-artist" style="display:none"></div>
         </div>
       </div>
       <div class="form-group">
         <label>Track Name</label>
-        <div class="ac-wrap">
+        <div class="ac-wrap input-icon-wrap">
+          <span class="input-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
           <input type="text" id="search-track" placeholder="e.g. Creep" autocomplete="off" />
           <div class="ac-dropdown" id="ac-track" style="display:none"></div>
         </div>
@@ -1412,7 +1444,7 @@
 
       <div id="search-empty" style="padding:24px 0">
         <div class="empty-state">
-          <div class="empty-state-icon">🎵</div>
+          <div class="empty-state-icon" style="font-size:0;margin-bottom:14px"><svg width="72" height="72" viewBox="0 0 72 72" fill="none"><rect width="72" height="72" rx="18" fill="rgba(124,58,237,0.12)"/><circle cx="34" cy="33" r="13" stroke="rgba(124,58,237,0.55)" stroke-width="3"/><line x1="43.5" y1="42.5" x2="52" y2="51" stroke="rgba(124,58,237,0.55)" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="20" r="1.5" fill="rgba(124,58,237,0.4)"/><circle cx="48" cy="16" r="1" fill="rgba(124,58,237,0.3)"/><circle cx="52" cy="28" r="1.5" fill="rgba(124,58,237,0.3)"/></svg></div>
           <div class="empty-state-title">Find a Track</div>
           <p>Enter an artist and track name above to see streaming links and add it to a playlist.</p>
         </div>
@@ -1455,15 +1487,15 @@
     <!-- Tab Bar -->
     <nav class="tabbar">
       <button class="tab-btn active" data-tab="search">
-        <span class="tab-icon">🔍</span>
+        <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
         <span>Search</span>
       </button>
       <button class="tab-btn" data-tab="playlists">
-        <span class="tab-icon">🎶</span>
+        <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><path d="M3 6l1 1-1 1"/><path d="M3 12l1 1-1 1"/><path d="M3 18l1 1-1 1"/></svg></span>
         <span>Playlists</span>
       </button>
       <button class="tab-btn" data-tab="shared">
-        <span class="tab-icon">🌐</span>
+        <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></span>
         <span>Shared</span>
       </button>
     </nav>
@@ -1732,7 +1764,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
 // ── Config ────────────────────────────────────────────────────────────
@@ -1932,6 +1964,8 @@ function closeFeedback() {
 function setFeedbackUnread(has) {
   const badge = document.getElementById('feedback-badge');
   if (badge) badge.classList.toggle('visible', has);
+  const icon = document.getElementById('feedback-icon');
+  if (icon) icon.classList.toggle('unread', has);
 }
 
 function setFbType(type) {
