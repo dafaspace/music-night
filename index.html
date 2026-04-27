@@ -553,12 +553,12 @@
     /* ── Empty State ────────────────────────────────────────────────── */
     .empty-state {
       text-align: center;
-      padding: 48px 24px;
+      padding: 20px 24px;
       color: var(--muted);
     }
     .empty-state-icon {
       font-size: 44px;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
       opacity: 0.6;
     }
     .empty-state-title {
@@ -569,7 +569,7 @@
       margin-bottom: 6px;
     }
     .empty-state p {
-      font-size: 13px;
+      font-size: 11px;
       line-height: 1.6;
       margin-bottom: 20px;
     }
@@ -910,6 +910,7 @@
       display: inline-block;
       line-height: 1;
       vertical-align: text-bottom;
+      top: -2px;
     }
     #feedback-icon { font-size: 26px; display: block; line-height: 1; transition: color 0.2s, text-shadow 0.2s; }
     #feedback-icon.unread {
@@ -1372,7 +1373,7 @@
           </div>
           <button class="btn btn-secondary btn-sm" id="btn-parse-link" style="white-space:nowrap">↵ Fill</button>
         </div>
-        <div style="margin-top:16px;text-align:center">
+        <div style="margin-top:8px;text-align:center">
           <div style="font-size:11px;color:var(--muted);font-family:DM Sans;margin-bottom:10px;letter-spacing:0.3px">or let me hear</div>
           <button id="btn-audd" title="Identify song playing nearby" style="
             width:68px;height:68px;border-radius:50%;border:none;cursor:pointer;
@@ -1442,9 +1443,8 @@
         <button class="btn btn-primary" id="btn-add-track" disabled style="opacity:0.4;cursor:not-allowed">+ Add to Playlist</button>
       </div>
 
-      <div id="search-empty" style="padding:24px 0">
+      <div id="search-empty" style="padding:8px 0">
         <div class="empty-state">
-          <div class="empty-state-icon" style="font-size:0;margin-bottom:14px"><svg width="72" height="72" viewBox="0 0 72 72" fill="none"><rect width="72" height="72" rx="18" fill="rgba(124,58,237,0.12)"/><circle cx="34" cy="33" r="13" stroke="rgba(124,58,237,0.55)" stroke-width="3"/><line x1="43.5" y1="42.5" x2="52" y2="51" stroke="rgba(124,58,237,0.55)" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="20" r="1.5" fill="rgba(124,58,237,0.4)"/><circle cx="48" cy="16" r="1" fill="rgba(124,58,237,0.3)"/><circle cx="52" cy="28" r="1.5" fill="rgba(124,58,237,0.3)"/></svg></div>
           <div class="empty-state-title">Find a Track</div>
           <p>Enter an artist and track name above to see streaming links and add it to a playlist.</p>
         </div>
