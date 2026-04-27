@@ -1932,9 +1932,13 @@ async function submitFeedback() {
     if (error) throw new Error(error.message);
     const inserted = data?.[0];
     if (inserted?.id) {
+      const { data: { session } } = await sbClient.auth.getSession();
       fetch(MUSIC_NIGHT_WORKER + '/feedback-notify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + session?.access_token,
+        },
         body: JSON.stringify({
           feedback_id: inserted.id,
           type:        _fbType,
