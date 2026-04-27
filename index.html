@@ -905,22 +905,21 @@
       transition: color 0.15s, background 0.15s;
     }
     .feedback-topbar-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-    #feedback-icon { font-size: 14px; transition: all 0.2s; }
+    #feedback-icon { font-size: 14px; }
     .feedback-badge {
       display: none;
-      position: absolute;
-      top: -3px; right: -3px;
-      width: 8px; height: 8px;
+      width: 7px; height: 7px;
       background: #a78bfa;
       border-radius: 50%;
       box-shadow: 0 0 6px #a78bfa;
+      flex-shrink: 0;
       animation: badge-pulse 1.8s ease-in-out infinite;
     }
     @keyframes badge-pulse {
       0%, 100% { transform: scale(1); opacity: 1; }
       50% { transform: scale(1.4); opacity: 0.6; }
     }
-    .feedback-badge.visible { display: block; }
+    .feedback-badge.visible { display: inline-block; }
     /* ── Feedback reply card ─────────────────────────────────────────── */
     .fb-reply-card {
       margin-top: 10px;
@@ -1315,11 +1314,9 @@
       <div class="topbar-logo"><span>MUSIC</span> NIGHT</div>
       <div class="topbar-actions">
         <button class="feedback-topbar-btn" id="btn-open-feedback" title="Feedback">
-          <span style="position:relative;display:inline-flex;align-items:center">
-            <span id="feedback-icon" style="line-height:1">✉</span>
-            <span id="feedback-badge" class="feedback-badge"></span>
-          </span>
-          <span id="feedback-label" style="font-size:11px;color:var(--muted);line-height:1">Feedback</span>
+          <span id="feedback-icon">✉</span>
+          <span id="feedback-badge" class="feedback-badge"></span>
+          <span style="font-size:11px;color:var(--muted)">Feedback</span>
         </button>
         <button class="avatar-btn" id="btn-avatar" title="Account">U</button>
       </div>
