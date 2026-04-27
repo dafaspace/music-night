@@ -1660,7 +1660,7 @@
 </div><!-- /app -->
 
 <!-- Feedback Modal — outside app so it works on all screens -->
-<div id="overlay-feedback" class="overlay" style="display:none" onclick="closeFeedback()">
+<div id="overlay-feedback" class="overlay" onclick="closeFeedback()">
   <div style="padding:20px;width:100%;display:flex;justify-content:center;cursor:default" onclick="event.stopPropagation()">
     <div class="feedback-modal">
       <div style="font-family:'Bebas Neue',cursive;color:var(--primary);font-size:12px;letter-spacing:2px;margin-bottom:3px">FEEDBACK</div>
@@ -1872,11 +1872,11 @@ function openFeedback() {
   document.getElementById('fb-message').value = '';
   setFbType('other');
   loadFeedbackReplies();
-  document.getElementById('overlay-feedback').style.display = 'flex';
+  openModal('overlay-feedback');
 }
 
 function closeFeedback() {
-  document.getElementById('overlay-feedback').style.display = 'none';
+  closeModal('overlay-feedback');
 }
 
 function setFeedbackUnread(has) {
