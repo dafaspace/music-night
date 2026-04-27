@@ -1861,7 +1861,7 @@ async function loadDiscover() {
 document.getElementById('btn-avatar').addEventListener('click', () => openModal('overlay-account'));
 
 // ── Feedback ──────────────────────────────────────────────────────────
-const MUSIC_NIGHT_WORKER = 'https://music-night-odesli.dafa4me.workers.dev';
+const MUSIC_NIGHT_WORKER = 'https://movie-night-proxy.dafa4me.workers.dev';
 let _fbType = 'other';
 
 document.getElementById('btn-open-feedback').addEventListener('click', openFeedback);
@@ -2065,7 +2065,7 @@ const TOP_PLATFORMS = 4;
 let platformsExpanded = false;
 
 // ── Odesli (song.link) integration ───────────────────────────────────
-const ODESLI_WORKER = 'https://music-night-odesli.dafa4me.workers.dev/';
+const ODESLI_WORKER = 'https://movie-night-proxy.dafa4me.workers.dev/';
 const odesliCache = new Map();
 
 const ODESLI_PLATFORM_MAP = {
@@ -2996,7 +2996,7 @@ document.getElementById('btn-parse-link').addEventListener('click', async () => 
   pendingDirectUrls = null;
   try {
     // Fetch meta first
-    const metaRes = await fetch(`https://music-night-odesli.dafa4me.workers.dev/meta?url=${encodeURIComponent(raw)}`).then(r => r.json());
+    const metaRes = await fetch(`https://movie-night-proxy.dafa4me.workers.dev/meta?url=${encodeURIComponent(raw)}`).then(r => r.json());
 
     if (!metaRes || metaRes.error) { showToast('❌ Could not parse link'); return; }
     if (metaRes.artist) document.getElementById('search-artist').value = metaRes.artist;
@@ -3017,7 +3017,7 @@ document.getElementById('btn-parse-link').addEventListener('click', async () => 
     // Fetch odesli in background with delay to avoid rate limit
     setTimeout(async () => {
       try {
-        const odesli = await fetch(`https://music-night-odesli.dafa4me.workers.dev/?url=${encodeURIComponent(raw)}`).then(r => r.json());
+        const odesli = await fetch(`https://movie-night-proxy.dafa4me.workers.dev/?url=${encodeURIComponent(raw)}`).then(r => r.json());
         if (odesli && odesli.linksByPlatform) {
           pendingDirectUrls = {};
           for (const [platform, info] of Object.entries(odesli.linksByPlatform)) {
