@@ -1656,30 +1656,31 @@
     </div>
   </div>
 
-  <!-- Feedback Modal -->
-  <div id="overlay-feedback" class="overlay" style="display:none" onclick="closeFeedback()">
-    <div style="padding:20px;width:100%;display:flex;justify-content:center;cursor:default" onclick="event.stopPropagation()">
-      <div class="feedback-modal">
-        <div style="font-family:'Bebas Neue',cursive;color:var(--primary);font-size:12px;letter-spacing:2px;margin-bottom:3px">FEEDBACK</div>
-        <div style="font-family:'Bebas Neue',cursive;font-size:19px;margin-bottom:14px;line-height:1.2">Share a thought or report a bug</div>
-        <div class="feedback-modal-label">Type</div>
-        <div style="display:flex;gap:8px;margin-bottom:14px">
-          <button id="fb-type-bug"   onclick="setFbType('bug')"   class="fb-type-btn">🔧 Bug</button>
-          <button id="fb-type-idea"  onclick="setFbType('idea')"  class="fb-type-btn">💡 Idea</button>
-          <button id="fb-type-other" onclick="setFbType('other')" class="fb-type-btn">💬 Other</button>
-        </div>
-        <div class="feedback-modal-label">Message</div>
-        <textarea id="fb-message" class="feedback-textarea" placeholder="Tell me what's on your mind…"></textarea>
-        <div id="fb-replies" style="display:none;margin-bottom:14px"></div>
-        <div style="display:flex;gap:9px">
-          <button class="fb-btn-cancel" onclick="closeFeedback()">Cancel</button>
-          <button class="fb-btn-send" id="fb-submit-btn" onclick="submitFeedback()">SEND</button>
-        </div>
+
+</div><!-- /app -->
+
+<!-- Feedback Modal — outside app so it works on all screens -->
+<div id="overlay-feedback" class="overlay" style="display:none" onclick="closeFeedback()">
+  <div style="padding:20px;width:100%;display:flex;justify-content:center;cursor:default" onclick="event.stopPropagation()">
+    <div class="feedback-modal">
+      <div style="font-family:'Bebas Neue',cursive;color:var(--primary);font-size:12px;letter-spacing:2px;margin-bottom:3px">FEEDBACK</div>
+      <div style="font-family:'Bebas Neue',cursive;font-size:19px;margin-bottom:14px;line-height:1.2">Share a thought or report a bug</div>
+      <div class="feedback-modal-label">Type</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button id="fb-type-bug"   onclick="setFbType('bug')"   class="fb-type-btn">🔧 Bug</button>
+        <button id="fb-type-idea"  onclick="setFbType('idea')"  class="fb-type-btn">💡 Idea</button>
+        <button id="fb-type-other" onclick="setFbType('other')" class="fb-type-btn">💬 Other</button>
+      </div>
+      <div class="feedback-modal-label">Message</div>
+      <textarea id="fb-message" class="feedback-textarea" placeholder="Tell me what's on your mind…"></textarea>
+      <div id="fb-replies" style="display:none;margin-bottom:14px"></div>
+      <div style="display:flex;gap:9px">
+        <button class="fb-btn-cancel" onclick="closeFeedback()">Cancel</button>
+        <button class="fb-btn-send" id="fb-submit-btn" onclick="submitFeedback()">SEND</button>
       </div>
     </div>
   </div>
-
-</div><!-- /app -->
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
