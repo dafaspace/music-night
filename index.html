@@ -909,16 +909,17 @@
       position: relative;
       display: inline-block;
       line-height: 1;
+      vertical-align: text-bottom;
     }
-    #feedback-icon { font-size: 13px; display: block; line-height: 1; }
+    #feedback-icon { font-size: 26px; display: block; line-height: 1; }
     .feedback-badge {
       display: none;
       position: absolute;
-      top: -1px; right: -2px;
-      width: 5px; height: 5px;
+      top: 1px; right: 0px;
+      width: 3px; height: 3px;
       background: #a78bfa;
       border-radius: 50%;
-      box-shadow: 0 0 4px #a78bfa;
+      box-shadow: 0 0 3px #a78bfa;
       animation: badge-pulse 1.8s ease-in-out infinite;
     }
     @keyframes badge-pulse {
