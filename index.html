@@ -892,8 +892,8 @@
     /* ── Feedback button in topbar ──────────────────────────────────── */
     .feedback-topbar-btn {
       display: inline-flex;
-      align-items: center;
-      gap: 5px;
+      align-items: flex-end;
+      gap: 4px;
       background: none;
       border: none;
       cursor: pointer;
@@ -905,21 +905,27 @@
       transition: color 0.15s, background 0.15s;
     }
     .feedback-topbar-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-    #feedback-icon { font-size: 14px; }
+    #feedback-icon-wrap {
+      position: relative;
+      display: inline-block;
+      line-height: 1;
+    }
+    #feedback-icon { font-size: 13px; display: block; line-height: 1; }
     .feedback-badge {
       display: none;
-      width: 7px; height: 7px;
+      position: absolute;
+      top: -1px; right: -2px;
+      width: 5px; height: 5px;
       background: #a78bfa;
       border-radius: 50%;
-      box-shadow: 0 0 6px #a78bfa;
-      flex-shrink: 0;
+      box-shadow: 0 0 4px #a78bfa;
       animation: badge-pulse 1.8s ease-in-out infinite;
     }
     @keyframes badge-pulse {
       0%, 100% { transform: scale(1); opacity: 1; }
       50% { transform: scale(1.4); opacity: 0.6; }
     }
-    .feedback-badge.visible { display: inline-block; }
+    .feedback-badge.visible { display: block; }
     /* ── Feedback reply card ─────────────────────────────────────────── */
     .fb-reply-card {
       margin-top: 10px;
@@ -1314,9 +1320,11 @@
       <div class="topbar-logo"><span>MUSIC</span> NIGHT</div>
       <div class="topbar-actions">
         <button class="feedback-topbar-btn" id="btn-open-feedback" title="Feedback">
-          <span id="feedback-icon">✉</span>
-          <span id="feedback-badge" class="feedback-badge"></span>
-          <span style="font-size:11px;color:var(--muted)">Feedback</span>
+          <span id="feedback-icon-wrap">
+            <span id="feedback-icon">✉</span>
+            <span id="feedback-badge" class="feedback-badge"></span>
+          </span>
+          <span style="font-size:11px;color:var(--muted);line-height:1">Feedback</span>
         </button>
         <button class="avatar-btn" id="btn-avatar" title="Account">U</button>
       </div>
