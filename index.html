@@ -325,6 +325,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 16px;
       margin-bottom: 14px;
     }
     .section-title {
@@ -377,8 +378,12 @@
       font-size: 11px;
       letter-spacing: 0.5px;
       border-radius: 4px;
-      padding: 2px 7px;
+      padding: 0 7px;
+      height: 20px;
+      white-space: nowrap;
     }
+    .badge svg { flex-shrink: 0; }
+    .badge-text { position: relative; top: 1px; }
     .badge-public {
       background: rgba(124,58,237,0.15);
       color: #a78bfa;
@@ -386,8 +391,10 @@
     }
     .badge-private {
       background: rgba(255,255,255,0.05);
-      color: var(--muted);
-      border: 1px solid var(--border);
+      color: #777;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+      border: 1px solid rgba(124,58,237,0.2);
     }
 
 
@@ -1284,7 +1291,7 @@
         <!-- Bug + Coffee row -->
         <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
           <div class="public-footer-actions">
-            <a href="/cdn-cgi/l/email-protection#98fefdfdfcfaf9fbf3d8fcf9fef9ebe8f9fbfdb6fbf7f5a7ebedfaf2fdfbeca5d5edebf1fbb8d6f1fff0ecb8faedffb8eafde8f7eaec" class="public-footer-btn" title="Report a bug">
+            <a href="/cdn-cgi/l/email-protection#d3b5b6b6b7b1b2b0b893b7b2b5b2a0a3b2b0b6fdb0bcbeeca0a6b1b9b6b0a7ee9ea6a0bab0f39dbab4bba7f3b1a6b4f3a1b6a3bca1a7" class="public-footer-btn" title="Report a bug">
               🔧 Found a bug?
             </a>
             <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn" title="Wanna say thanks?">
@@ -1319,7 +1326,7 @@
       <div class="public-footer-cta">
         <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
           <div class="public-footer-actions">
-            <a href="/cdn-cgi/l/email-protection#44222121202625272f042025222537342527216a272b297b3731262e212730790931372d27640a2d232c3064263123643621342b3630" class="public-footer-btn" title="Report a bug">
+            <a href="/cdn-cgi/l/email-protection#deb8bbbbbabcbfbdb59ebabfb8bfadaebfbdbbf0bdb1b3e1adabbcb4bbbdaae393abadb7bdfe90b7b9b6aafebcabb9feacbbaeb1acaa" class="public-footer-btn" title="Report a bug">
               🔧 Found a bug?
             </a>
             <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn">
@@ -2431,8 +2438,8 @@ function renderPlaylists() {
           <div class="card-title">${escHtml(p.name)}</div>
           <div class="card-meta" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px">
             ${p.is_public
-              ? `<span class="badge badge-public">🌐 Public</span>`
-              : `<span class="badge badge-private">🔒 Private</span>`}
+              ? `<span class="badge badge-public"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span class="badge-text">Public</span></span>`
+              : `<span class="badge badge-private"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="badge-text" style="position:relative;top:2px">Private</span></span>`}
             <span>${(() => {
               if (p._trackCount) return p._trackCount + ' track' + (p._trackCount !== 1 ? 's' : '');
               if (p.spotify_url || p.spotify_playlist_id) return SVG_ICONS.spotify + ' Spotify';
@@ -2445,9 +2452,9 @@ function renderPlaylists() {
         </div>
         <div class="card-actions" onclick="event.stopPropagation()">
           ${p.is_public && p.public_slug ? `
-          <button class="btn btn-icon btn-ghost" onclick="copyPublicLink('${p.public_slug}')" title="Copy link">🔗</button>` : ''}
-          <button class="btn btn-icon btn-ghost" onclick="openEditPlaylist('${p.id}')" title="Edit">✎</button>
-          <button class="btn btn-icon btn-ghost" style="color:#f87171" onclick="deletePlaylist('${p.id}')" title="Delete">✕</button>
+          <button class="btn btn-icon btn-ghost" onclick="copyPublicLink('${p.public_slug}')" title="Copy link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>` : ''}
+          <button class="btn btn-icon btn-ghost" onclick="openEditPlaylist('${p.id}')" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="btn btn-icon btn-ghost" style="color:#f87171" onclick="deletePlaylist('${p.id}')" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
         </div>
       </div>
       ${p.description ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">${escHtml(p.description)}</div>` : ''}
