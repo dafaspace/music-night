@@ -383,6 +383,7 @@
       white-space: nowrap;
     }
     .badge svg { flex-shrink: 0; }
+    .badge-text { position: relative; top: 1px; }
     .badge-public {
       background: rgba(124,58,237,0.15);
       color: #a78bfa;
@@ -1935,7 +1936,7 @@ async function loadDiscover() {
             <div>
               <div class="card-title">${escHtml(p.name)}</div>
               <div class="card-meta" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px">
-                <span>${trackMeta}</span>
+                <span style="display:inline-flex;align-items:center">${trackMeta}</span>
                 ${authorHtml ? `<span style="color:var(--muted)">${authorHtml}</span>` : ''}
               </div>
             </div>
