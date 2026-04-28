@@ -829,6 +829,25 @@
       border-bottom-color: var(--primary);
     }
 
+    /* ── Sort pills ─────────────────────────────────────────────────── */
+    .sort-pill {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      padding: 3px 10px;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .sort-pill.active {
+      background: rgba(124,58,237,0.15);
+      border-color: var(--primary-border);
+      color: var(--primary);
+    }
+
     /* ── Drag handle ────────────────────────────────────────────────── */
     .drag-handle {
       cursor: grab;
@@ -1457,6 +1476,12 @@
         <span class="section-title">My Playlists</span>
         <button class="btn btn-primary btn-sm" id="btn-new-playlist">+ New</button>
       </div>
+      <div id="playlists-sort-bar" style="display:flex;gap:6px;margin-bottom:12px">
+        <button class="sort-pill active" data-sort="position">Custom</button>
+        <button class="sort-pill" data-sort="date">Date</button>
+        <button class="sort-pill" data-sort="alpha">A → Z</button>
+        <button class="sort-pill" data-sort="tracks">Tracks</button>
+      </div>
       <div id="playlists-list">
         <div class="loading-dots"><span></span><span></span><span></span></div>
       </div>
@@ -1919,6 +1944,7 @@ async function loadDiscover() {
             <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();copyPublicLink('${p.public_slug}')">Copy Link</button>
           </div>
           ${p.description ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">${escHtml(p.description)}</div>` : ''}
+          <div style="font-size:10px;color:var(--muted);margin-top:5px;opacity:0.6">${fmtDate(p.created_at)}</div>
         </div>`;
     }).join('');
     discoverLoaded = true;
@@ -2417,8 +2443,9 @@ function renderPlaylists() {
     return;
   }
   container.innerHTML = playlists.map(p => `
-    <div class="card" data-id="${p.id}" style="cursor:pointer" onclick="openPlaylistDetail('${p.id}')">
+    <div class="card" data-playlist-id="${p.id}" style="cursor:pointer" onclick="openPlaylistDetail('${p.id}')">
       <div class="card-header">
+        <span class="drag-handle" onclick="event.stopPropagation()" title="Drag to reorder">⠿</span>
         <div style="flex:1;min-width:0">
           <div class="card-title">${escHtml(p.name)}</div>
           <div class="card-meta" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px">
@@ -2443,12 +2470,70 @@ function renderPlaylists() {
         </div>
       </div>
       ${p.description ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">${escHtml(p.description)}</div>` : ''}
+      <div style="font-size:10px;color:var(--muted);margin-top:5px;opacity:0.6">${fmtDate(p.created_at)}</div>
     </div>`).join('');
 
   updatePlaylistSelect();
+  initPlaylistSortable();
 }
 
-// ── Playlists: render My Public tab ──────────────────────────────────
+let playlistSortable = null;
+function initPlaylistSortable() {
+  if (playlistSortable) { playlistSortable.destroy(); playlistSortable = null; }
+  const container = document.getElementById('playlists-list');
+  if (!container || !playlists.length) return;
+  const isDrag = currentSort === 'position';
+  playlistSortable = Sortable.create(container, {
+    handle: '.drag-handle',
+    animation: 150,
+    ghostClass: 'sortable-ghost',
+    dragClass: 'sortable-drag',
+    disabled: !isDrag,
+    onEnd: async (evt) => {
+      if (evt.oldIndex === evt.newIndex) return;
+      const items = container.querySelectorAll('[data-playlist-id]');
+      const updates = Array.from(items).map((el, idx) => ({
+        id: el.dataset.playlistId,
+        position: idx
+      }));
+      playlists = updates.map(u => ({ ...playlists.find(p => p.id === u.id), position: u.position }));
+      try {
+        await Promise.all(updates.map(u =>
+          sbClient.from('music_playlists').update({ position: u.position }).eq('id', u.id)
+        ));
+      } catch (err) {
+        showToast('Error saving order');
+        loadPlaylists();
+      }
+    }
+  });
+}
+
+// ── Playlists: sort pills ─────────────────────────────────────────────
+let currentSort = 'position';
+document.querySelectorAll('.sort-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentSort = btn.dataset.sort;
+    document.querySelectorAll('.sort-pill').forEach(b => b.classList.toggle('active', b === btn));
+    const isDrag = currentSort === 'position';
+    if (playlistSortable) { playlistSortable.option('disabled', !isDrag); }
+    const handles = document.querySelectorAll('#playlists-list .drag-handle');
+    handles.forEach(h => h.style.opacity = isDrag ? '' : '0.2');
+    handles.forEach(h => h.style.pointerEvents = isDrag ? '' : 'none');
+    const sorted = [...playlists].sort((a, b) => {
+      if (currentSort === 'alpha') return a.name.localeCompare(b.name);
+      if (currentSort === 'tracks') return (b._trackCount || 0) - (a._trackCount || 0);
+      if (currentSort === 'date') return new Date(b.created_at) - new Date(a.created_at);
+      return (a.position ?? 9999) - (b.position ?? 9999);
+    });
+    const container = document.getElementById('playlists-list');
+    sorted.forEach(p => {
+      const el = container.querySelector(`[data-playlist-id="${p.id}"]`);
+      if (el) container.appendChild(el);
+    });
+  });
+});
+
 // ── Playlists: update select in search tab ────────────────────────────
 function updatePlaylistSelect() {
   const sel = document.getElementById('search-playlist-select');
@@ -2465,6 +2550,7 @@ async function loadPlaylists() {
       .from('music_playlists')
       .select('*, playlist_tracks(count)')
       .eq('user_id', currentUser.id)
+      .order('position', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false });
     if (error) throw error;
     playlists = (data || []).map(p => ({
@@ -2876,6 +2962,17 @@ async function saveDirectLinks(trackId, playlistId, saveBtn) {
 }
 
 // ── Utility: escape HTML ──────────────────────────────────────────────
+function fmtDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso), now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  if (diff < 86400 * 6) return Math.floor(diff / 86400) + 'd ago';
+  return d.toLocaleDateString('en', { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+}
+
 function escHtml(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
