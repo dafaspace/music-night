@@ -1462,25 +1462,10 @@
       </div>
     </div>
 
-    <!-- ── TAB: Shared ──────────────────────────────────────────────── -->
+    <!-- ── TAB: Discover ────────────────────────────────────────────── -->
     <div id="tab-shared" class="tab-panel">
-      <div class="shared-tabs">
-        <button class="shared-tab-btn active" data-shared-tab="my-public">My Public</button>
-        <button class="shared-tab-btn" data-shared-tab="discover">Discover</button>
-      </div>
-      <div id="shared-my-public">
-        <div id="my-public-list">
-          <div class="empty-state">
-            <div class="empty-state-icon">🌐</div>
-            <div class="empty-state-title">No Public Playlists</div>
-            <p>Make a playlist public to share it with anyone — no account needed to view.</p>
-          </div>
-        </div>
-      </div>
-      <div id="shared-discover" style="display:none">
-        <div id="discover-list">
-          <div class="loading-dots"><span></span><span></span><span></span></div>
-        </div>
+      <div id="discover-list">
+        <div class="loading-dots"><span></span><span></span><span></span></div>
       </div>
     </div>
 
@@ -1495,8 +1480,8 @@
         <span>Playlists</span>
       </button>
       <button class="tab-btn" data-tab="shared">
-        <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></span>
-        <span>Shared</span>
+        <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span>
+        <span>Discover</span>
       </button>
     </nav>
 
@@ -1792,6 +1777,7 @@ function showScreen(name) {
 function showTab(name) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+  if (name === 'shared') loadDiscover();
 }
 
 // ── Modal management ──────────────────────────────────────────────────
@@ -1862,16 +1848,6 @@ document.querySelectorAll('.overlay').forEach(overlay => {
   });
 });
 
-// ── Shared sub-tabs ───────────────────────────────────────────────────
-document.querySelectorAll('.shared-tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.shared-tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('shared-my-public').style.display = btn.dataset.sharedTab === 'my-public' ? '' : 'none';
-    document.getElementById('shared-discover').style.display = btn.dataset.sharedTab === 'discover' ? '' : 'none';
-    if (btn.dataset.sharedTab === 'discover') { discoverLoaded = false; loadDiscover(); }
-  });
-});
 
 // ── Discover ──────────────────────────────────────────────────────────
 let discoverLoaded = false;
@@ -2469,39 +2445,10 @@ function renderPlaylists() {
       ${p.description ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">${escHtml(p.description)}</div>` : ''}
     </div>`).join('');
 
-  // Also update shared tab
-  renderMyPublic();
-  // Update search playlist select
   updatePlaylistSelect();
 }
 
 // ── Playlists: render My Public tab ──────────────────────────────────
-function renderMyPublic() {
-  const container = document.getElementById('my-public-list');
-  const pub = playlists.filter(p => p.is_public);
-  if (!pub.length) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">🌐</div>
-        <div class="empty-state-title">No Public Playlists</div>
-        <p>Make a playlist public to share it with anyone — no account needed to view.</p>
-      </div>`;
-    return;
-  }
-  const base = `https://dafaspace.github.io/music-night/`;
-  container.innerHTML = pub.map(p => `
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <div class="card-title">${escHtml(p.name)}</div>
-          <div class="card-meta">${p._trackCount || 0} track${p._trackCount !== 1 ? 's' : ''}</div>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="copyPublicLink('${p.public_slug}')">Copy Link</button>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:6px;word-break:break-all">${base}?p=${p.public_slug}</div>
-    </div>`).join('');
-}
-
 // ── Playlists: update select in search tab ────────────────────────────
 function updatePlaylistSelect() {
   const sel = document.getElementById('search-playlist-select');
