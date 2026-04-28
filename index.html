@@ -1924,12 +1924,23 @@ async function loadDiscover() {
       const authorHtml = author
         ? `· by ${escHtml(author)}${username ? ` <a href="?u=${escHtml(username)}" style="color:#a78bfa;text-decoration:none">@${escHtml(username)}</a>` : ''}`
         : '';
+      const trackMeta = (() => {
+        if (count) return count + ' track' + (count !== 1 ? 's' : '');
+        if (p.spotify_url || p.spotify_playlist_id) return SVG_ICONS.spotify + ' Spotify';
+        if (p.apple_music_url) return SVG_ICONS.apple + ' Apple Music';
+        if (p.deezer_url) return SVG_ICONS.deezer + ' Deezer';
+        if (p.soundcloud_url) return SVG_ICONS.soundcloud + ' SoundCloud';
+        return '0 tracks';
+      })();
       return `
         <div class="card" style="cursor:pointer" onclick="window.location.href='?p=${p.public_slug}'">
           <div class="card-header">
             <div>
               <div class="card-title">${escHtml(p.name)}</div>
-              <div class="card-meta">${count} track${count !== 1 ? 's' : ''} ${authorHtml}</div>
+              <div class="card-meta" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px">
+                <span>${trackMeta}</span>
+                ${authorHtml ? `<span style="color:var(--muted)">${authorHtml}</span>` : ''}
+              </div>
             </div>
             <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();copyPublicLink('${p.public_slug}')">Copy Link</button>
           </div>
@@ -2439,7 +2450,7 @@ function renderPlaylists() {
           <div class="card-meta" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px">
             ${p.is_public
               ? `<span class="badge badge-public"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span class="badge-text">Public</span></span>`
-              : `<span class="badge badge-private"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="badge-text" style="position:relative;top:2px">Private</span></span>`}
+              : `<span class="badge badge-private"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="badge-text">Private</span></span>`}
             <span>${(() => {
               if (p._trackCount) return p._trackCount + ' track' + (p._trackCount !== 1 ? 's' : '');
               if (p.spotify_url || p.spotify_playlist_id) return SVG_ICONS.spotify + ' Spotify';
