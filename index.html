@@ -640,20 +640,20 @@
       letter-spacing: 1px;
     }
     .modal-close {
-      background: rgba(255,255,255,0.07);
-      border: none;
-      color: var(--muted);
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      font-size: 16px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--text);
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.15s;
+      flex-shrink: 0;
+      transition: border-color 0.15s, background 0.15s;
     }
-    .modal-close:hover { background: rgba(255,255,255,0.12); }
+    .modal-close:hover { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.05); }
 
     .modal-body { padding: 20px; }
 
@@ -1522,7 +1522,7 @@
       <div class="modal-handle"></div>
       <div class="modal-header">
         <span class="modal-title" id="modal-playlist-title">New Playlist</span>
-        <button class="modal-close" data-close="overlay-playlist">✕</button>
+        <button class="modal-close" data-close="overlay-playlist"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body">
         <div class="form-group">
@@ -1580,7 +1580,7 @@
         </div>
         <div style="display:flex;gap:6px;align-items:center">
           <button class="btn btn-secondary btn-sm" id="btn-detail-edit">Edit</button>
-          <button class="modal-close" data-close="overlay-playlist-detail">✕</button>
+          <button class="modal-close" data-close="overlay-playlist-detail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
       </div>
       <div class="modal-body" style="padding-bottom:8px">
@@ -1611,7 +1611,7 @@
       <div class="modal-handle"></div>
       <div class="modal-header">
         <span class="modal-title">Import from Spotify</span>
-        <button class="modal-close" data-close="overlay-spotify">✕</button>
+        <button class="modal-close" data-close="overlay-spotify"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body" id="spotify-modal-body">
         <!-- Step 1: Connect -->
@@ -1646,7 +1646,7 @@
       <div class="modal-handle"></div>
       <div class="modal-header">
         <span class="modal-title">Import Tracks</span>
-        <button class="modal-close" data-close="overlay-import">✕</button>
+        <button class="modal-close" data-close="overlay-import"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body">
         <!-- Source tabs -->
@@ -1704,7 +1704,7 @@
       <div class="modal-handle"></div>
       <div class="modal-header">
         <span class="modal-title">Account</span>
-        <button class="modal-close" data-close="overlay-account">✕</button>
+        <button class="modal-close" data-close="overlay-account"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body">
         <div style="text-align:center;padding:8px 0 20px">
@@ -1736,7 +1736,7 @@
       <div class="modal-handle"></div>
       <div class="modal-header">
         <span class="modal-title" id="confirm-title">Are you sure?</span>
-        <button class="modal-close" data-close="overlay-confirm">✕</button>
+        <button class="modal-close" data-close="overlay-confirm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body">
         <p style="color:var(--muted);font-size:14px" id="confirm-text">This action cannot be undone.</p>
@@ -2825,8 +2825,8 @@ function renderTrackList(tracks, playlistId) {
         </div>
         <div class="track-actions" style="display:flex;align-items:center;gap:4px">
           ${t.duration_ms ? `<span style="font-size:11px;color:var(--muted)">${fmtDuration(t.duration_ms)}</span>` : ''}
-          <button class="btn btn-icon btn-ghost" style="color:#f87171;font-size:12px" title="Remove"
-            onclick="deleteTrack('${t.id}','${playlistId}')">✕</button>
+          <button class="btn btn-icon btn-ghost" style="color:#f87171" title="Remove"
+            onclick="deleteTrack('${t.id}','${playlistId}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
       </div>
       <div class="platform-links" style="margin-top:8px">${topLinks}</div>
