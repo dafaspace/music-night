@@ -383,7 +383,6 @@
       white-space: nowrap;
     }
     .badge svg { flex-shrink: 0; }
-    .badge-text { position: relative; top: 1px; }
     .badge-public {
       background: rgba(124,58,237,0.15);
       color: #a78bfa;
@@ -393,8 +392,6 @@
       background: rgba(255,255,255,0.05);
       color: #777;
       border: 1px solid rgba(255,255,255,0.1);
-    }
-      border: 1px solid rgba(124,58,237,0.2);
     }
 
 
@@ -1926,10 +1923,10 @@ async function loadDiscover() {
         : '';
       const trackMeta = (() => {
         if (count) return count + ' track' + (count !== 1 ? 's' : '');
-        if (p.spotify_url || p.spotify_playlist_id) return SVG_ICONS.spotify + ' Spotify';
-        if (p.apple_music_url) return SVG_ICONS.apple + ' Apple Music';
-        if (p.deezer_url) return SVG_ICONS.deezer + ' Deezer';
-        if (p.soundcloud_url) return SVG_ICONS.soundcloud + ' SoundCloud';
+        if (p.spotify_url || p.spotify_playlist_id) return SVG_ICONS.spotify;
+        if (p.apple_music_url) return SVG_ICONS.apple;
+        if (p.deezer_url) return SVG_ICONS.deezer;
+        if (p.soundcloud_url) return SVG_ICONS.soundcloud;
         return '0 tracks';
       })();
       return `
