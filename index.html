@@ -3061,7 +3061,8 @@ document.getElementById('btn-new-playlist-inline').addEventListener('click', () 
 });
 
 // ── AudD Music Recognition ───────────────────────────────────────────
-const AUDD_TOKEN = 'ac0579244d601709446cf43a16f4753f';
+// The AudD token lives in the worker, not here: anything in this file is
+// public, and a leaked token is someone else spending our recognition quota.
 let auddRecording = false;
 let auddMediaRecorder = null;
 let auddChunks = [];
@@ -3109,16 +3110,28 @@ document.getElementById('btn-audd').addEventListener('click', async () => {
         const blob = new Blob(auddChunks, { type: 'audio/webm' });
         const formData = new FormData();
         formData.append('file', blob, 'recording.webm');
-        formData.append('api_token', AUDD_TOKEN);
-        formData.append('return', 'apple_music,spotify,deezer');
-        formData.append('file', blob, 'recording.webm');
-        formData.append('api_token', AUDD_TOKEN);
-        formData.append('return', 'apple_music,spotify,deezer');
 
-        const res = await fetch('https://api.audd.io/', { method: 'POST', body: formData });
+        const { data: { session } } = await sbClient.auth.getSession();
+        const res = await fetch(MUSIC_NIGHT_WORKER + '/recognize', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + session?.access_token },
+          body: formData,
+        });
         const data = await res.json();
 
         if (data.status !== 'success' || !data.result) {
+          // A real reason - out of credits, signed out, service down - must be
+          // said plainly. "I didn't catch that" would send you on retrying
+          // something that cannot succeed.
+          const reason = typeof data.error === 'string'
+            ? data.error
+            : data.error?.error_message;
+          if (reason) {
+            auddStatus('❌ ' + reason);
+            setTimeout(() => auddStatus(''), 6000);
+            auddRecording = false;
+            return;
+          }
           const failPhrases = [
             "I'm dancing too hard to hear! Again?",
             "Too much noise — try again?",
