@@ -1308,7 +1308,7 @@
         <!-- Bug + Coffee row -->
         <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
           <div class="public-footer-actions">
-            <a href="/cdn-cgi/l/email-protection#d3b5b6b6b7b1b2b0b893b7b2b5b2a0a3b2b0b6fdb0bcbeeca0a6b1b9b6b0a7ee9ea6a0bab0f39dbab4bba7f3b1a6b4f3a1b6a3bca1a7" class="public-footer-btn" title="Report a bug">
+            <a href="mailto:feedback@dafaspace.com?subject=Music%20Night%20bug%20report" class="public-footer-btn" title="Report a bug">
               🔧 Found a bug?
             </a>
             <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn" title="Wanna say thanks?">
@@ -1343,7 +1343,7 @@
       <div class="public-footer-cta">
         <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
           <div class="public-footer-actions">
-            <a href="/cdn-cgi/l/email-protection#deb8bbbbbabcbfbdb59ebabfb8bfadaebfbdbbf0bdb1b3e1adabbcb4bbbdaae393abadb7bdfe90b7b9b6aafebcabb9feacbbaeb1acaa" class="public-footer-btn" title="Report a bug">
+            <a href="mailto:feedback@dafaspace.com?subject=Music%20Night%20bug%20report" class="public-footer-btn" title="Report a bug">
               🔧 Found a bug?
             </a>
             <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn">
@@ -1774,7 +1774,7 @@
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
 // ── Config ────────────────────────────────────────────────────────────
@@ -4454,6 +4454,14 @@ if (_profCreate) _profCreate.addEventListener('click', () => {
     }
   });
 })();
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
 </script>
 </body>
 </html>
