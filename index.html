@@ -2315,7 +2315,10 @@ function buildPlatformLinksHtml(artist, trackName, odesliLinks, showAll = false,
     // 3. Fallback to search
     if (!href) href = p.url(artist, trackName);
     const isExact = !!href && !href.includes('/search') && !href.includes('q=') && !href.includes('text=') && !href.includes('query=');
-    return `<a href="${href}" target="_blank" rel="noopener" class="platform-btn"${isExact ? ' style="border-color:rgba(124,58,237,0.4)"' : ''}>
+    // href can come from the user's own direct-link fields or straight from
+    // Odesli and AudD, so it is filtered to a real http(s) URL: a javascript:
+    // value here would run on click, and a quote would open an attribute.
+    return `<a href="${safeUrl(href)}" target="_blank" rel="noopener" class="platform-btn"${isExact ? ' style="border-color:rgba(124,58,237,0.4)"' : ''}>
       <span style="display:inline-flex;align-items:center;gap:5px">${p.icon}<span>${p.name}</span>${isExact ? '<span style="font-size:9px;color:#a78bfa">✓</span>' : ''}</span>
     </a>`;
   }).join('');
@@ -2862,7 +2865,7 @@ function renderTrackList(tracks, playlistId) {
       </div>
       <div class="platform-links" style="margin-top:8px">${topLinks}</div>
       <div style="margin-top:4px;display:flex;align-items:center;gap:10px">
-        <button class="platform-expand" onclick="toggleTrackPlatforms(this,'${escHtml(t.artist)}','${escHtml(t.track_name)}')">+ More</button>
+        <button class="platform-expand" data-artist="${escHtml(t.artist)}" data-track="${escHtml(t.track_name)}" onclick="toggleTrackPlatforms(this)">+ More</button>
       </div>
       <div class="direct-links-wrap">
         <button class="direct-links-toggle" onclick="toggleDirectLinks(this,'${t.id}')">
@@ -2951,7 +2954,13 @@ function renderTrackList(tracks, playlistId) {
 }
 
 // ── Tracks: toggle all platforms for a track ──────────────────────────
-function toggleTrackPlatforms(btn, artist, track) {
+// The artist and track arrive through data-* attributes, not as arguments in
+// an inline onclick. HTML-decodes the attribute before JS ever sees it, so a
+// quote in a track name is data, never code - escaping alone cannot fix a
+// value pasted into a JS string inside an attribute.
+function toggleTrackPlatforms(btn) {
+  const artist = btn.dataset.artist || '';
+  const track = btn.dataset.track || '';
   const expanded = btn.dataset.expanded === '1';
   const linksDiv = btn.closest('.track-item').querySelector('.platform-links');
   if (expanded) {
@@ -3056,8 +3065,29 @@ function fmtDate(iso) {
   return d.toLocaleDateString('en', { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
 }
 
+// Escapes the apostrophe too, so values are safe inside single-quoted HTML
+// attributes such as data-*. It does NOT make a value safe inside an inline
+// onclick: the parser turns &#39; back into a quote before JS is parsed, so
+// the string still breaks out (measured, not assumed). Anything user-supplied
+// that a handler needs goes through a data-* attribute instead.
 function escHtml(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(str || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// Only ever emit a URL we are sure about. Anything else - javascript:, data:,
+// a value with a quote in it - becomes '#'. These URLs arrive from the user's
+// own "add direct links" fields and from Odesli and AudD, so neither source is
+// trusted to be a plain http(s) link.
+function safeUrl(value) {
+  const raw = String(value || '').trim();
+  if (!/^https?:\/\//i.test(raw)) return '#';
+  try {
+    return escHtml(new URL(raw).href);
+  } catch {
+    return '#';
+  }
 }
 
 // ── Add to Playlist button: enable only when playlist selected ───────
@@ -3643,7 +3673,6 @@ async function spotifyExchangeToken(code) {
     })
   });
   const data = await res.json();
-  console.log('[Spotify] token response:', JSON.stringify(data).slice(0, 200));
   if (!res.ok || data.error) {
     throw new Error('Token exchange failed: ' + (data.error_description || data.error || res.status));
   }
@@ -3698,7 +3727,7 @@ async function spotifyGetAllTracks(playlistId, token) {
 function renderSpotifyPlaylists(playlists) {
   const container = document.getElementById('spotify-playlists-list');
   container.innerHTML = playlists.map(p => `
-    <div class="card" style="cursor:pointer;margin-bottom:8px" onclick="importSpotifyPlaylist('${p.id}','${escHtml(p.name)}',${p.tracks?.total ?? 0})">
+    <div class="card" style="cursor:pointer;margin-bottom:8px" data-sp-id="${escHtml(p.id)}" data-sp-name="${escHtml(p.name)}" data-sp-total="${p.tracks?.total ?? 0}" onclick="importSpotifyPlaylist(this.dataset.spId, this.dataset.spName, +this.dataset.spTotal)">
       <div style="display:flex;align-items:center;gap:10px">
         ${p.images?.[0] ? `<img src="${p.images[0].url}" style="width:44px;height:44px;border-radius:6px;object-fit:cover;flex-shrink:0">` : '<div style="width:44px;height:44px;border-radius:6px;background:var(--primary-soft);flex-shrink:0"></div>'}
         <div style="min-width:0">
@@ -4144,8 +4173,10 @@ async function loadPublicPlaylist(slug) {
 
     // Render header
     document.getElementById('public-playlist-name').textContent = pl.name;
+    // Both are attacker-chosen: display_name has no validation at all, and the
+    // username rule is client-side only. This is the page anonymous visitors open.
     const byPart = authorName
-      ? ` · shared by ${authorName}${authorUsername ? ` <a href="?u=${authorUsername}" style="color:#a78bfa;text-decoration:none;font-family:DM Sans,sans-serif">@${authorUsername}</a>` : ''}`
+      ? ` · shared by ${escHtml(authorName)}${authorUsername ? ` <a href="?u=${encodeURIComponent(authorUsername)}" style="color:#a78bfa;text-decoration:none;font-family:DM Sans,sans-serif">@${escHtml(authorUsername)}</a>` : ''}`
       : '';
     document.getElementById('public-playlist-meta').innerHTML =
       `${trackList.length} track${trackList.length !== 1 ? 's' : ''}${byPart}`;
@@ -4165,7 +4196,7 @@ async function loadPublicPlaylist(slug) {
 
     // Spotify embed — from imported ID or manually entered URL
     let spotifyEmbedSrc = null;
-    if (pl.spotify_playlist_id) {
+    if (pl.spotify_playlist_id && /^[A-Za-z0-9]+$/.test(pl.spotify_playlist_id)) {
       spotifyEmbedSrc = `https://open.spotify.com/embed/playlist/${pl.spotify_playlist_id}?utm_source=generator&theme=0`;
     } else if (pl.spotify_url) {
       const sm = pl.spotify_url.match(/spotify\.com\/(playlist|album|track)\/([A-Za-z0-9]+)/);
@@ -4186,7 +4217,9 @@ async function loadPublicPlaylist(slug) {
       let appleEmbedUrl = null;
       const appleUrl = pl.apple_music_url;
       // Playlist: pl.xxx
-      const plMatch = appleUrl.match(/\/(pl\.[^?&/]+)/);
+      // [^?&/]+ used to allow a quote, which broke straight out of src="..."
+      // and became an onload handler on the parent page.
+      const plMatch = appleUrl.match(/\/(pl\.[A-Za-z0-9._-]+)/);
       // Album: /album/name/id
       const albumMatch = appleUrl.match(/\/album\/[^/]+\/(\d+)/);
       // Song: /album/name/id?i=songid
@@ -4269,7 +4302,7 @@ async function loadPublicPlaylist(slug) {
           </div>
           <div class="platform-links" style="margin-top:8px">${topLinks}</div>
           <div style="margin-top:4px">
-            <button class="platform-expand" onclick="toggleTrackPlatforms(this,'${escHtml(t.artist)}','${escHtml(t.track_name)}')">+ More</button>
+            <button class="platform-expand" data-artist="${escHtml(t.artist)}" data-track="${escHtml(t.track_name)}" onclick="toggleTrackPlatforms(this)">+ More</button>
           </div>
         </div>`;
     }).join('');
