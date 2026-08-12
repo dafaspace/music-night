@@ -1,9 +1,9 @@
 {
-  "name": "Music Night",
-  "short_name": "Music Night",
+  "name": "Tunemail",
+  "short_name": "Tunemail",
   "description": "Share music playlists across multiple streaming services",
-  "start_url": "/music-night/",
-  "scope": "/music-night/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0d0d1a",
   "theme_color": "#7c3aed",

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>Music Night</title>
+  <title>Tunemail</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0d0d1a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -1206,7 +1206,7 @@
   <!-- Sign In -->
   <div id="screen-signin" class="screen active">
     <div class="auth-wrap">
-      <div class="auth-logo"><span>MUSIC</span> NIGHT</div>
+      <div class="auth-logo"><span>TUNE</span>MAIL</div>
       <div class="auth-tagline">Share playlists across every streaming service</div>
       <div class="auth-card">
         <h2>Welcome Back</h2>
@@ -1232,7 +1232,7 @@
   <!-- Sign Up -->
   <div id="screen-signup" class="screen">
     <div class="auth-wrap">
-      <div class="auth-logo"><span>MUSIC</span> NIGHT</div>
+      <div class="auth-logo"><span>TUNE</span>MAIL</div>
       <div class="auth-tagline">Share playlists across every streaming service</div>
       <div class="auth-card">
         <h2>Create Account</h2>
@@ -1279,7 +1279,7 @@
   ══════════════════════════════════════════════════════════════════ -->
   <div id="public-view">
     <div class="public-header">
-      <div class="public-header-logo"><span>MUSIC</span> NIGHT</div>
+      <div class="public-header-logo"><span>TUNE</span>MAIL</div>
       <div class="public-playlist-name" id="public-playlist-name">Loading…</div>
       <div class="public-playlist-meta" id="public-playlist-meta"></div>
       <div id="public-desc" style="font-size:13px;color:var(--muted);margin-top:6px;display:none"></div>
@@ -1308,14 +1308,14 @@
         <!-- Bug + Coffee row -->
         <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
           <div class="public-footer-actions">
-            <a href="mailto:feedback@dafaspace.com?subject=Music%20Night%20bug%20report" class="public-footer-btn" title="Report a bug">
+            <a href="mailto:feedback@dafaspace.com?subject=Tunemail%20bug%20report" class="public-footer-btn" title="Report a bug">
               🔧 Found a bug?
             </a>
             <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn" title="Wanna say thanks?">
               <span class="coffee-icon">☕</span> Wanna say thanks?
             </a>
           </div>
-          <div class="public-footer-hint">developed by dafaspace · music night</div>
+          <div class="public-footer-hint">developed by dafaspace · tunemail</div>
         </div>
         <!-- Get started / sign in -->
         <div class="public-footer-join">
@@ -1332,7 +1332,7 @@
   <!-- User Profile View (?u=username) -->
   <div id="profile-view" style="display:none;min-height:100vh;padding-bottom:40px">
     <div class="public-header">
-      <div class="public-header-logo"><span>MUSIC</span> NIGHT</div>
+      <div class="public-header-logo"><span>TUNE</span>MAIL</div>
       <div class="public-playlist-name" id="profile-name">Loading…</div>
       <div class="public-playlist-meta" id="profile-meta"></div>
     </div>
@@ -1343,14 +1343,14 @@
       <div class="public-footer-cta">
         <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
           <div class="public-footer-actions">
-            <a href="mailto:feedback@dafaspace.com?subject=Music%20Night%20bug%20report" class="public-footer-btn" title="Report a bug">
+            <a href="mailto:feedback@dafaspace.com?subject=Tunemail%20bug%20report" class="public-footer-btn" title="Report a bug">
               🔧 Found a bug?
             </a>
             <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn">
               <span class="coffee-icon">☕</span> Wanna say thanks?
             </a>
           </div>
-          <div class="public-footer-hint">developed by dafaspace · music night</div>
+          <div class="public-footer-hint">developed by dafaspace · tunemail</div>
         </div>
         <div class="public-footer-join">
           <p>Make your own playlist — share anywhere</p>
@@ -1370,7 +1370,7 @@
 
     <!-- Top Bar -->
     <div class="topbar">
-      <div class="topbar-logo"><span>MUSIC</span> NIGHT</div>
+      <div class="topbar-logo"><span>TUNE</span>MAIL</div>
       <div class="topbar-actions">
         <button class="feedback-topbar-btn" id="btn-open-feedback" title="Feedback">
           <span id="feedback-icon-wrap">
@@ -3691,7 +3691,7 @@ async function importSpotifyPlaylist(spotifyId, name, total) {
   try {
     const tracks = await spotifyGetAllTracks(spotifyId, token);
 
-    // Create new Music Night playlist
+    // Create new Tunemail playlist
     const slug = generateSlug();
     const { data: pl, error: plErr } = await sbClient
       .from('music_playlists')
@@ -4126,7 +4126,7 @@ async function loadPublicPlaylist(slug) {
     }
 
     // Set page title
-    document.title = `${pl.name} — Music Night`;
+    document.title = `${pl.name} — Tunemail`;
 
     // Show embed players
     const embedDiv = document.getElementById('public-spotify-embed');
@@ -4290,7 +4290,7 @@ async function loadUserProfile(username) {
 
     const displayName = profile.display_name || profile.username;
     document.getElementById('profile-name').textContent = displayName;
-    document.title = `${displayName} — Music Night`;
+    document.title = `${displayName} — Tunemail`;
 
     // Load public playlists
     const { data: playlists } = await sbClient

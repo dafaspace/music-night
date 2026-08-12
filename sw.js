@@ -1,10 +1,10 @@
-/* Music Night - service worker
+/* Tunemail - service worker
  *
  * Bump CACHE_VERSION on every deploy that changes the precached files below,
  * otherwise returning visitors keep the old shell until the cache is evicted.
  */
-const CACHE_VERSION = 'v2';
-const CACHE_NAME = `music-night-${CACHE_VERSION}`;
+const CACHE_VERSION = 'v3';
+const CACHE_NAME = `tunemail-${CACHE_VERSION}`;
 
 /* Same-origin shell. Without any one of these the page cannot render, so these
  * go through addAll: if a single request fails the whole install fails and the
@@ -70,7 +70,7 @@ self.addEventListener('activate', (event) => {
     const names = await caches.keys();
     await Promise.all(
       names
-        .filter((n) => n.startsWith('music-night-') && n !== CACHE_NAME)
+        .filter((n) => (n.startsWith('music-night-') || n.startsWith('tunemail-')) && n !== CACHE_NAME)
         .map((n) => caches.delete(n))
     );
     await self.clients.claim();

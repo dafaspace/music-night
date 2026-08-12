@@ -1,7 +1,7 @@
 const SUPABASE_URL = 'https://rqruaqoecvpythbvnozf.supabase.co';
 
 // Only the deployed app may spend recognition credits.
-const ALLOWED_ORIGIN = 'https://dafaspace.github.io';
+const ALLOWED_ORIGIN = 'https://tunemail.app';
 
 // AudD rejects anything larger, and there is no point paying to find out.
 const MAX_AUDIO_BYTES = 10 * 1024 * 1024;
@@ -101,7 +101,7 @@ export default {
         }
 
         const typeEmoji = { bug: "🔧", idea: "💡", other: "💬" }[type] || "💬";
-        const text = `${typeEmoji} *Music Night Feedback*\n\n👤 ${user_name}\n📝 ${message}\n\n\`id:${feedback_id}\``;
+        const text = `${typeEmoji} *Tunemail Feedback*\n\n👤 ${user_name}\n📝 ${message}\n\n\`id:${feedback_id}\``;
 
         await fetch(`https://api.telegram.org/bot${env.TELEGRAM_TOKEN}/sendMessage`, {
           method: "POST",
