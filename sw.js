@@ -3,7 +3,7 @@
  * Bump CACHE_VERSION on every deploy that changes the precached files below,
  * otherwise returning visitors keep the old shell until the cache is evicted.
  */
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_NAME = `tunemail-${CACHE_VERSION}`;
 
 /* Same-origin shell. Without any one of these the page cannot render, so these
@@ -14,6 +14,10 @@ const SHELL = [
   './index.html',
   './manifest.json',
   './icon.png',
+  './fonts/bebas-neue-latin.woff2',
+  './fonts/bebas-neue-latin-ext.woff2',
+  './fonts/dm-sans-latin.woff2',
+  './fonts/dm-sans-latin-ext.woff2',
 ];
 
 /* Cross-origin code the page needs to boot. Same criticality as the shell. */
@@ -22,16 +26,8 @@ const VENDOR = [
   'https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js',
 ];
 
-/* Nice to have. A missing font must never fail the install. */
-const OPTIONAL = [
-  'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap',
-];
-
-/* Hosts whose GET responses we keep in the cache as we see them - the font
- * files referenced from inside the Google Fonts stylesheet land here. */
+/* Hosts whose GET responses we keep in the cache as we see them. */
 const RUNTIME_HOSTS = new Set([
-  'fonts.googleapis.com',
-  'fonts.gstatic.com',
   'cdn.jsdelivr.net',
 ]);
 
@@ -60,7 +56,6 @@ self.addEventListener('install', (event) => {
     const cache = await caches.open(CACHE_NAME);
     await cache.addAll(SHELL);
     await Promise.all(VENDOR.map((url) => fetchAndPut(cache, url)));
-    await Promise.all(OPTIONAL.map((url) => fetchAndPut(cache, url).catch(() => {})));
     await self.skipWaiting();
   })());
 });
