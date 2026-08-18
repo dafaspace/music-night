@@ -68,6 +68,22 @@ async function overRecognizeLimit(env, userId) {
 }
 
 export default {
+  // Supabase pauses a free project after a week without API activity and drops
+  // its DNS record with it - the whole app dies until someone restores it by
+  // hand. A cron trigger here keeps the counter at zero whether or not anybody
+  // opened the app. Set the schedule in the dashboard: Settings, Trigger
+  // Events, Cron Triggers.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(
+      fetch(`${SUPABASE_URL}/rest/v1/track_links?select=id&limit=1`, {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+      }).catch(() => {})
+    );
+  },
+
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
