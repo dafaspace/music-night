@@ -1096,6 +1096,48 @@
     .fb-btn-send:disabled { opacity: 0.5; cursor: default; }
 
     /* ── Public footer ──────────────────────────────────────────────── */
+
+    /* ── Public page: the conversion path ──────────────────────────────
+       Measured before this existed: the largest buttons on a share page were
+       "Found a bug?" and "Wanna say thanks?", while Get Started was the
+       smallest thing on it. A first-time visitor was asked for bug reports and
+       money before being offered the product. Cinemail's share page has the
+       right shape - one loud action, one reassuring line, everything else
+       quiet - so this follows it. */
+    .public-cta-wrap { padding: 4px 16px 28px; max-width: 480px; margin: 0 auto; }
+    .public-cta {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; min-height: 52px; padding: .9em 1.2em;
+      box-sizing: border-box; -webkit-appearance: none; appearance: none;
+      border: none; border-radius: var(--radius);
+      background: var(--primary); color: #fff; cursor: pointer;
+      font-family: 'Bebas Neue', 'Oswald', -apple-system, 'Arial Narrow', sans-serif;
+      font-size: 18px; line-height: 1; letter-spacing: .06em; text-indent: .06em;
+      text-box: trim-both cap alphabetic;
+      transition: transform 100ms ease-out, background 150ms;
+    }
+    .public-cta:hover { background: var(--primary-hover); }
+    .public-cta:active { transform: scale(0.985); }   /* feedback on press, not release */
+    .public-cta-sub {
+      margin: 10px 0 0; text-align: center;
+      font-size: 12.5px; color: var(--muted);
+    }
+    .public-note {
+      margin: 14px auto 0; max-width: 420px; text-align: left;
+      padding: 10px 14px; border-left: 3px solid var(--primary);
+      background: var(--primary-soft); border-radius: 0 8px 8px 0;
+      font-size: 14px; font-style: italic; color: #d8d4e4; line-height: 1.55;
+    }
+    .public-footer-quiet {
+      margin-top: 14px; text-align: center;
+      font-size: 12px; color: var(--muted);
+    }
+    .public-footer-quiet a {
+      color: var(--muted); text-decoration: none;
+      display: inline-block; padding: 10px 6px;   /* small type, still a real target */
+    }
+    .public-footer-quiet a:hover { color: var(--text); text-decoration: underline; }
+
     .public-footer {
       text-align: center;
       padding: 28px 16px 44px;
@@ -1365,9 +1407,7 @@
       <div class="public-playlist-name" id="public-playlist-name">Loading…</div>
       <div class="public-playlist-meta" id="public-playlist-meta"></div>
       <div id="public-desc" style="font-size:13px;color:var(--muted);margin-top:6px;display:none"></div>
-      <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-secondary btn-sm" id="btn-public-copy">🔗 Copy Link</button>
-      </div>
+      <div id="public-note" class="public-note" style="display:none"></div>
     </div>
     <!-- Spotify embed (shown if playlist was imported from Spotify) -->
     <div id="public-spotify-embed" style="display:none;padding:0 16px;margin-top:16px">
@@ -1384,29 +1424,32 @@
     <div class="public-content" id="public-tracks">
       <div class="loading-dots"><span></span><span></span><span></span></div>
     </div>
+
+    <!-- The one thing a visitor should do next. Cinemail's share page proved the
+         shape: a single loud action, then a line that removes the fear of a
+         sign-up wall. -->
+    <div class="public-cta-wrap">
+      <button class="public-cta" id="btn-public-save">Save these tracks &rarr;</button>
+      <p class="public-cta-sub">Free &middot; no app to install &middot; works right in your browser</p>
+    </div>
+
     <!-- Footer -->
     <div class="public-footer">
       <div class="public-footer-cta">
-        <!-- Bug + Coffee row -->
-        <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
-          <div class="public-footer-actions">
-            <a href="mailto:feedback@dafaspace.com?subject=Tunemail%20bug%20report" class="public-footer-btn" title="Report a bug">
-              🔧 Found a bug?
-            </a>
-            <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn" title="Wanna say thanks?">
-              <span class="coffee-icon">☕</span> Wanna say thanks?
-            </a>
-          </div>
-          <div class="public-footer-hint">developed by dafaspace · tunemail</div>
-        </div>
-        <!-- Get started / sign in -->
         <div class="public-footer-join">
-          <p>Make your own playlist — share anywhere</p>
+          <p>Already here before?</p>
           <div class="public-footer-join-btns">
-            <button class="btn btn-primary btn-sm" id="btn-public-create">Get Started</button>
+            <button class="btn btn-ghost btn-sm" id="btn-public-create" style="display:none">Get Started</button>
             <button class="btn btn-ghost btn-sm" id="link-public-signin">Sign In</button>
+            <button class="btn btn-ghost btn-sm" id="btn-public-copy">🔗 Copy link</button>
           </div>
         </div>
+        <div class="public-footer-quiet">
+          <a href="mailto:feedback@dafaspace.com?subject=Tunemail%20bug%20report" title="Report a bug">Found a bug?</a>
+          <span aria-hidden="true">&middot;</span>
+          <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" title="Wanna say thanks?">Say thanks</a>
+        </div>
+        <div class="public-footer-hint">developed by dafaspace &middot; tunemail</div>
       </div>
     </div>
   </div>
@@ -4441,6 +4484,10 @@ if (_pubSignin) _pubSignin.addEventListener('click', () => {
   window.location.href = window.location.pathname;
 });
 document.getElementById('btn-public-create').addEventListener('click', () => {
+  window.location.href = window.location.pathname;
+});
+const _pubSave = document.getElementById('btn-public-save');
+if (_pubSave) _pubSave.addEventListener('click', () => {
   window.location.href = window.location.pathname;
 });
 
