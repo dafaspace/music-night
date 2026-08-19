@@ -1253,6 +1253,9 @@
         <div style="margin-top:4px">
           <button class="btn btn-primary" id="btn-signin">Sign In</button>
         </div>
+        <div style="margin-top:12px;text-align:center">
+          <a id="link-to-forgot" style="font-size:12px;color:var(--muted);cursor:pointer">Forgot password?</a>
+        </div>
       </div>
       <div class="auth-footer">
         No account? <a id="link-to-signup">Create one</a>
@@ -1296,11 +1299,59 @@
       <div class="auth-card" style="text-align:center">
         <div class="check-email-icon">📬</div>
         <div class="check-email-title">Check Your Email</div>
-        <p class="check-email-text">
+        <p class="check-email-text" id="check-email-msg">
           We sent a confirmation link to your inbox.<br/>
           Click it to activate your account.
         </p>
         <button class="btn btn-ghost w-full" id="btn-back-to-signin">Back to Sign In</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Forgot Password -->
+  <div id="screen-forgot" class="screen">
+    <div class="auth-wrap">
+      <div class="auth-logo"><span>TUNE</span>MAIL</div>
+      <div class="auth-tagline">Share playlists across every streaming service</div>
+      <div class="auth-card">
+        <h2>Reset Password</h2>
+        <div id="forgot-error" class="error-msg"></div>
+        <p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 16px">
+          Enter your email and we will send you a reset link.
+        </p>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="forgot-email" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div style="margin-top:4px">
+          <button class="btn btn-primary" id="btn-forgot">Send reset link</button>
+        </div>
+      </div>
+      <div class="auth-footer">
+        Remembered it? <a id="link-forgot-to-signin">Sign in</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Set a new password (reached from the emailed recovery link) -->
+  <div id="screen-reset" class="screen">
+    <div class="auth-wrap">
+      <div class="auth-logo"><span>TUNE</span>MAIL</div>
+      <div class="auth-tagline">Share playlists across every streaming service</div>
+      <div class="auth-card">
+        <h2>New Password</h2>
+        <div id="reset-error" class="error-msg"></div>
+        <div class="form-group">
+          <label>New password</label>
+          <input type="password" id="reset-password" placeholder="Min. 6 characters" autocomplete="new-password" />
+        </div>
+        <div class="form-group">
+          <label>Repeat password</label>
+          <input type="password" id="reset-password2" placeholder="••••••••" autocomplete="new-password" />
+        </div>
+        <div style="margin-top:4px">
+          <button class="btn btn-primary" id="btn-reset">Save and sign in</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1893,6 +1944,64 @@ document.getElementById('link-to-signin').addEventListener('click', () => {
   showScreen('signin');
 });
 document.getElementById('btn-back-to-signin').addEventListener('click', () => showScreen('signin'));
+
+// ── Password recovery ─────────────────────────────────────────────────
+document.getElementById('link-to-forgot').addEventListener('click', () => {
+  clearAuthError('forgot-error');
+  document.getElementById('forgot-email').value =
+    document.getElementById('signin-email').value.trim();
+  showScreen('forgot');
+});
+document.getElementById('link-forgot-to-signin').addEventListener('click', () => showScreen('signin'));
+
+document.getElementById('btn-forgot').addEventListener('click', async () => {
+  const email = document.getElementById('forgot-email').value.trim();
+  clearAuthError('forgot-error');
+  if (!email) { showAuthError('forgot-error', 'Please enter your email.'); return; }
+  const btn = document.getElementById('btn-forgot');
+  const label = btn.textContent;
+  btn.textContent = '…'; btn.disabled = true;
+  try {
+    // No redirectTo: Supabase uses the project Site URL, which already brings
+    // signup confirmations back here with a token_hash.
+    const { error } = await sbClient.auth.resetPasswordForEmail(email);
+    if (error) throw error;
+    // Always the same wording, whether or not the address is registered -
+    // saying "no such user" would let anyone test which emails have accounts.
+    // Built as nodes rather than innerHTML: the address is user input.
+    const msg = document.getElementById('check-email-msg');
+    msg.textContent = 'If that address has an account, a reset link is on its way to';
+    msg.appendChild(document.createElement('br'));
+    const who = document.createElement('strong');
+    who.style.color = 'var(--text)';
+    who.textContent = email;
+    msg.appendChild(who);
+    showScreen('check-email');
+  } catch (err) {
+    showAuthError('forgot-error', err.message || 'Could not send the reset link.');
+  } finally { btn.textContent = label; btn.disabled = false; }
+});
+
+document.getElementById('btn-reset').addEventListener('click', async () => {
+  const p1 = document.getElementById('reset-password').value;
+  const p2 = document.getElementById('reset-password2').value;
+  clearAuthError('reset-error');
+  if (p1.length < 6) { showAuthError('reset-error', 'Password must be at least 6 characters.'); return; }
+  if (p1 !== p2) { showAuthError('reset-error', "Passwords don't match."); return; }
+  const btn = document.getElementById('btn-reset');
+  const label = btn.textContent;
+  btn.textContent = '…'; btn.disabled = true;
+  try {
+    const { data, error } = await sbClient.auth.updateUser({ password: p1 });
+    if (error) throw error;
+    showToast('Password updated');
+    // The recovery link already opened a session, so this signs them straight in.
+    await onSignedIn(data.user);
+  } catch (err) {
+    showAuthError('reset-error', err.message || 'Could not save the password.');
+    btn.textContent = label; btn.disabled = false;
+  }
+});
 
 // ── Modal close buttons ───────────────────────────────────────────────
 document.querySelectorAll('[data-close]').forEach(btn => {
@@ -3584,6 +3693,11 @@ document.getElementById('btn-signup').addEventListener('click', async () => {
       });
     }
     setLoading('btn-signup', false);
+    // The screen is shared with password recovery, which rewrites this text.
+    const msg = document.getElementById('check-email-msg');
+    msg.textContent = 'We sent a confirmation link to your inbox.';
+    msg.appendChild(document.createElement('br'));
+    msg.appendChild(document.createTextNode('Click it to activate your account.'));
     showScreen('check-email');
   } catch (err) {
     showAuthError('signup-error', err.message || 'Sign up failed.');
@@ -4476,6 +4590,7 @@ if (_profCreate) _profCreate.addEventListener('click', () => {
     const hashParams = new URLSearchParams(hash.slice(1));
     const accessToken = hashParams.get('access_token');
     const refreshToken = hashParams.get('refresh_token');
+    const hashType = hashParams.get('type');
     if (accessToken) {
       try {
         const { data, error } = await sbClient.auth.setSession({
@@ -4484,6 +4599,9 @@ if (_profCreate) _profCreate.addEventListener('click', () => {
         });
         if (error) throw error;
         window.history.replaceState({}, '', window.location.pathname);
+        // Recovery arrives in this format too. Same rule as the query-param
+        // path: send them to set a password rather than into the app.
+        if (hashType === 'recovery') { showScreen('reset'); return; }
         showToast('✅ Email confirmed! Welcome!');
         if (data.session) await onSignedIn(data.session.user);
         return;
@@ -4501,10 +4619,16 @@ if (_profCreate) _profCreate.addEventListener('click', () => {
     try {
       const { error } = await sbClient.auth.verifyOtp({ token_hash: tokenHash, type });
       if (error) throw error;
-      showToast('✅ Email confirmed! You are now signed in.');
       window.history.replaceState({}, '', window.location.pathname);
+      // A recovery link opens a session, but the point of following it is to set
+      // a new password - so stop here rather than dropping them into the app,
+      // where they would still not know their password.
+      if (type === 'recovery') { showScreen('reset'); return; }
+      showToast('✅ Email confirmed! You are now signed in.');
     } catch (err) {
-      showToast('Email confirmation failed: ' + err.message);
+      showToast(type === 'recovery'
+        ? 'That reset link did not work: ' + err.message
+        : 'Email confirmation failed: ' + err.message);
       showScreen('signin');
       return;
     }
