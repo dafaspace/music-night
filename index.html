@@ -176,7 +176,34 @@
     }
 
     /* ── Buttons ────────────────────────────────────────────────────── */
-    .btn {
+
+/* Ported from Cinemail, where the same rules produced the same defect - the two apps
+   share this stylesheet's ancestry, so a fix in one drifts apart unless it lands in
+   both. Measured here before the change: all six button classes rendered under 44px,
+   the platform minimum for a touch target, the smallest at 29px tall and 43 wide, and
+   .modal-close at 32x32. None of them set line-height, so every label was centred on a
+   line box carrying descender space rather than on its own ink. Height comes from
+   padding; a fixed height and a line box fight each other. */
+button {
+  display: inline-flex; align-items: center; justify-content: center;
+  font: inherit; line-height: 1;
+  box-sizing: border-box;
+  -webkit-appearance: none; appearance: none;
+  text-box: trim-both cap alphabetic;   /* trims to cap height, so the ink is centred */
+}
+/* An invisible 44x44 floor around any control that is visually smaller. Layout does not
+   move: the pseudo-element is absolutely positioned and centred on the button, so dense
+   rows keep their spacing while every target becomes reachable. No button in this file
+   uses ::after for its own drawing - checked before adding this. */
+button { position: relative; }
+button::after {
+  content: ''; position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%; height: 100%;
+  min-width: 44px; min-height: 44px;
+}
+
+    .btn { min-height: 44px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -670,7 +697,7 @@
       font-size: 20px;
       letter-spacing: 1px;
     }
-    .modal-close {
+    .modal-close { min-height: 44px;
       background: transparent;
       border: 1px solid rgba(255,255,255,0.2);
       color: var(--text);
@@ -842,7 +869,7 @@
       margin-bottom: 16px;
       border-bottom: 1px solid var(--border);
     }
-    .shared-tab-btn {
+    .shared-tab-btn { min-height: 44px;
       background: none;
       border: none;
       border-bottom: 2px solid transparent;
@@ -1035,7 +1062,7 @@
       font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
       letter-spacing: 1px;
     }
-    .fb-type-btn {
+    .fb-type-btn { min-height: 44px;
       flex: 1;
       padding: 7px;
       border-radius: 8px;
@@ -1064,7 +1091,7 @@
     }
     .feedback-textarea:focus { border-color: rgba(124,58,237,0.4); }
     .feedback-textarea::placeholder { color: #555; }
-    .fb-btn-cancel {
+    .fb-btn-cancel { min-height: 44px;
       flex: 1;
       min-width: 80px;
       padding: 10px;
@@ -1079,7 +1106,7 @@
       transition: all 0.15s;
     }
     .fb-btn-cancel:hover { background: rgba(255,255,255,0.08); color: #ccc; }
-    .fb-btn-send {
+    .fb-btn-send { min-height: 44px;
       flex: 2;
       padding: 10px;
       border-radius: 9px;
