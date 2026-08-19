@@ -1111,9 +1111,12 @@
       box-sizing: border-box; -webkit-appearance: none; appearance: none;
       border: none; border-radius: var(--radius);
       background: var(--primary); color: #fff; cursor: pointer;
-      font-family: 'Bebas Neue', 'Oswald', -apple-system, 'Arial Narrow', sans-serif;
-      font-size: 18px; line-height: 1; letter-spacing: .06em; text-indent: .06em;
-      text-box: trim-both cap alphabetic;
+      /* Cinemail's share CTA is system-font, sentence case, bold 16px - not the
+         Bebas caps the in-app buttons use. Caps plus tracking next to a thin
+         arrow reads badly, and the arrow is what tells you this moves you
+         somewhere, so the type gives way, not the arrow. */
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 16.5px; font-weight: 600; line-height: 1.2; letter-spacing: 0;
       transition: transform 100ms ease-out, background 150ms;
     }
     .public-cta:hover { background: var(--primary-hover); }
@@ -1429,7 +1432,7 @@
          shape: a single loud action, then a line that removes the fear of a
          sign-up wall. -->
     <div class="public-cta-wrap">
-      <button class="public-cta" id="btn-public-save">Save these tracks &rarr;</button>
+      <button class="public-cta" id="btn-public-save">Save these tracks →</button>
       <p class="public-cta-sub">Free &middot; no app to install &middot; works right in your browser</p>
     </div>
 
