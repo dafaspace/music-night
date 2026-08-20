@@ -3360,12 +3360,12 @@ function toggleTrackPlatforms(btn) {
   if (expanded) {
     linksDiv.innerHTML = STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS)
       .map(p => `<a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn"><span style="display:inline-flex;align-items:center;gap:5px">${p.icon}<span>${p.name}</span></span></a>`).join('');
-    btn.textContent = 'More';
+    btn.textContent = '+ More';
     btn.dataset.expanded = '0';
   } else {
     linksDiv.innerHTML = STREAMING_PLATFORMS
       .map(p => `<a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn"><span style="display:inline-flex;align-items:center;gap:5px">${p.icon}<span>${p.name}</span></span></a>`).join('');
-    btn.textContent = 'Less';
+    btn.textContent = '− Less';
     btn.dataset.expanded = '1';
   }
 }
@@ -4779,7 +4779,7 @@ function renderPublicTracks(trackList) {
           </div>
           <div class="track-actions">
             <div class="platform-links">${topLinks}</div>
-            <button class="platform-expand" data-artist="${escHtml(t.artist)}" data-track="${escHtml(t.track_name)}" onclick="toggleTrackPlatforms(this)">More</button>
+            <button class="platform-expand" data-artist="${escHtml(t.artist)}" data-track="${escHtml(t.track_name)}" onclick="toggleTrackPlatforms(this)">+ More</button>
           </div>
         </div>`;
     }).join('');
