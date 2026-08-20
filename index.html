@@ -1184,7 +1184,10 @@ button {
     }
     .public-footer-quiet a {
       color: var(--muted); text-decoration: none;
-      display: inline-block; padding: 10px 6px;   /* small type, still a real target */
+      /* small type, still a real target: the padding carries the 44px, the text
+         keeps its size */
+      display: inline-flex; align-items: center;
+      min-height: 44px; padding: 0 10px;
     }
     .public-footer-quiet a:hover { color: var(--text); text-decoration: underline; }
 
@@ -4383,7 +4386,7 @@ async function loadPublicPlaylist(slug) {
     // Both are attacker-chosen: display_name has no validation at all, and the
     // username rule is client-side only. This is the page anonymous visitors open.
     const byPart = authorName
-      ? ` · shared by ${escHtml(authorName)}${authorUsername ? ` <a href="?u=${encodeURIComponent(authorUsername)}" style="color:#a78bfa;text-decoration:none;font-family:DM Sans,sans-serif">@${escHtml(authorUsername)}</a>` : ''}`
+      ? ` · shared by ${escHtml(authorName)}${authorUsername ? ` <a href="?u=${encodeURIComponent(authorUsername)}" style="color:#a78bfa;text-decoration:none;font-family:DM Sans,sans-serif;display:inline-block;padding:14px 4px">@${escHtml(authorUsername)}</a>` : ''}`
       : '';
     document.getElementById('public-playlist-meta').innerHTML =
       `${trackList.length} track${trackList.length !== 1 ? 's' : ''}${byPart}`;
