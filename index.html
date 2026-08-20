@@ -2474,30 +2474,42 @@ async function trackLinksCacheSet(artist, trackName, fields) {
 }
 
 async function fetchOdesliLinks(spotifyUri) {
-  // Disabled until API key obtained — uncomment below when ready
+  // Odesli is gone: api.song.link now answers 401 PUBLIC_API_ACCESS_DEPRECATED,
+  // and they no longer hand out keys. Kept as a no-op so callers stay unchanged;
+  // exact links come from resolveByIsrc below instead.
   return null;
-  // eslint-disable-next-line no-unreachable
-  if (!spotifyUri) return null;
-  if (odesliCache.has(spotifyUri)) return odesliCache.get(spotifyUri);
+}
+
+// Deezer's public API needs no key and resolves an ISRC to the exact recording,
+// with a preview URL attached. Verified live. This is the only free, keyless
+// exact bridge left after Odesli closed and Spotify capped development apps at
+// five users - so ISRC is the spine, and everything else hangs off it.
+const isrcCache = new Map();
+
+async function resolveByIsrc(isrc) {
+  if (!isrc) return null;
+  if (isrcCache.has(isrc)) return isrcCache.get(isrc);
   try {
-    const spotifyUrl = spotifyUri.startsWith('http')
-      ? spotifyUri
-      : 'https://open.spotify.com/track/' + spotifyUri.split(':').pop();
-    const res = await fetch(ODESLI_WORKER + '?url=' + encodeURIComponent(spotifyUrl));
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.error) return null;
-    const links = {};
-    for (const [platform, info] of Object.entries(data.linksByPlatform || {})) {
-      links[platform] = info.url;
-    }
-    odesliCache.set(spotifyUri, links);
-    return links;
+    const res = await fetch(`https://api.deezer.com/track/isrc:${encodeURIComponent(isrc)}`);
+    if (!res.ok) { isrcCache.set(isrc, null); return null; }
+    const d = await res.json();
+    if (!d || d.error || !d.link) { isrcCache.set(isrc, null); return null; }
+    const out = {
+      deezer:  d.link,
+      preview: d.preview || null,
+      artwork: d.album?.cover_medium || null,
+      title:   d.title || null,
+      artist:  d.artist?.name || null,
+    };
+    isrcCache.set(isrc, out);
+    return out;
   } catch (e) {
-    console.warn('odesli error:', e.message);
+    console.warn('isrc resolve:', e.message);
+    isrcCache.set(isrc, null);
     return null;
   }
 }
+
 
 function buildPlatformLinksHtml(artist, trackName, odesliLinks, showAll = false, directUrls = null) {
   const list = showAll ? STREAMING_PLATFORMS : STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS);
@@ -3912,7 +3924,11 @@ async function spotifyGetAllPlaylists(token) {
 }
 
 async function spotifyGetAllTracks(playlistId, token) {
-  let url = `/playlists/${playlistId}/tracks?limit=100&fields=next,items(track(name,artists,album(name),duration_ms,uri,external_ids))`;
+  // /tracks was retired in the February 2026 Web API changes; /items replaces it.
+  // external_ids carries the ISRC, which was already being requested and then
+  // dropped on the floor - it is the only identifier that survives a jump
+  // between services, so it is the one thing worth keeping.
+  let url = `/playlists/${playlistId}/items?limit=100&fields=next,items(track(name,artists,album(name),duration_ms,uri,external_ids))`;
   const all = [];
   while (url) {
     const data = await spotifyGet(url, token);
@@ -3924,6 +3940,7 @@ async function spotifyGetAllTracks(playlistId, token) {
         album:        i.track.album?.name || '',
         duration_ms:  i.track.duration_ms || null,
         spotify_uri:  i.track.uri,
+        isrc:         i.track.external_ids?.isrc || null,
         release_date: '',
         genre:        null
       }));
@@ -3977,13 +3994,26 @@ async function importSpotifyPlaylist(spotifyId, name, total) {
       album:        t.album || null,
       duration_ms:  t.duration_ms || null,
       spotify_uri:  t.spotify_uri || null,
+      isrc:         t.isrc || null,
       release_date: t.release_date || null,
       genre:        null,
       position:     i
     }));
 
+    // The isrc column may not exist yet - the migration is applied by hand in the
+    // Supabase dashboard, and a deploy must not be able to break importing while
+    // that is pending. PostgREST answers 42703 for an unknown column, so drop the
+    // field once and carry on rather than failing the whole import.
+    let keepIsrc = true;
     for (let i = 0; i < rows.length; i += 50) {
-      const { error } = await sbClient.from('playlist_tracks').insert(rows.slice(i, i + 50));
+      const slice = () => rows.slice(i, i + 50)
+        .map(r => keepIsrc ? r : (({ isrc, ...rest }) => rest)(r));
+      let { error } = await sbClient.from('playlist_tracks').insert(slice());
+      if (error && (error.code === '42703' || /isrc/i.test(error.message || ''))) {
+        keepIsrc = false;
+        console.warn('playlist_tracks.isrc missing, importing without it');
+        ({ error } = await sbClient.from('playlist_tracks').insert(slice()));
+      }
       if (error) throw error;
       document.getElementById('spotify-importing-text').textContent =
         `Importing… ${Math.min(i + 50, rows.length)} / ${rows.length}`;
@@ -4274,8 +4304,20 @@ document.getElementById('btn-import-confirm').addEventListener('click', async ()
       position:     startPos + i
     }));
 
+    // The isrc column may not exist yet - the migration is applied by hand in the
+    // Supabase dashboard, and a deploy must not be able to break importing while
+    // that is pending. PostgREST answers 42703 for an unknown column, so drop the
+    // field once and carry on rather than failing the whole import.
+    let keepIsrc = true;
     for (let i = 0; i < rows.length; i += 50) {
-      const { error } = await sbClient.from('playlist_tracks').insert(rows.slice(i, i + 50));
+      const slice = () => rows.slice(i, i + 50)
+        .map(r => keepIsrc ? r : (({ isrc, ...rest }) => rest)(r));
+      let { error } = await sbClient.from('playlist_tracks').insert(slice());
+      if (error && (error.code === '42703' || /isrc/i.test(error.message || ''))) {
+        keepIsrc = false;
+        console.warn('playlist_tracks.isrc missing, importing without it');
+        ({ error } = await sbClient.from('playlist_tracks').insert(slice()));
+      }
       if (error) throw error;
     }
 
@@ -4488,12 +4530,28 @@ async function loadPublicPlaylist(slug) {
     // Render tracks
     const container = document.getElementById('public-tracks');
     if (!trackList.length) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state-icon">🎵</div>
-          <div class="empty-state-title">No Tracks Yet</div>
-          <p>This playlist is empty.</p>
-        </div>`;
+      // A playlist saved as nothing but a streaming link is not empty - it is
+      // unconverted, and the page was claiming both at once: an embed playing
+      // three songs above the words "this playlist is empty". Worse than the
+      // contradiction is what it hides: a link that only opens in one service
+      // is exactly the barrier this app exists to remove, so say so plainly
+      // rather than showing a dead end (apple-design section 16, wayfinding:
+      // every screen answers what is here and what you can do).
+      const hasEmbed = !!(pl.spotify_url || pl.apple_music_url || pl.deezer_url || pl.soundcloud_url);
+      const cta = document.querySelector('.public-cta-wrap');
+      if (cta) cta.style.display = hasEmbed ? 'none' : '';
+      container.innerHTML = hasEmbed
+        ? `<div class="empty-state">
+             <div class="empty-state-icon">🔗</div>
+             <div class="empty-state-title">Playable in one service only</div>
+             <p>These tracks live inside the player above, so they open in that
+                service and nowhere else. Nothing here to open in yours yet.</p>
+           </div>`
+        : `<div class="empty-state">
+             <div class="empty-state-icon">🎵</div>
+             <div class="empty-state-title">No Tracks Yet</div>
+             <p>This playlist is empty.</p>
+           </div>`;
       return;
     }
 
