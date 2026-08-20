@@ -263,33 +263,43 @@ button {
     .feedback-topbar-btn { min-height: 44px; min-width: 44px; }
     .avatar-btn { width: 44px; height: 44px; }
 
-    /* Cover art and the preview button. The art holder keeps its space from the
-       start so the row does not jump when the image arrives. */
+    /* Cover art with the play control on top of it - the arrangement every music
+       app uses, from Spotify to Bandcamp. Beside the art it reads as debris; on
+       the art it reads as "play this". The scrim keeps the triangle legible over
+       a bright sleeve. */
     .track-art {
-      width: 48px; height: 48px; border-radius: 6px; flex-shrink: 0;
+      position: relative;
+      width: 56px; height: 56px; border-radius: 6px; flex-shrink: 0;
       background: var(--primary-soft); overflow: hidden;
     }
     .track-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .track-play {
-      width: 44px; height: 44px; flex-shrink: 0; padding: 0;
-      border: 1px solid var(--primary-border); border-radius: 50%;
-      background: var(--primary-soft); cursor: pointer;
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; padding: 0; border: none;
+      background: rgba(0,0,0,0.45); cursor: pointer;
       display: inline-flex; align-items: center; justify-content: center;
-      transition: transform 100ms ease-out, background 150ms;
+      opacity: 0; transition: opacity 150ms, background 150ms;
     }
+    /* Touch has no hover, so the control is always visible there; a pointer gets
+       it on approach and keeps the sleeve unobstructed until then. */
+    .track-art:hover .track-play, .track-play:focus-visible,
+    .track-play.playing { opacity: 1; }
+    @media (hover: none) { .track-play { opacity: 1; background: rgba(0,0,0,0.35); } }
     .track-play::before {
       content: ''; display: block;
-      border-style: solid; border-width: 6px 0 6px 10px;
-      border-color: transparent transparent transparent var(--primary);
+      border-style: solid; border-width: 7px 0 7px 12px;
+      border-color: transparent transparent transparent #fff;
       margin-left: 3px;   /* a triangle looks off-centre when centred by its box */
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
     }
+    .track-play.playing { background: rgba(0,0,0,0.55); }
     .track-play.playing::before {
-      border-width: 0; width: 10px; height: 12px; margin-left: 0;
-      background: var(--primary);
-      -webkit-mask: linear-gradient(#000 0 0) 0/3.5px 100% no-repeat,
-                    linear-gradient(#000 0 0) 100%/3.5px 100% no-repeat;
-              mask: linear-gradient(#000 0 0) 0/3.5px 100% no-repeat,
-                    linear-gradient(#000 0 0) 100%/3.5px 100% no-repeat;
+      border: none; margin-left: 0;
+      width: 12px; height: 14px; background: #fff;
+      -webkit-mask: linear-gradient(#000 0 0) 0/4px 100% no-repeat,
+                    linear-gradient(#000 0 0) 100%/4px 100% no-repeat;
+              mask: linear-gradient(#000 0 0) 0/4px 100% no-repeat,
+                    linear-gradient(#000 0 0) 100%/4px 100% no-repeat;
     }
     .track-play:active { transform: scale(0.94); }
     .track-header { gap: 10px; align-items: center; }
@@ -1182,7 +1192,7 @@ button {
        money before being offered the product. Cinemail's share page has the
        right shape - one loud action, one reassuring line, everything else
        quiet - so this follows it. */
-    .public-cta-wrap { padding: 4px 16px 28px; max-width: 480px; margin: 0 auto; }
+    .public-cta-wrap { padding: 4px 16px 18px; max-width: 480px; margin: 0 auto; }
     .public-cta {
       display: flex; align-items: center; justify-content: center;
       width: 100%; min-height: 52px; padding: .9em 1.2em;
@@ -1210,9 +1220,12 @@ button {
       font-size: 14px; font-style: italic; color: #d8d4e4; line-height: 1.55;
     }
     .public-footer-quiet {
-      margin-top: 14px; text-align: center;
+      margin-top: 2px; text-align: center;
       font-size: 12px; color: var(--muted);
+      display: flex; align-items: center; justify-content: center; gap: 2px;
+      flex-wrap: wrap;
     }
+    .public-footer-quiet .public-footer-hint { margin: 0; padding: 0 6px; }
     .public-footer-quiet a {
       color: var(--muted); text-decoration: none;
       /* small type, still a real target: the padding carries the 44px, the text
@@ -1224,7 +1237,7 @@ button {
 
     .public-footer {
       text-align: center;
-      padding: 28px 16px 44px;
+      padding: 20px 16px 24px;
       border-top: 1px solid var(--border);
       margin-top: 8px;
     }
@@ -1521,7 +1534,6 @@ button {
     <div class="public-footer">
       <div class="public-footer-cta">
         <div class="public-footer-join">
-          <p>Already have an account?</p>
           <div class="public-footer-join-btns">
             <button class="btn btn-ghost btn-sm" id="btn-public-create" style="display:none">Get Started</button>
             <button class="btn btn-ghost btn-sm" id="link-public-signin">Sign In</button>
@@ -1532,8 +1544,9 @@ button {
           <a href="mailto:feedback@dafaspace.com?subject=Tunemail%20bug%20report" title="Report a bug">Found a bug?</a>
           <span aria-hidden="true">&middot;</span>
           <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" title="Wanna say thanks?">Say thanks</a>
+          <span aria-hidden="true">&middot;</span>
+          <span class="public-footer-hint">dafaspace</span>
         </div>
-        <div class="public-footer-hint">developed by dafaspace &middot; tunemail</div>
       </div>
     </div>
   </div>
@@ -4718,9 +4731,10 @@ function renderPublicTracks(trackList) {
         <div class="track-item">
           <div class="track-header">
             <div class="track-num">${i + 1}</div>
-            <div class="track-art" aria-hidden="true"></div>
-            <button class="track-play" hidden aria-label="Play a 30 second preview"
-                    onclick="togglePreview(this)"></button>
+            <div class="track-art">
+              <button class="track-play" hidden aria-label="Play a 30 second preview"
+                      onclick="togglePreview(this)"></button>
+            </div>
             <div class="track-info">
               <div class="track-name">${escHtml(t.track_name)}</div>
               <div class="track-artist">${escHtml(t.artist)}${t.genre ? `${renderGenreBadges(t.genre) ? ' · ' + renderGenreBadges(t.genre) : ''}` : ''}</div>
@@ -4748,8 +4762,12 @@ async function enrichPublicTracks(trackList) {
 
     if (data.artwork) {
       const holder = item.querySelector('.track-art');
-      if (holder) {
-        holder.innerHTML = `<img src="${safeUrl(data.artwork)}" alt="" loading="lazy">`;
+      if (holder && !holder.querySelector('img')) {
+        const img = document.createElement('img');
+        img.src = data.artwork;
+        img.alt = '';
+        img.loading = 'lazy';
+        holder.prepend(img);          // prepend: the play button stays on top
         holder.classList.add('has-art');
       }
     }
