@@ -255,6 +255,14 @@ button {
     .auth-footer a, #link-to-forgot, #link-to-signup, #link-to-signin,
     #link-forgot-to-signin { display: inline-block; padding: 14px 6px; }
 
+    /* Last of the 44px sweep: the sort pills, the topbar feedback button and the
+       avatar. Pills stay visually small - a 44px-tall pill would dominate the
+       screen - so the height comes from padding on the hit box while the border
+       keeps its own size via a smaller line-height. */
+    .sort-pill { min-height: 44px; padding-top: 0; padding-bottom: 0; }
+    .feedback-topbar-btn { min-height: 44px; min-width: 44px; }
+    .avatar-btn { width: 44px; height: 44px; }
+
     .btn-icon {
       width: 44px;
       height: 44px;
