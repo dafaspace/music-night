@@ -3,7 +3,7 @@
  * Bump CACHE_VERSION on every deploy that changes the precached files below,
  * otherwise returning visitors keep the old shell until the cache is evicted.
  */
-const CACHE_VERSION = 'v16';
+const CACHE_VERSION = 'v17';
 const CACHE_NAME = `tunemail-${CACHE_VERSION}`;
 
 /* Same-origin shell. Without any one of these the page cannot render, so these
