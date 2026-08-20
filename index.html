@@ -304,6 +304,11 @@ button {
     .track-play:active { transform: scale(0.94); }
     .track-header { gap: 10px; align-items: center; }
 
+    /* Thin-stroke glyphs replace the emoji that were doing icon duty. An emoji is
+       a different typeface on every platform and cannot take the interface colour;
+       these inherit currentColor and sit on the text baseline. */
+    .g { display: inline-block; vertical-align: -0.15em; flex-shrink: 0; }
+
     .btn-icon {
       width: 44px;
       height: 44px;
@@ -1436,7 +1441,7 @@ button {
   <div id="screen-check-email" class="screen">
     <div class="auth-wrap">
       <div class="auth-card" style="text-align:center">
-        <div class="check-email-icon">📬</div>
+        <div class="check-email-icon"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></div>
         <div class="check-email-title">Check Your Email</div>
         <p class="check-email-text" id="check-email-msg">
           We sent a confirmation link to your inbox.<br/>
@@ -1527,7 +1532,6 @@ button {
          sign-up wall. -->
     <div class="public-cta-wrap">
       <button class="public-cta" id="btn-public-save">Save these tracks →</button>
-      <p class="public-cta-sub">Free &middot; no app to install &middot; works right in your browser</p>
     </div>
 
     <!-- Footer -->
@@ -1537,7 +1541,7 @@ button {
           <div class="public-footer-join-btns">
             <button class="btn btn-ghost btn-sm" id="btn-public-create" style="display:none">Get Started</button>
             <button class="btn btn-ghost btn-sm" id="link-public-signin">Sign In</button>
-            <button class="btn btn-ghost btn-sm" id="btn-public-copy">🔗 Copy link</button>
+            <button class="btn btn-ghost btn-sm" id="btn-public-copy"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg> Copy link</button>
           </div>
         </div>
         <div class="public-footer-quiet">
@@ -1566,10 +1570,10 @@ button {
         <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
           <div class="public-footer-actions">
             <a href="mailto:feedback@dafaspace.com?subject=Tunemail%20bug%20report" class="public-footer-btn" title="Report a bug">
-              🔧 Found a bug?
+              <svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0 5 5l-9.4 9.4a2.1 2.1 0 0 1-3-3z"/></svg> Found a bug?
             </a>
             <a href="https://ko-fi.com/dafaspace" target="_blank" rel="noopener" class="public-footer-btn coffee-btn">
-              <span class="coffee-icon">☕</span> Wanna say thanks?
+              <span class="coffee-icon"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><path d="M6 2v3M10 2v3M14 2v3"/></svg></span> Wanna say thanks?
             </a>
           </div>
           <div class="public-footer-hint">developed by dafaspace · tunemail</div>
@@ -1596,7 +1600,7 @@ button {
       <div class="topbar-actions">
         <button class="feedback-topbar-btn" id="btn-open-feedback" title="Feedback">
           <span id="feedback-icon-wrap">
-            <span id="feedback-icon">✉</span>
+            <span id="feedback-icon"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span>
             <span id="feedback-badge" class="feedback-badge"></span>
           </span>
           <span style="font-size:12px;color:var(--muted);line-height:1;position:relative;top:3px">Feedback</span>
@@ -1668,7 +1672,7 @@ button {
         <div class="divider"></div>
         <div class="section-header">
           <span class="section-title">Open In</span>
-          <button class="btn btn-ghost btn-sm" id="btn-share-track">🔗 Share Track</button>
+          <button class="btn btn-ghost btn-sm" id="btn-share-track"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg> Share Track</button>
         </div>
         <div class="platform-links" id="search-platform-links"></div>
         <button class="platform-expand" id="btn-expand-platforms" style="margin-top:4px">+ More platforms</button>
@@ -1839,7 +1843,7 @@ button {
         <!-- Step 1: Connect -->
         <div id="spotify-step-connect">
           <div style="text-align:center;padding:16px 0 24px">
-            <div style="font-size:48px;margin-bottom:12px">🎵</div>
+            <div style="font-size:48px;margin-bottom:12px"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
             <div style="font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:18px;letter-spacing:1px;margin-bottom:8px">Connect Spotify</div>
             <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">
               Sign in with Spotify to import your playlists.<br/>
@@ -1887,7 +1891,7 @@ button {
             </div>
           </div>
           <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--border);border-radius:10px;padding:28px 16px;cursor:pointer;transition:border-color 0.15s" id="csv-drop-zone">
-            <span style="font-size:28px">📂</span>
+            <span style="font-size:28px"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.6 3.9A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg></span>
             <span style="font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:14px;letter-spacing:0.5px;color:var(--muted)">Drop CSV here or tap to browse</span>
             <input type="file" id="csv-file-input" accept=".csv" style="display:none" />
           </label>
@@ -1934,7 +1938,7 @@ button {
           <div style="font-family:'Bebas Neue','Arial Narrow',sans-serif;font-size:18px;letter-spacing:0.5px" id="account-name">User</div>
           <div style="font-size:12px;color:var(--muted)" id="account-email"></div>
           <div id="account-profile-link" style="display:none;margin-top:6px">
-            <a id="account-profile-url" href="#" target="_blank" style="font-size:12px;color:#a78bfa;text-decoration:none">🔗 music-night/?u=...</a>
+            <a id="account-profile-url" href="#" target="_blank" style="font-size:12px;color:#a78bfa;text-decoration:none"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg> music-night/?u=...</a>
           </div>
         </div>
         <div class="divider"></div>
@@ -1981,9 +1985,9 @@ button {
       <div style="font-family:'Bebas Neue','Arial Narrow',sans-serif;font-size:19px;margin-bottom:14px;line-height:1.2">Share a thought or report a bug</div>
       <div class="feedback-modal-label">Type</div>
       <div style="display:flex;gap:8px;margin-bottom:14px">
-        <button id="fb-type-bug"   onclick="setFbType('bug')"   class="fb-type-btn">🔧 Bug</button>
-        <button id="fb-type-idea"  onclick="setFbType('idea')"  class="fb-type-btn">💡 Idea</button>
-        <button id="fb-type-other" onclick="setFbType('other')" class="fb-type-btn">💬 Other</button>
+        <button id="fb-type-bug"   onclick="setFbType('bug')"   class="fb-type-btn"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0 5 5l-9.4 9.4a2.1 2.1 0 0 1-3-3z"/></svg> Bug</button>
+        <button id="fb-type-idea"  onclick="setFbType('idea')"  class="fb-type-btn"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V18h8v-3.3A7 7 0 0 0 12 2z"/></svg> Idea</button>
+        <button id="fb-type-other" onclick="setFbType('other')" class="fb-type-btn"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Other</button>
       </div>
       <div class="feedback-modal-label">Message</div>
       <textarea id="fb-message" class="feedback-textarea" placeholder="Tell me what's on your mind…"></textarea>
@@ -2190,7 +2194,7 @@ async function loadDiscover() {
     (profilesData || []).forEach(p => { profileMap[p.id] = p; });
 
     if (!playlists.length) {
-      container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔭</div><div class="empty-state-title">No public playlists yet</div></div>';
+      container.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-2.9 6.4-6.4 2.9 2.9-6.4z"/></svg></div><div class="empty-state-title">No public playlists yet</div></div>';
       return;
     }
 
@@ -2229,7 +2233,7 @@ async function loadDiscover() {
     }).join('');
     discoverLoaded = true;
   } catch (err) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>${escHtml(err.message)}</p></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>️</div><p>${escHtml(err.message)}</p></div>`;
   }
 }
 
@@ -2283,7 +2287,7 @@ function startFeedbackRealtime() {
     }, (payload) => {
       if (payload.new?.reply && !payload.new?.read_by_user) {
         setFeedbackUnread(true);
-        showToast('💬 You have a new reply!', 4000);
+        showToast('You have a new reply!', 4000);
       }
     })
     .subscribe();
@@ -2343,7 +2347,7 @@ async function submitFeedback() {
       }).catch(() => {});
     }
     document.getElementById('fb-message').value = '';
-    showToast('Got it! I read everything personally 🙏');
+    showToast('Got it! I read everything personally');
     closeFeedback();
   } catch (e) {
     showToast('Could not send: ' + e.message);
@@ -2366,14 +2370,14 @@ async function loadFeedbackReplies() {
       await sbClient.from('feedback').update({ read_by_user: true }).in('id', unread.map(f => f.id));
     }
     setFeedbackUnread(false);
-    const typeEmoji = { bug: '🔧', idea: '💡', other: '💬' };
+    const typeEmoji = { bug: '<svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0 5 5l-9.4 9.4a2.1 2.1 0 0 1-3-3z"/></svg>', idea: '<svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V18h8v-3.3A7 7 0 0 0 12 2z"/></svg>', other: '<svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' };
     el.style.display = 'block';
     el.innerHTML = `
       <div style="color:#555;font-size:11px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Your previous messages</div>
       ${data.map(f => `
         <div style="margin-bottom:10px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-            <div style="font-size:11px;color:#555">${typeEmoji[f.type] || '💬'} ${new Date(f.created_at).toLocaleDateString('en-GB')}</div>
+            <div style="font-size:11px;color:#555">${typeEmoji[f.type] || '<svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'} ${new Date(f.created_at).toLocaleDateString('en-GB')}</div>
             <button onclick="deleteFeedback('${f.id}')" style="background:none;border:none;color:#444;cursor:pointer;font-size:16px;line-height:1;padding:0">×</button>
           </div>
           <div style="font-size:13px;color:#ccc">${escHtml(f.message)}</div>
@@ -2678,7 +2682,7 @@ function buildPlatformLinksHtml(artist, trackName, odesliLinks, showAll = false,
     // Odesli and AudD, so it is filtered to a real http(s) URL: a javascript:
     // value here would run on click, and a quote would open an attribute.
     return `<a href="${safeUrl(href)}" target="_blank" rel="noopener" class="platform-btn"${isExact ? ' style="border-color:rgba(124,58,237,0.4)"' : ''}>
-      <span style="display:inline-flex;align-items:center;gap:5px">${p.icon}<span>${p.name}</span>${isExact ? '<span style="font-size:9px;color:#a78bfa">✓</span>' : ''}</span>
+      <span style="display:inline-flex;align-items:center;gap:5px">${p.icon}<span>${p.name}</span>${isExact ? '<span style="font-size:9px;color:#a78bfa"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>' : ''}</span>
     </a>`;
   }).join('');
 }
@@ -2731,7 +2735,7 @@ document.getElementById('btn-share-track').addEventListener('click', async () =>
 
     const url = `https://dafaspace.github.io/music-night/?p=${slug}`;
     await navigator.clipboard.writeText(url);
-    showToast('🔗 Track link copied!');
+    showToast('Track link copied!');
     await loadPlaylists();
   } catch (err) {
     showToast('Error: ' + err.message);
@@ -2774,7 +2778,7 @@ document.getElementById('btn-add-track').addEventListener('click', async () => {
     pendingDirectUrls = null;
     if (error) throw error;
 
-    showToast('✅ Added to playlist');
+    showToast('Added to playlist');
     document.getElementById('search-artist').value = '';
     document.getElementById('search-track').value = '';
     document.getElementById('search-playlist-select').value = '';
@@ -2819,7 +2823,7 @@ async function moveTrack(trackId, playlistId, direction) {
 document.getElementById('btn-copy-link').addEventListener('click', () => {
   const url = document.getElementById('detail-share-url').textContent;
   if (url) {
-    navigator.clipboard.writeText(url).then(() => showToast('🔗 Link copied!'));
+    navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
   }
 });
 
@@ -2829,7 +2833,7 @@ function renderPlaylists() {
   if (!playlists.length) {
     container.innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-icon">🎶</div>
+        <div class="empty-state-icon"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
         <div class="empty-state-title">No Playlists Yet</div>
         <p>Create your first playlist and start adding tracks.</p>
       </div>`;
@@ -3036,7 +3040,7 @@ document.getElementById('btn-save-playlist').addEventListener('click', async () 
         .update(updates)
         .eq('id', currentPlaylist.id);
       if (error) throw error;
-      showToast('✅ Playlist updated');
+      showToast('Playlist updated');
     } else {
       // Create
       const newPl = {
@@ -3052,7 +3056,7 @@ document.getElementById('btn-save-playlist').addEventListener('click', async () 
       };
       const { data: created, error } = await sbClient.from('music_playlists').insert(newPl).select().single();
       if (error) throw error;
-      showToast('✅ Playlist created');
+      showToast('Playlist created');
       closeModal('overlay-playlist');
       await loadPlaylists();
       // If opened from Search tab — auto-select the new playlist
@@ -3100,7 +3104,7 @@ function deletePlaylist(id) {
       try {
         const { error } = await sbClient.from('music_playlists').delete().eq('id', id);
         if (error) throw error;
-        showToast('🗑 Playlist deleted');
+        showToast('Playlist deleted');
         await loadPlaylists();
       } catch (err) {
         showToast('Error: ' + err.message);
@@ -3154,7 +3158,7 @@ document.getElementById('btn-detail-edit').addEventListener('click', () => {
 // ── Playlists: copy public link ───────────────────────────────────────
 function copyPublicLink(slug) {
   const url = `https://dafaspace.github.io/music-night/?p=${slug}`;
-  navigator.clipboard.writeText(url).then(() => showToast('🔗 Link copied!'));
+  navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
 }
 
 // ── Tracks: load for detail modal (stub, full logic in step 6) ────────
@@ -3191,7 +3195,7 @@ function renderTrackList(tracks, playlistId) {
   if (!tracks.length) {
     container.innerHTML = `
       <div class="empty-state" style="padding:32px 0">
-        <div class="empty-state-icon">🎵</div>
+        <div class="empty-state-icon"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
         <div class="empty-state-title">No Tracks Yet</div>
         <p>Go to the Search tab to find and add tracks.</p>
       </div>`;
@@ -3228,7 +3232,7 @@ function renderTrackList(tracks, playlistId) {
       </div>
       <div class="direct-links-wrap">
         <button class="direct-links-toggle" onclick="toggleDirectLinks(this,'${t.id}')">
-          ${hasDirectLinks ? '✏️ Edit direct links' : '+ Add direct links'}
+          ${hasDirectLinks ? '<svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>️ Edit direct links' : '+ Add direct links'}
         </button>
         <div class="direct-links-panel" style="display:none">
           <div class="direct-links-grid">
@@ -3359,7 +3363,7 @@ function toggleDirectLinks(btn, trackId) {
   if (!panel) return;
   const open = panel.style.display === 'none' || !panel.style.display;
   panel.style.display = open ? '' : 'none';
-  if (toggleBtn) toggleBtn.textContent = open ? '− Close' : (item.querySelector('[data-platform-key]')?.value ? '✏️ Edit direct links' : '+ Add direct links');
+  if (toggleBtn) toggleBtn.textContent = open ? '− Close' : (item.querySelector('[data-platform-key]')?.value ? '<svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>️ Edit direct links' : '+ Add direct links');
 }
 
 // ── Direct links: save to DB ──────────────────────────────────────────
@@ -3399,12 +3403,12 @@ async function saveDirectLinks(trackId, playlistId, saveBtn) {
       );
     }
 
-    showToast('✅ Direct links saved');
+    showToast('Direct links saved');
     // Close panel
     const panel = item.querySelector('.direct-links-panel');
     if (panel) panel.style.display = 'none';
     const toggleBtn = item.querySelector('.direct-links-toggle');
-    if (toggleBtn) toggleBtn.textContent = Object.keys(direct_urls).length ? '✏️ Edit direct links' : '+ Add direct links';
+    if (toggleBtn) toggleBtn.textContent = Object.keys(direct_urls).length ? '<svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>️ Edit direct links' : '+ Add direct links';
   } catch (err) {
     showToast('Error: ' + err.message);
   }
@@ -3547,7 +3551,7 @@ document.getElementById('btn-audd').addEventListener('click', async () => {
             ? data.error
             : data.error?.error_message;
           if (reason) {
-            auddStatus('❌ ' + reason);
+            auddStatus('' + reason);
             setTimeout(() => auddStatus(''), 6000);
             auddRecording = false;
             return;
@@ -3565,7 +3569,7 @@ document.getElementById('btn-audd').addEventListener('click', async () => {
             "A rare find! Let me try one more time?",
             "Lean in! I'm catching the vibe",
           ];
-          auddStatus('❌ ' + failPhrases[Math.floor(Math.random() * failPhrases.length)]);
+          auddStatus('' + failPhrases[Math.floor(Math.random() * failPhrases.length)]);
           setTimeout(() => auddStatus(''), 4000);
           auddRecording = false;
           return;
@@ -3604,11 +3608,11 @@ document.getElementById('btn-audd').addEventListener('click', async () => {
           "Spot on! I love this one too",
           "Ta-da! Here it is",
         ];
-        auddStatus('✅ ' + successPhrases[Math.floor(Math.random() * successPhrases.length)]);
+        auddStatus('' + successPhrases[Math.floor(Math.random() * successPhrases.length)]);
         setTimeout(() => auddStatus(''), 4000);
 
       } catch (e) {
-        auddStatus('❌ Error: ' + e.message);
+        auddStatus('Error: ' + e.message);
         setTimeout(() => auddStatus(''), 3000);
         auddRecording = false;
       }
@@ -3644,12 +3648,12 @@ document.getElementById('btn-parse-link').addEventListener('click', async () => 
     // Fetch meta first
     const metaRes = await fetch(`https://movie-night-proxy.dafa4me.workers.dev/meta?url=${encodeURIComponent(raw)}`).then(r => r.json());
 
-    if (!metaRes || metaRes.error) { showToast('❌ Could not parse link'); return; }
+    if (!metaRes || metaRes.error) { showToast('Could not parse link'); return; }
     if (metaRes.artist) document.getElementById('search-artist').value = metaRes.artist;
     if (metaRes.track)  document.getElementById('search-track').value  = metaRes.track;
     document.getElementById('paste-link-input').value = '';
     updateSearchPreview();
-    showToast('✅ Filled!');
+    showToast('Filled!');
 
     // Check track_links cache first
     if (metaRes.artist && metaRes.track) {
@@ -3680,7 +3684,7 @@ document.getElementById('btn-parse-link').addEventListener('click', async () => 
       } catch (_) {}
     }, 3000);
   } catch (e) {
-    showToast('❌ Could not parse link');
+    showToast('Could not parse link');
   } finally {
     btn.textContent = '↵ Fill';
     btn.disabled = false;
@@ -3842,7 +3846,7 @@ document.getElementById('btn-save-username').addEventListener('click', async () 
       if (error.code === '23505') throw new Error('Username already taken');
       throw error;
     }
-    showToast('✅ Username saved!');
+    showToast('Username saved!');
     updateProfileLink(raw);
   } catch (err) {
     showToast('Error: ' + err.message);
@@ -3856,7 +3860,7 @@ function updateProfileLink(username) {
   const linkDiv = document.getElementById('account-profile-link');
   const linkEl = document.getElementById('account-profile-url');
   linkEl.href = url;
-  linkEl.textContent = `🔗 music-night/?u=${username}`;
+  linkEl.textContent = `<svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg> music-night/?u=${username}`;
   linkDiv.style.display = '';
 }
 
@@ -4162,7 +4166,7 @@ async function importSpotifyPlaylist(spotifyId, name, total) {
     }
 
     closeModal('overlay-spotify');
-    showToast(`✅ "${name}" imported — ${rows.length} tracks`);
+    showToast(`"${name}" imported — ${rows.length} tracks`);
     await loadPlaylists();
   } catch (err) {
     showToast('Import failed: ' + err.message);
@@ -4369,7 +4373,7 @@ document.getElementById('csv-file-input').addEventListener('change', e => {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    document.getElementById('csv-file-name').textContent = '📄 ' + file.name;
+    document.getElementById('csv-file-name').textContent = '<svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> ' + file.name;
     document.getElementById('csv-file-name').style.display = '';
     importedTracks = parseCSV(ev.target.result);
     renderImportPreview(importedTracks);
@@ -4392,7 +4396,7 @@ document.getElementById('csv-drop-zone').addEventListener('drop', e => {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    document.getElementById('csv-file-name').textContent = '📄 ' + file.name;
+    document.getElementById('csv-file-name').textContent = '<svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> ' + file.name;
     document.getElementById('csv-file-name').style.display = '';
     importedTracks = parseCSV(ev.target.result);
     renderImportPreview(importedTracks);
@@ -4464,7 +4468,7 @@ document.getElementById('btn-import-confirm').addEventListener('click', async ()
     }
 
     closeModal('overlay-import');
-    showToast('✅ ' + importedTracks.length + ' tracks imported!');
+    showToast('' + importedTracks.length + ' tracks imported!');
     await loadPlaylistTracks(currentPlaylist.id);
     await loadPlaylists();
   } catch (err) {
@@ -4505,7 +4509,7 @@ document.getElementById('btn-export-json').addEventListener('click', async () =>
   };
   const filename = (currentPlaylist.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'playlist') + '.json';
   downloadFile(filename, JSON.stringify(payload, null, 2), 'application/json');
-  showToast('📥 JSON exported');
+  showToast('JSON exported');
 });
 
 document.getElementById('btn-export-csv').addEventListener('click', async () => {
@@ -4518,7 +4522,7 @@ document.getElementById('btn-export-csv').addEventListener('click', async () => 
   )];
   const filename = (currentPlaylist.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'playlist') + '.csv';
   downloadFile(filename, rows.join('\n'), 'text/csv');
-  showToast('📥 CSV exported');
+  showToast('CSV exported');
 });
 
 // ── Public playlist: load ─────────────────────────────────────────────
@@ -4536,7 +4540,7 @@ async function loadPublicPlaylist(slug) {
       document.getElementById('public-playlist-name').textContent = 'Playlist Not Found';
       document.getElementById('public-tracks').innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">🔍</div>
+          <div class="empty-state-icon"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
           <div class="empty-state-title">Not Found</div>
           <p>This playlist may have been made private or deleted.</p>
         </div>`;
@@ -4695,13 +4699,13 @@ async function loadPublicPlaylist(slug) {
       if (cta) cta.style.display = hasEmbed ? 'none' : '';
       container.innerHTML = hasEmbed
         ? `<div class="empty-state">
-             <div class="empty-state-icon">🔗</div>
+             <div class="empty-state-icon"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></div>
              <div class="empty-state-title">Playable in one service only</div>
              <p>These tracks live inside the player above, so they open in that
                 service and nowhere else. Nothing here to open in yours yet.</p>
            </div>`
         : `<div class="empty-state">
-             <div class="empty-state-icon">🎵</div>
+             <div class="empty-state-icon"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
              <div class="empty-state-title">No Tracks Yet</div>
              <p>This playlist is empty.</p>
            </div>`;
@@ -4714,7 +4718,7 @@ async function loadPublicPlaylist(slug) {
     console.warn('Public load error:', err);
     document.getElementById('public-tracks').innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-icon">😕</div>
+        <div class="empty-state-icon"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2M9 9h.01M15 9h.01"/></svg></div>
         <div class="empty-state-title">Could not load</div>
         <p>Try again in a moment.</p>
       </div>`;
@@ -4730,7 +4734,6 @@ function renderPublicTracks(trackList) {
       return `
         <div class="track-item">
           <div class="track-header">
-            <div class="track-num">${i + 1}</div>
             <div class="track-art">
               <button class="track-play" hidden aria-label="Play a 30 second preview"
                       onclick="togglePreview(this)"></button>
@@ -4808,7 +4811,7 @@ function togglePreview(btn) {
 
 // ── Public playlist: button handlers ─────────────────────────────────
 document.getElementById('btn-public-copy').addEventListener('click', () => {
-  navigator.clipboard.writeText(window.location.href).then(() => showToast('🔗 Link copied!'));
+  navigator.clipboard.writeText(window.location.href).then(() => showToast('Link copied!'));
 });
 const _pubSignin = document.getElementById('link-public-signin');
 if (_pubSignin) _pubSignin.addEventListener('click', () => {
@@ -4837,7 +4840,7 @@ async function loadUserProfile(username) {
       document.getElementById('profile-name').textContent = 'User Not Found';
       document.getElementById('profile-playlists').innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">🔍</div>
+          <div class="empty-state-icon"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
           <div class="empty-state-title">Not Found</div>
           <p>No user with username "@${escHtml(username)}"</p>
         </div>`;
@@ -4864,7 +4867,7 @@ async function loadUserProfile(username) {
     if (!list.length) {
       container.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">🎶</div>
+          <div class="empty-state-icon"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
           <div class="empty-state-title">No Public Playlists</div>
           <p>${escHtml(displayName)} hasn't shared any playlists yet.</p>
         </div>`;
@@ -4891,7 +4894,7 @@ async function loadUserProfile(username) {
     console.warn('Profile load error:', err);
     document.getElementById('profile-playlists').innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-icon">⚠️</div>
+        <div class="empty-state-icon"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>️</div>
         <div class="empty-state-title">Something went wrong</div>
       </div>`;
   }
@@ -4980,7 +4983,7 @@ if (_profCreate) _profCreate.addEventListener('click', () => {
         // Recovery arrives in this format too. Same rule as the query-param
         // path: send them to set a password rather than into the app.
         if (hashType === 'recovery') { showScreen('reset'); return; }
-        showToast('✅ Email confirmed! Welcome!');
+        showToast('Email confirmed! Welcome!');
         if (data.session) await onSignedIn(data.session.user);
         return;
       } catch (err) {
@@ -5002,7 +5005,7 @@ if (_profCreate) _profCreate.addEventListener('click', () => {
       // a new password - so stop here rather than dropping them into the app,
       // where they would still not know their password.
       if (type === 'recovery') { showScreen('reset'); return; }
-      showToast('✅ Email confirmed! You are now signed in.');
+      showToast('Email confirmed! You are now signed in.');
     } catch (err) {
       showToast(type === 'recovery'
         ? 'That reset link did not work: ' + err.message
