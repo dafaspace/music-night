@@ -4430,8 +4430,15 @@ async function loadPublicPlaylist(slug) {
     const byPart = authorName
       ? ` · shared by ${escHtml(authorName)}${authorUsername ? ` <a href="?u=${encodeURIComponent(authorUsername)}" style="color:#a78bfa;text-decoration:none;font-family:DM Sans,sans-serif;display:inline-block;padding:14px 4px">@${escHtml(authorUsername)}</a>` : ''}`
       : '';
+    // Counting rows and calling the result "tracks" is a lie when the playlist is
+    // an embed: the player above is holding songs this count cannot see. Say
+    // nothing rather than something false.
+    const hasAnyEmbed = !!(pl.spotify_url || pl.apple_music_url || pl.deezer_url || pl.soundcloud_url);
+    const countPart = trackList.length
+      ? `${trackList.length} track${trackList.length !== 1 ? 's' : ''}`
+      : (hasAnyEmbed ? '' : '0 tracks');
     document.getElementById('public-playlist-meta').innerHTML =
-      `${trackList.length} track${trackList.length !== 1 ? 's' : ''}${byPart}`;
+      countPart ? `${countPart}${byPart}` : (byPart ? byPart.replace(/^\s*·\s*/, '') : '');
 
     if (pl.description) {
       const descEl = document.getElementById('public-desc');
@@ -4520,10 +4527,14 @@ async function loadPublicPlaylist(slug) {
     }
 
     if (embedHtml) {
+      // The "or open on any platform" line only earns its place when there is
+      // something underneath it to open.
+      const hasAlternatives = trackList.length > 0;
       embedDiv.innerHTML = `
         <div style="padding:0 16px;margin-top:16px">${embedHtml}</div>
-        <div class="divider" style="margin:16px 0"></div>
-        <div style="font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-align:center;padding:0 16px">OR OPEN ON ANY PLATFORM</div>`;
+        ${hasAlternatives ? '<div class="divider" style="margin:16px 0"></div>' : ''}
+        ${hasAlternatives ? `<div style="font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-align:center;padding:0 16px">OR OPEN ON ANY PLATFORM</div>` : ''}
+      `;
       embedDiv.style.display = '';
     }
 
