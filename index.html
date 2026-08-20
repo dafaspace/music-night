@@ -263,6 +263,37 @@ button {
     .feedback-topbar-btn { min-height: 44px; min-width: 44px; }
     .avatar-btn { width: 44px; height: 44px; }
 
+    /* Cover art and the preview button. The art holder keeps its space from the
+       start so the row does not jump when the image arrives. */
+    .track-art {
+      width: 48px; height: 48px; border-radius: 6px; flex-shrink: 0;
+      background: var(--primary-soft); overflow: hidden;
+    }
+    .track-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .track-play {
+      width: 44px; height: 44px; flex-shrink: 0; padding: 0;
+      border: 1px solid var(--primary-border); border-radius: 50%;
+      background: var(--primary-soft); cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: transform 100ms ease-out, background 150ms;
+    }
+    .track-play::before {
+      content: ''; display: block;
+      border-style: solid; border-width: 6px 0 6px 10px;
+      border-color: transparent transparent transparent var(--primary);
+      margin-left: 3px;   /* a triangle looks off-centre when centred by its box */
+    }
+    .track-play.playing::before {
+      border-width: 0; width: 10px; height: 12px; margin-left: 0;
+      background: var(--primary);
+      -webkit-mask: linear-gradient(#000 0 0) 0/3.5px 100% no-repeat,
+                    linear-gradient(#000 0 0) 100%/3.5px 100% no-repeat;
+              mask: linear-gradient(#000 0 0) 0/3.5px 100% no-repeat,
+                    linear-gradient(#000 0 0) 100%/3.5px 100% no-repeat;
+    }
+    .track-play:active { transform: scale(0.94); }
+    .track-header { gap: 10px; align-items: center; }
+
     .btn-icon {
       width: 44px;
       height: 44px;
@@ -1490,7 +1521,7 @@ button {
     <div class="public-footer">
       <div class="public-footer-cta">
         <div class="public-footer-join">
-          <p>Already here before?</p>
+          <p>Already have an account?</p>
           <div class="public-footer-join-btns">
             <button class="btn btn-ghost btn-sm" id="btn-public-create" style="display:none">Get Started</button>
             <button class="btn btn-ghost btn-sm" id="link-public-signin">Sign In</button>
@@ -2485,6 +2516,104 @@ async function fetchOdesliLinks(spotifyUri) {
 // exact bridge left after Odesli closed and Spotify capped development apps at
 // five users - so ISRC is the spine, and everything else hangs off it.
 const isrcCache = new Map();
+
+// Matching, measured rather than assumed. iTunes Search is a search, not a lookup:
+// "radiohead creep" returns 25 results without the original among them, three of the
+// first five being covers by other artists. But on this owner's actual repertoire -
+// Kit Sebastian, Soapkills, Altin Gun, Khruangbin - all eight test tracks matched on
+// the first result. The failure concentrates on famous songs drowned in karaoke, so
+// the rules below exist to catch that tail, not the common case.
+// NFKD strips accents, but only from letters that decompose. Turkish dotless i,
+// Nordic slashed o, Polish l-with-stroke and the ligatures are separate letters
+// and survive it - so "Altin Gun" failed to match "Altin Gun" until these were
+// mapped by hand. Measured: it was the one failure in a ten-track sample, and it
+// landed on exactly the international repertoire these rules exist to protect.
+const LETTER_MAP = { 'ı':'i', 'İ':'i', 'ø':'o', 'Ø':'o', 'đ':'d', 'Đ':'d',
+                     'ł':'l', 'Ł':'l', 'ß':'ss', 'æ':'ae', 'Æ':'ae',
+                     'œ':'oe', 'Œ':'oe', 'ð':'d', 'þ':'th' };
+
+function normLoose(v) {
+  return String(v || '')
+    .replace(/[ıİøØđĐłŁßæÆœŒðþ]/g, ch => LETTER_MAP[ch] || ch)
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+const VARIANT_RE = /\((?:[^)]*\b(?:live|instrumental|acoustic|karaoke|cover|remix|version|remaster(?:ed)?|edit|demo|mix)\b[^)]*)\)/i;
+
+function scoreCandidate(cand, artist, track) {
+  const a = normLoose(artist), t = normLoose(track);
+  const ca = normLoose(cand.artistName), ct = normLoose(cand.trackName);
+  if (!ca || !ct) return -1;
+  // Dave Brubeck must match The Dave Brubeck Quartet, so containment, not equality.
+  const artistOk = ca === a || ca.includes(a) || a.includes(ca);
+  if (!artistOk) return -1;
+  let score = 0;
+  if (ct === t) score += 10;
+  else if (ct.includes(t) || t.includes(ct)) score += 5;
+  else return -1;
+  // A variant suffix is only wanted when the query asked for one.
+  if (VARIANT_RE.test(cand.trackName || '') && !VARIANT_RE.test(track || '')) score -= 6;
+  if (ca === a) score += 2;
+  return score;
+}
+
+// artworkUrl100 is a thumbnail; the same URL serves any size.
+const bigArt = (url) => url ? url.replace(/\/\d+x\d+bb\./, '/600x600bb.') : null;
+
+async function lookupItunes(artist, track) {
+  const term = encodeURIComponent(`${artist} ${track}`.trim());
+  const res = await fetch(`https://itunes.apple.com/search?term=${term}&entity=song&limit=12`);
+  if (!res.ok) return null;
+  const { results = [] } = await res.json();
+  let best = null, bestScore = 0;
+  for (const c of results) {
+    const sc = scoreCandidate(c, artist, track);
+    if (sc <= 0) continue;
+    // Prefer the earliest release: the same recording turns up on the album, a
+    // deluxe edition and three compilations.
+    if (sc > bestScore || (sc === bestScore && best && (c.releaseDate || '') < (best.releaseDate || ''))) {
+      best = c; bestScore = sc;
+    }
+  }
+  if (!best) return null;
+  return {
+    artwork: bigArt(best.artworkUrl100),
+    preview: best.previewUrl || null,
+    appleUrl: best.trackViewUrl || null,
+    album: best.collectionName || null,
+    year: (best.releaseDate || '').slice(0, 4) || null,
+    exact: bestScore >= 10,
+  };
+}
+
+// One place that answers "what does this track look and sound like". ISRC first
+// because it is exact and free; the search is the fallback and says so.
+const enrichCache = new Map();
+
+async function enrichTrack(t) {
+  const key = `${t.isrc || ''}|${t.artist}|${t.track_name}`;
+  if (enrichCache.has(key)) return enrichCache.get(key);
+  let out = null;
+  try {
+    if (t.isrc) {
+      const d = await resolveByIsrc(t.isrc);
+      if (d) out = { artwork: d.artwork, preview: d.preview, deezerUrl: d.deezer, exact: true };
+    }
+    if (!out || !out.artwork || !out.preview) {
+      const it = await lookupItunes(t.artist, t.track_name);
+      if (it) out = {
+        artwork: out?.artwork || it.artwork,
+        preview: out?.preview || it.preview,
+        deezerUrl: out?.deezerUrl || null,
+        appleUrl: it.appleUrl,
+        exact: out?.exact || it.exact,
+      };
+    }
+  } catch (e) { console.warn('enrich:', e.message); }
+  enrichCache.set(key, out);
+  return out;
+}
 
 async function resolveByIsrc(isrc) {
   if (!isrc) return null;
@@ -4566,6 +4695,21 @@ async function loadPublicPlaylist(slug) {
       return;
     }
 
+    renderPublicTracks(trackList);
+    enrichPublicTracks(trackList);
+  } catch (err) {
+    console.warn('Public load error:', err);
+    document.getElementById('public-tracks').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">😕</div>
+        <div class="empty-state-title">Could not load</div>
+        <p>Try again in a moment.</p>
+      </div>`;
+  }
+}
+
+function renderPublicTracks(trackList) {
+    const container = document.getElementById('public-tracks');
     container.innerHTML = trackList.map((t, i) => {
       const topLinks = STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS)
         .map(p => `<a href="${p.url(t.artist, t.track_name)}" target="_blank" rel="noopener" class="platform-btn">${p.icon} ${p.name}</a>`)
@@ -4574,6 +4718,9 @@ async function loadPublicPlaylist(slug) {
         <div class="track-item">
           <div class="track-header">
             <div class="track-num">${i + 1}</div>
+            <div class="track-art" aria-hidden="true"></div>
+            <button class="track-play" hidden aria-label="Play a 30 second preview"
+                    onclick="togglePreview(this)"></button>
             <div class="track-info">
               <div class="track-name">${escHtml(t.track_name)}</div>
               <div class="track-artist">${escHtml(t.artist)}${t.genre ? `${renderGenreBadges(t.genre) ? ' · ' + renderGenreBadges(t.genre) : ''}` : ''}</div>
@@ -4585,16 +4732,60 @@ async function loadPublicPlaylist(slug) {
           </div>
         </div>`;
     }).join('');
+}
 
-  } catch (err) {
-    console.warn('Public load error:', err);
-    document.getElementById('public-tracks').innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">⚠️</div>
-        <div class="empty-state-title">Something went wrong</div>
-        <p>${escHtml(err.message)}</p>
-      </div>`;
+// Art and a 30-second preview, fetched after the list is already on screen so
+// nothing waits on the network to read. A film page cannot play; a track page
+// can, and that is the whole reason this page should exist.
+async function enrichPublicTracks(trackList) {
+  const container = document.getElementById('public-tracks');
+  for (let i = 0; i < trackList.length; i++) {
+    const t = trackList[i];
+    const data = await enrichTrack(t);
+    if (!data) continue;
+    const item = container.querySelectorAll('.track-item')[i];
+    if (!item) continue;
+
+    if (data.artwork) {
+      const holder = item.querySelector('.track-art');
+      if (holder) {
+        holder.innerHTML = `<img src="${safeUrl(data.artwork)}" alt="" loading="lazy">`;
+        holder.classList.add('has-art');
+      }
+    }
+    if (data.preview) {
+      const btn = item.querySelector('.track-play');
+      if (btn) {
+        btn.dataset.preview = data.preview;
+        btn.hidden = false;
+      }
+    }
+    // A pause between calls: iTunes documents no rate limit, which is a reason
+    // to be careful rather than a licence to hammer it.
+    await new Promise(r => setTimeout(r, 120));
   }
+}
+
+// One preview at a time - two tracks playing over each other is nobody's idea.
+let publicAudio = null;
+let publicPlayingBtn = null;
+
+function togglePreview(btn) {
+  const url = btn.dataset.preview;
+  if (!url) return;
+  if (publicPlayingBtn === btn && publicAudio && !publicAudio.paused) {
+    publicAudio.pause();
+    btn.classList.remove('playing');
+    publicPlayingBtn = null;
+    return;
+  }
+  if (publicAudio) { publicAudio.pause(); }
+  if (publicPlayingBtn) publicPlayingBtn.classList.remove('playing');
+  publicAudio = new Audio(url);
+  publicAudio.play().catch(() => {});
+  publicAudio.onended = () => { btn.classList.remove('playing'); publicPlayingBtn = null; };
+  btn.classList.add('playing');
+  publicPlayingBtn = btn;
 }
 
 // ── Public playlist: button handlers ─────────────────────────────────
