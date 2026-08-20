@@ -191,17 +191,13 @@ button {
   -webkit-appearance: none; appearance: none;
   text-box: trim-both cap alphabetic;   /* trims to cap height, so the ink is centred */
 }
-/* An invisible 44x44 floor around any control that is visually smaller. Layout does not
-   move: the pseudo-element is absolutely positioned and centred on the button, so dense
-   rows keep their spacing while every target becomes reachable. No button in this file
-   uses ::after for its own drawing - checked before adding this. */
-button { position: relative; }
-button::after {
-  content: ''; position: absolute; left: 50%; top: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%; height: 100%;
-  min-width: 44px; min-height: 44px;
-}
+/* An earlier attempt grew the hit area with an absolutely positioned ::after on every
+   button. Measured in a real three-button row, 32px wide with 6px gaps, it backfired:
+   neighbouring floors overlap, the later sibling wins the overlap, so each button got
+   38px rather than 44 - and Delete, drawn last, took the gap AND the right edge of
+   Edit. A tap that used to land in dead space started deleting a playlist. Targets are
+   given real size here instead, and the destructive one is moved away from its
+   neighbours rather than merely enlarged (apple-design section 16: agency, forgiveness). */
 
     .btn { min-height: 44px;
       display: inline-flex;
@@ -246,14 +242,30 @@ button::after {
     .btn-sm {
       font-size: 12px;
       padding: 6px 12px;
+      min-width: 44px;
     }
+    /* The remainder of the 44px sweep. Inputs and the modal close button were
+       sized by eye; the text links had no padding at all, so "Create one" was a
+       66x17 target. Vertical padding on an inline link grows the hit box without
+       moving the line, which is why the layout is unchanged below. */
+    input[type="text"], input[type="email"], input[type="password"],
+    input[type="url"], input[type="search"], select, textarea {
+      min-height: 44px;
+    }
+    .auth-footer a, #link-to-forgot, #link-to-signup, #link-to-signin,
+    #link-forgot-to-signin { display: inline-block; padding: 14px 6px; }
+
     .btn-icon {
-      width: 32px;
-      height: 32px;
+      width: 44px;
+      height: 44px;
       padding: 0;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 14px;
+      flex-shrink: 0;
     }
+    /* Destructive controls get a gutter, so a miss lands on nothing rather than
+       on the one action that cannot be undone. */
+    .btn-icon[title="Delete"], .btn-icon[title="Remove"] { margin-left: 14px; }
 
     /* ── Auth footer link ───────────────────────────────────────────── */
     .auth-footer {
@@ -701,8 +713,8 @@ button::after {
       background: transparent;
       border: 1px solid rgba(255,255,255,0.2);
       color: var(--text);
-      width: 32px;
-      height: 32px;
+      width: 44px;
+      height: 44px;
       border-radius: 6px;
       cursor: pointer;
       display: flex;
