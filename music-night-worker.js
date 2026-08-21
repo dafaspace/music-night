@@ -85,7 +85,80 @@ async function sb(path) {
   return r.ok ? r.json() : null;
 }
 
-async function sharePage(slug, url) {
+
+// Filling the artwork cache used to depend on the owner opening the playlist
+// while signed in - so a link shared before that unfurled without a cover, and
+// the person best placed to fix it was the one least likely to notice. The card
+// warms its own cache instead: derived from iTunes, never from a user, so there
+// is nothing here to poison and no session to require.
+function loose(v) {
+  return String(v || '')
+    .replace(/[\u0131\u0130\u00f8\u00d8\u0111\u0110\u0142\u0141\u00df\u00e6\u00c6\u0153\u0152\u00f0\u00fe]/g,
+      c => ({'\u0131':'i','\u0130':'i','\u00f8':'o','\u00d8':'o','\u0111':'d','\u0110':'d','\u0142':'l',
+             '\u0141':'l','\u00df':'ss','\u00e6':'ae','\u00c6':'ae','\u0153':'oe','\u0152':'oe',
+             '\u00f0':'d','\u00fe':'th'}[c] || c))
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+const VARIANT = /\((?:[^)]*\b(?:live|instrumental|acoustic|karaoke|cover|remix|version|remaster(?:ed)?|edit|demo|mix)\b[^)]*)\)/i;
+
+// The same scoring the app uses: artist by containment, exact title preferred,
+// variant suffixes penalised unless asked for. A wrong cover on a shared card is
+// worse than no cover, so a weak match yields nothing.
+function score(cand, artist, track) {
+  const a = loose(artist), t = loose(track);
+  const ca = loose(cand.artistName), ct = loose(cand.trackName);
+  if (!ca || !ct) return -1;
+  if (!(ca === a || ca.includes(a) || a.includes(ca))) return -1;
+  let sc = 0;
+  if (ct === t) sc += 10;
+  else if (ct.includes(t) || t.includes(ct)) sc += 5;
+  else return -1;
+  if (VARIANT.test(cand.trackName || '') && !VARIANT.test(track || '')) sc -= 6;
+  return sc;
+}
+
+async function warmArtwork(env, tracks) {
+  if (!env.SUPABASE_KEY) return;
+  for (const t of tracks.slice(0, 6)) {
+    try {
+      const term = encodeURIComponent(`${t.artist} ${t.track_name}`.trim());
+      const r = await fetch(`https://itunes.apple.com/search?term=${term}&entity=song&limit=12`);
+      if (!r.ok) continue;
+      const { results = [] } = await r.json();
+      let best = null, bestScore = 0;
+      for (const c of results) {
+        const sc = score(c, t.artist, t.track_name);
+        if (sc > bestScore) { best = c; bestScore = sc; }
+      }
+      const row = {
+        artist: String(t.artist || '').toLowerCase().trim(),
+        track_name: String(t.track_name || '').toLowerCase().trim(),
+        updated_at: new Date().toISOString(),
+      };
+      if (best) {
+        row.artwork_url = (best.artworkUrl100 || '').replace(/\/\d+x\d+bb\./, '/600x600bb.') || null;
+        row.preview_url = best.previewUrl || null;
+        row.enrich_missed_at = null;
+      } else {
+        row.enrich_missed_at = new Date().toISOString();
+      }
+      await fetch(`${SUPABASE_URL}/rest/v1/track_links?on_conflict=artist,track_name`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: env.SUPABASE_KEY,
+          Authorization: `Bearer ${env.SUPABASE_KEY}`,
+          Prefer: 'resolution=merge-duplicates,return=minimal',
+        },
+        body: JSON.stringify([row]),
+      });
+    } catch (e) { /* a cold cache is slow, not broken */ }
+  }
+}
+
+async function sharePage(slug, url, env, ctx) {
   const pls = await sb(`music_playlists?public_slug=eq.${encodeURIComponent(slug)}&is_public=eq.true&select=id,name,description,user_id&limit=1`);
   const pl = pls && pls[0];
   if (!pl) return new Response("Not found", { status: 404 });
@@ -112,6 +185,9 @@ async function sharePage(slug, url) {
       `&select=artwork_url&limit=1`
     );
     art = (rows && rows[0] && rows[0].artwork_url) || "";
+    // Nothing cached for this playlist yet: answer now, learn afterwards, so the
+    // next person to open the link gets a cover and this one waits for nothing.
+    if (!art && ctx) ctx.waitUntil(warmArtwork(env, list));
   }
 
   const appUrl = `https://tunemail.app/?p=${encodeURIComponent(slug)}`;
@@ -197,7 +273,7 @@ export default {
     const url = new URL(request.url);
 
     if (request.method === "GET" && url.pathname.startsWith("/p/")) {
-      return sharePage(url.pathname.slice(3), url);
+      return sharePage(url.pathname.slice(3), url, env, ctx);
     }
 
     if (request.method === "OPTIONS") {
