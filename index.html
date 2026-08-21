@@ -294,11 +294,13 @@ button {
        screen - so the height comes from padding on the hit box while the border
        keeps its own size via a smaller line-height. */
     .sort-pill { min-height: 44px; padding-top: 0; padding-bottom: 0;
-      letter-spacing: 0.01em;
+      letter-spacing: .02em;
       font-weight: 500;
     }
     .feedback-topbar-btn { min-height: 44px; min-width: 44px; }
-    .avatar-btn { width: 44px; height: 44px; }
+    .avatar-btn { width: 44px; height: 44px;
+      font-weight: 600;
+    }
 
     /* Cover art with the play control on top of it - the arrangement every music
        app uses, from Spotify to Bandcamp. Beside the art it reads as debris; on
@@ -1015,12 +1017,13 @@ button {
       border-bottom: 2px solid transparent;
       color: var(--muted);
       cursor: pointer;
-      font-family: var(--font-display);
-      font-size: 14px;
-      letter-spacing: 0.05em;
+      font-family: var(--font-text);
+      font-size: 12.5px;
+      letter-spacing: .05em;
       padding: 8px 16px;
       margin-bottom: -1px;
       transition: color 0.15s, border-color 0.15s;
+      font-weight: 600;
     }
     .shared-tab-btn.active {
       color: var(--primary);
@@ -1241,11 +1244,12 @@ button {
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.1);
       color: #aaa;
-      font-family: var(--font-display);
-      font-size: 14px;
-      letter-spacing: 0.05em;
+      font-family: var(--font-text);
+      font-size: 13px;
+      letter-spacing: .04em;
       cursor: pointer;
       transition: all 0.15s;
+      font-weight: 600;
     }
     .fb-btn-cancel:hover { background: rgba(255,255,255,0.08); color: #ccc; }
     .fb-btn-send { min-height: 44px;
@@ -1255,11 +1259,12 @@ button {
       background: var(--primary);
       border: none;
       color: #fff;
-      font-family: var(--font-display);
-      font-size: 14px;
-      letter-spacing: 0.05em;
+      font-family: var(--font-text);
+      font-size: 13px;
+      letter-spacing: .04em;
       cursor: pointer;
       transition: opacity 0.15s;
+      font-weight: 600;
     }
     .fb-btn-send:hover { opacity: 0.88; }
     .fb-btn-send:disabled { opacity: 0.5; cursor: default; }
@@ -1846,7 +1851,7 @@ button {
           </label>
         </div>
         <div class="divider"></div>
-        <div style="font-family:var(--font-display);font-size:13px;letter-spacing:0.5px;color:var(--muted);margin-bottom:10px">Streaming Links <span style="font-family:DM Sans;font-size:11px;letter-spacing:0;text-transform:none">(optional — adds an embedded player)</span></div>
+        <div style="font-family:var(--font-text);font-weight:600;font-size:12.5px;letter-spacing:.05em;color:var(--muted);margin-bottom:10px">Streaming Links <span style="font-family:DM Sans;font-size:11px;letter-spacing:0;text-transform:none">(optional — adds an embedded player)</span></div>
         <div class="form-group">
           <label style="display:flex;align-items:center;gap:6px"><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:4px"><svg width="13" height="13" viewBox="0 0 168 168"><circle cx="84" cy="84" r="84" fill="#1DB954"/><path d="M120.7 116.4c-1.6 2.7-5.1 3.5-7.7 1.9-21.2-13-47.9-15.9-79.3-8.7-3 .7-6.1-1.2-6.8-4.2-.7-3 1.2-6.1 4.2-6.8 34.4-7.9 64-4.5 87.8 10.1 2.7 1.6 3.5 5.1 1.9 7.7zm10.2-22.8c-2 3.4-6.4 4.5-9.8 2.5-24.3-14.9-61.3-19.3-90-10.5-3.7 1.1-7.6-1-8.7-4.7-1.1-3.7 1-7.6 4.7-8.7 32.8-10 73.5-5.1 101.3 12 3.4 2 4.5 6.4 2.5 9.8zm.9-23.8c-29.1-17.3-77.2-18.9-105-10.5-4.5 1.4-9.2-1.2-10.5-5.6-1.4-4.5 1.2-9.2 5.6-10.5 31.9-9.7 84.9-7.8 118.4 12.1 4 2.4 5.4 7.6 3 11.6-2.4 4.1-7.6 5.4-11.6 3z" fill="white"/></svg></span> Spotify URL</label>
           <input type="url" id="playlist-spotify-url" placeholder="https://open.spotify.com/playlist/..." />
@@ -1960,7 +1965,7 @@ button {
         <!-- CSV tab -->
         <div id="import-panel-csv">
           <div style="background:var(--primary-soft);border:1px solid var(--primary-border);border-radius:8px;padding:12px;margin-bottom:14px">
-            <div style="font-family:var(--font-display);font-size:13px;letter-spacing:0.5px;color:#a78bfa;margin-bottom:4px">Exportify CSV</div>
+            <div style="font-family:var(--font-text);font-weight:600;font-size:12.5px;letter-spacing:.05em;color:#a78bfa;margin-bottom:4px">Exportify CSV</div>
             <div style="font-size:12px;color:var(--muted);line-height:1.6">
               Go to <strong style="color:var(--text)">exportify.app</strong> → connect Spotify → export playlist as CSV → upload here.<br/>
               Artist, track name, album, duration and Spotify URI are all imported automatically.
@@ -1968,7 +1973,7 @@ button {
           </div>
           <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--border);border-radius:10px;padding:28px 16px;cursor:pointer;transition:border-color 0.15s" id="csv-drop-zone">
             <span style="font-size:28px"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.6 3.9A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg></span>
-            <span style="font-family:var(--font-display);font-size:14px;letter-spacing:0.5px;color:var(--muted)">Drop CSV here or tap to browse</span>
+            <span style="font-family:var(--font-text);font-weight:600;font-size:12.5px;letter-spacing:.05em;color:var(--muted)">Drop CSV here or tap to browse</span>
             <input type="file" id="csv-file-input" accept=".csv" style="display:none" />
           </label>
           <div id="csv-file-name" style="font-size:12px;color:#a78bfa;margin-top:8px;display:none"></div>
@@ -1989,7 +1994,7 @@ button {
 
         <!-- Preview -->
         <div id="import-preview" style="display:none;margin-top:12px">
-          <div style="font-family:var(--font-display);font-size:13px;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px" id="import-preview-count"></div>
+          <div style="font-family:var(--font-text);font-weight:600;font-size:12.5px;letter-spacing:.05em;color:var(--muted);margin-bottom:6px" id="import-preview-count"></div>
           <div id="import-preview-list" style="max-height:150px;overflow-y:auto"></div>
         </div>
       </div>
@@ -4738,7 +4743,7 @@ async function loadPublicPlaylist(slug) {
     if (spotifyEmbedSrc) {
       embedHtml += `
         <div style="margin-bottom:12px">
-          <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${SVG_ICONS.spotify} SPOTIFY</div>
+          <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-text);font-weight:600;font-size:11.5px;letter-spacing:.05em;color:var(--muted);margin-bottom:6px">${SVG_ICONS.spotify} SPOTIFY</div>
           <iframe src="${spotifyEmbedSrc}"
             style="border-radius:12px;width:100%;border:none" height="352"
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
@@ -4769,7 +4774,7 @@ async function loadPublicPlaylist(slug) {
       if (appleEmbedUrl) {
         embedHtml += `
           <div style="margin-bottom:12px">
-            <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${SVG_ICONS.apple} APPLE MUSIC</div>
+            <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-text);font-weight:600;font-size:11.5px;letter-spacing:.05em;color:var(--muted);margin-bottom:6px">${SVG_ICONS.apple} APPLE MUSIC</div>
             <iframe src="${appleEmbedUrl}"
               style="border-radius:12px;width:100%;border:none;overflow:hidden;background:transparent" height="450"
               sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
@@ -4783,7 +4788,7 @@ async function loadPublicPlaylist(slug) {
       if (deezerId) {
         embedHtml += `
           <div style="margin-bottom:12px">
-            <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${SVG_ICONS.deezer} DEEZER</div>
+            <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-text);font-weight:600;font-size:11.5px;letter-spacing:.05em;color:var(--muted);margin-bottom:6px">${SVG_ICONS.deezer} DEEZER</div>
             <iframe src="https://widget.deezer.com/widget/dark/playlist/${deezerId}"
               style="border-radius:12px;width:100%;border:none" height="350"
               allow="encrypted-media; clipboard-write" loading="lazy"></iframe>
@@ -4794,7 +4799,7 @@ async function loadPublicPlaylist(slug) {
     if (pl.soundcloud_url) {
       embedHtml += `
         <div style="margin-bottom:12px">
-          <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${SVG_ICONS.soundcloud} SOUNDCLOUD</div>
+          <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-text);font-weight:600;font-size:11.5px;letter-spacing:.05em;color:var(--muted);margin-bottom:6px">${SVG_ICONS.soundcloud} SOUNDCLOUD</div>
           <iframe src="https://w.soundcloud.com/player/?url=${encodeURIComponent(pl.soundcloud_url)}&color=%237c3aed&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&visual=true"
             style="border-radius:12px;width:100%;border:none" height="300" loading="lazy"></iframe>
         </div>`;
@@ -4807,7 +4812,7 @@ async function loadPublicPlaylist(slug) {
       embedDiv.innerHTML = `
         <div style="padding:0 16px;margin-top:16px">${embedHtml}</div>
         ${hasAlternatives ? '<div class="divider" style="margin:16px 0"></div>' : ''}
-        ${hasAlternatives ? `<div style="font-family:var(--font-display);font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-align:center;padding:0 16px">OR OPEN ON ANY PLATFORM</div>` : ''}
+        ${hasAlternatives ? `<div style="font-family:var(--font-text);font-weight:600;font-size:12.5px;letter-spacing:.05em;color:var(--muted);margin-bottom:8px;text-align:center;padding:0 16px">OR OPEN ON ANY PLATFORM</div>` : ''}
       `;
       embedDiv.style.display = '';
     }
