@@ -3499,6 +3499,66 @@ function toggleDirectLinks(btn, trackId) {
 }
 
 // ── Direct links: save to DB ──────────────────────────────────────────
+// ── Direct links: shape, then proof ──────────────────────────────────
+// A hand-fixed link is the one asset here nobody else has, and the one that
+// rots fastest if every edit is believed. People mistype; a public write path
+// invites worse. So a correction is personal until it is proven, and the proof
+// is mechanical rather than a judgement about the person.
+
+const URL_SHAPE = {
+  spotify:      /^https:\/\/open\.spotify\.com\/(intl-[a-z]{2}\/)?track\/[A-Za-z0-9]{22}(\?.*)?$/,
+  appleMusic:   /^https:\/\/music\.apple\.com\/[a-z]{2}\/(album|song)\/[^/]+\/\d+(\?i=\d+)?$/,
+  youtubeMusic: /^https:\/\/music\.youtube\.com\/watch\?v=[\w-]{11}([&?].*)?$/,
+  bandcamp:     /^https:\/\/[\w-]+\.bandcamp\.com\/track\/[\w-]+\/?$/,
+  tidal:        /^https:\/\/(listen\.)?tidal\.com\/(browse\/)?track\/\d+(\?.*)?$/,
+  deezer:       /^https:\/\/(www\.)?deezer\.com\/([a-z]{2}\/)?track\/\d+(\?.*)?$/,
+};
+
+const PLATFORM_LABEL = {
+  spotify: 'Spotify', appleMusic: 'Apple Music', youtubeMusic: 'YouTube Music',
+  bandcamp: 'Bandcamp', tidal: 'Tidal', deezer: 'Deezer',
+};
+
+// Cheap and first: most bad input is a wrong paste or a page URL rather than a
+// track URL, and that costs nothing to catch.
+function validateDirectUrl(key, url) {
+  const shape = URL_SHAPE[key];
+  if (!shape) return { ok: true, verified: false };
+  if (!shape.test(url)) {
+    return { ok: false, reason: `That does not look like a ${PLATFORM_LABEL[key] || key} track link` };
+  }
+  return { ok: true, verified: false };
+}
+
+// Where the platform answers for free, ask it what the link actually points at
+// and compare with the same normalisation the matcher uses. This turns "trust
+// the user" into "check the claim", which is the only version that scales to
+// strangers.
+async function verifyDirectUrl(key, url, artist, track) {
+  try {
+    if (key === 'deezer') {
+      const id = (url.match(/track\/(\d+)/) || [])[1];
+      if (!id) return false;
+      const r = await fetch(`https://api.deezer.com/track/${id}`);
+      if (!r.ok) return false;
+      const d = await r.json();
+      if (!d || d.error) return false;
+      return scoreCandidate({ artistName: d.artist?.name, trackName: d.title }, artist, track) > 0;
+    }
+    if (key === 'appleMusic') {
+      const id = (url.match(/[?&]i=(\d+)/) || url.match(/\/(\d+)(?:\?|$)/) || [])[1];
+      if (!id) return false;
+      const r = await fetch(`https://itunes.apple.com/lookup?id=${id}&entity=song`);
+      if (!r.ok) return false;
+      const { results = [] } = await r.json();
+      const song = results.find(x => x.wrapperType === 'track');
+      if (!song) return false;
+      return scoreCandidate(song, artist, track) > 0;
+    }
+  } catch (e) { /* an unreachable platform is not evidence of a bad link */ }
+  return false;   // no free way to check: valid, but unproven
+}
+
 async function saveDirectLinks(trackId, playlistId, saveBtn) {
   const item = document.querySelector(`[data-track-id="${trackId}"]`);
   if (!item) return;
@@ -3509,6 +3569,16 @@ async function saveDirectLinks(trackId, playlistId, saveBtn) {
     if (val) direct_urls[inp.dataset.platformKey] = val;
   });
 
+  const trackName = item.querySelector('.track-name')?.textContent?.trim();
+  const artist    = item.querySelector('.track-artist')?.textContent?.split('·')[0]?.trim();
+
+  // Shape first: a wrong paste or an album page instead of a track costs nothing
+  // to reject, and it is most of what goes wrong.
+  for (const [key, url] of Object.entries(direct_urls)) {
+    const check = validateDirectUrl(key, url);
+    if (!check.ok) { showToast(check.reason); return; }
+  }
+
   saveBtn.disabled = true;
   saveBtn.textContent = '…';
   try {
@@ -3518,11 +3588,25 @@ async function saveDirectLinks(trackId, playlistId, saveBtn) {
       .eq('id', trackId);
     if (error) throw error;
 
-    // Also cache to track_links table
-    const trackName = item.querySelector('.track-name')?.textContent;
-    const artist    = item.querySelector('.track-artist')?.textContent?.split('·')[0]?.trim();
+    // The shared cache is a different matter. It is read by everyone, so a link
+    // reaches it only if the platform itself confirms the link points at this
+    // recording. Anything unproven stays on this track alone - it still works
+    // for its owner, it just does not speak for anybody else.
     if (artist && trackName && currentUser) {
-      trackLinksCacheSet(artist, trackName, { direct_urls });
+      const verified = {};
+      let unproven = 0;
+      for (const [key, url] of Object.entries(direct_urls)) {
+        if (await verifyDirectUrl(key, url, artist, trackName)) verified[key] = url;
+        else unproven++;
+      }
+      if (Object.keys(verified).length) {
+        trackLinksCacheSet(artist, trackName, { direct_urls: verified });
+      }
+      showToast(
+        unproven === 0 ? 'Direct links saved'
+        : Object.keys(verified).length ? `Saved. ${unproven} link${unproven > 1 ? 's' : ''} kept to this track only`
+        : 'Saved to this track only'
+      );
     }
 
     // Refresh platform links
@@ -3535,7 +3619,6 @@ async function saveDirectLinks(trackId, playlistId, saveBtn) {
       );
     }
 
-    showToast('Direct links saved');
     // Close panel
     const panel = item.querySelector('.direct-links-panel');
     if (panel) panel.style.display = 'none';
