@@ -5883,8 +5883,33 @@ if (_profCreate) _profCreate.addEventListener('click', () => {
 
 <script>
   if ('serviceWorker' in navigator) {
+    // Measured: the browser sat on cache v42 while the server served v44. Not
+    // because the worker was stuck waiting - skipWaiting and clients.claim are
+    // both there - but because a page keeps running the code it already loaded.
+    // The new worker takes over and the open tab carries on with the old app
+    // until something reloads it, so a returning visitor gets a fix on their
+    // second visit rather than this one. An installed PWA is not closed for
+    // weeks, so "second visit" can mean never.
+    //
+    // updateViaCache:'none' also stops GitHub Pages' max-age=600 from delaying
+    // the check, which we cannot set a header for.
+    let reloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloading) return;      // controllerchange can fire twice; a loop here
+      reloading = true;           // would be worse than a stale page
+      window.location.reload();
+    });
+
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+        .then(reg => {
+          // Check again when the app is brought back to the foreground: a PWA on
+          // a phone is resumed far more often than it is launched.
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') reg.update().catch(() => {});
+          });
+        })
+        .catch(() => {});
     });
   }
 </script>
