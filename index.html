@@ -4271,6 +4271,7 @@ async function onSignedIn(user) {
   // playlist now that there is an account to hand it to.
   claimPendingPlaylist();
   refreshReviewSection();
+  setTimeout(warmAllArtwork, 4000);
 }
 
 async function refreshReviewSection() {
@@ -5133,6 +5134,59 @@ function renderPublicTracks(trackList) {
 // can, and that is the whole reason this page should exist.
 async function enrichPublicTracks(trackList) {
   return enrichTrackList(document.getElementById('public-tracks'), trackList);
+}
+
+// Warm the artwork cache for every playlist the owner has, not only the one
+// they happen to open. The worker cannot do this - iTunes answers 429 to
+// Cloudflare's shared egress addresses - and the person who would notice a
+// missing cover is the one who never sees the card, since it renders in
+// somebody else's chat. So it happens here, quietly, from an address that is
+// not throttled.
+async function warmAllArtwork() {
+  if (!currentUser) return;
+  try {
+    const { data: pls } = await sbClient.from('music_playlists')
+      .select('id').eq('user_id', currentUser.id);
+    if (!pls || !pls.length) return;
+
+    const { data: tracks } = await sbClient.from('playlist_tracks')
+      .select('artist,track_name,isrc')
+      .in('playlist_id', pls.map(p => p.id));
+    if (!tracks || !tracks.length) return;
+
+    // One row per recording, so a track on three playlists is looked up once.
+    const seen = new Map();
+    tracks.forEach(t => seen.set(`${normKey(t.artist)}|${normKey(t.track_name)}`, t));
+
+    const { data: cached } = await sbClient.from('track_links')
+      .select('artist,track_name,artwork_url,enrich_missed_at')
+      .in('artist', [...new Set(tracks.map(t => normKey(t.artist)))]);
+    (cached || []).forEach(r => {
+      const k = `${r.artist}|${r.track_name}`;
+      if (r.artwork_url || r.enrich_missed_at) seen.delete(k);
+    });
+
+    const todo = [...seen.values()];
+    if (!todo.length) return;
+
+    let done = 0;
+    const worker = async () => {
+      while (todo.length) {
+        const t = todo.shift();
+        const d = await enrichTrack(t);
+        await trackLinksCacheSet(t.artist, t.track_name, d && (d.artwork || d.preview)
+          ? { artwork_url: d.artwork || null, preview_url: d.preview || null, enrich_missed_at: null }
+          : { enrich_missed_at: new Date().toISOString() });
+        done++;
+      }
+    };
+    // Three at a time: this runs unasked in the background, so it should be
+    // invisible rather than fast.
+    await Promise.all(Array.from({ length: 3 }, worker));
+    if (done) console.warn(`[tunemail] warmed ${done} track${done === 1 ? '' : 's'}`);
+  } catch (e) {
+    console.warn('warm all:', e.message);
+  }
 }
 
 async function enrichTrackList(container, trackList) {
