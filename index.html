@@ -368,6 +368,32 @@ button {
     }
     .track-actions .platform-links { display: contents; }
 
+    .review-head {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+      font-family: var(--font-text); font-size: 12.5px; font-weight: 600;
+      letter-spacing: .03em; color: var(--text);
+    }
+    .review-hint { margin: 0 0 12px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+    .review-row {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 12px; margin-bottom: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border); border-radius: var(--radius);
+    }
+    .review-what { flex: 1 1 160px; min-width: 0; }
+    .review-track {
+      font-size: 13.5px; font-weight: 600; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .review-meta { font-size: 12px; color: var(--muted); }
+    .review-link {
+      display: inline-flex; align-items: center; min-height: 44px;
+      padding: 0 10px; font-size: 12.5px; color: var(--accent-text, #a78bfa);
+      text-decoration: none;
+    }
+    .review-link:hover { text-decoration: underline; }
+    .review-actions { display: flex; gap: 6px; }
+
     .btn-icon {
       width: 44px;
       height: 44px;
@@ -2034,6 +2060,19 @@ button {
           <div style="font-size:11px;color:var(--muted);margin-top:4px">Letters, numbers, hyphens only</div>
         </div>
         <div class="divider"></div>
+        <!-- Only rendered for reviewers. Machine checks handle what a platform can
+             confirm; this is where everything else waits for a person. -->
+        <div id="review-section" style="display:none;margin-bottom:18px">
+          <div class="review-head">
+            <span>Links waiting for review</span>
+            <span id="review-count" class="badge"></span>
+          </div>
+          <p class="review-hint">
+            These could not be confirmed by the platform automatically. Open each
+            one, check it is the right recording, and approve to let everyone use it.
+          </p>
+          <div id="review-queue"></div>
+        </div>
         <button class="btn btn-ghost w-full" id="btn-signout">Sign Out</button>
       </div>
     </div>
@@ -3499,6 +3538,93 @@ function toggleDirectLinks(btn, trackId) {
 }
 
 // ── Direct links: save to DB ──────────────────────────────────────────
+// Anything a platform cannot vouch for goes to a human. The row is the
+// suggestion, not the decision: the database only accepts it as pending, and
+// only a reviewer can move it on.
+async function submitForReview(artist, trackName, pairs, item) {
+  const isrc = item?.dataset?.isrc || null;
+  const rows = pairs.map(([platform, url]) => ({
+    artist, track_name: trackName, platform, url, isrc,
+    submitted_by: currentUser.id,
+  }));
+  try {
+    await sbClient.from('link_review').upsert(rows, {
+      onConflict: 'artist,track_name,platform,url',
+      ignoreDuplicates: true,
+    });
+  } catch (e) {
+    console.warn('review queue:', e.message);
+  }
+}
+
+// ── Review queue: the human half of the check ────────────────────────────────
+async function isReviewer() {
+  if (!currentUser) return false;
+  const { data } = await sbClient.from('profiles')
+    .select('is_reviewer').eq('id', currentUser.id).maybeSingle();
+  return !!data?.is_reviewer;
+}
+
+async function loadReviewQueue() {
+  const box = document.getElementById('review-queue');
+  if (!box) return;
+  const { data, error } = await sbClient.from('link_review')
+    .select('*').eq('state', 'pending').order('submitted_at').limit(50);
+  if (error) { box.innerHTML = ''; return; }
+  if (!data || !data.length) {
+    box.innerHTML = '<p style="color:var(--muted);font-size:13px;margin:0">Nothing waiting.</p>';
+    return;
+  }
+  box.innerHTML = data.map(r => `
+    <div class="review-row" data-id="${r.id}">
+      <div class="review-what">
+        <div class="review-track">${escHtml(r.artist)} - ${escHtml(r.track_name)}</div>
+        <div class="review-meta">${escHtml(PLATFORM_LABEL[r.platform] || r.platform)}</div>
+      </div>
+      <a class="review-link" href="${safeUrl(r.url)}" target="_blank" rel="noopener">Open and check</a>
+      <div class="review-actions">
+        <button class="btn btn-sm btn-ghost" data-act="reject" aria-label="Reject this suggestion">Reject</button>
+        <button class="btn btn-sm btn-primary" data-act="approve" aria-label="Approve this suggestion">Approve</button>
+      </div>
+    </div>`).join('');
+
+  box.querySelectorAll('[data-act]').forEach(btn => {
+    btn.addEventListener('click', () => decideReview(
+      btn.closest('.review-row').dataset.id,
+      btn.dataset.act,
+      data.find(x => x.id === btn.closest('.review-row').dataset.id)
+    ));
+  });
+}
+
+async function decideReview(id, act, row) {
+  try {
+    const state = act === 'approve' ? 'approved' : 'rejected';
+    const { error } = await sbClient.from('link_review')
+      .update({ state, reviewed_by: currentUser.id, reviewed_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw error;
+
+    if (state === 'approved' && row) {
+      // Approving is what promotes a suggestion into the cache everyone reads.
+      const { data: existing } = await sbClient.from('track_links')
+        .select('direct_urls')
+        .eq('artist', normKey(row.artist)).eq('track_name', normKey(row.track_name))
+        .maybeSingle();
+      const merged = { ...(existing?.direct_urls || {}), [row.platform]: row.url };
+      await trackLinksCacheSet(row.artist, row.track_name, {
+        direct_urls: merged,
+        direct_urls_prev: existing?.direct_urls || null,   // keep what it replaced
+        updated_by: currentUser.id,
+      });
+    }
+    showToast(state === 'approved' ? 'Approved' : 'Rejected');
+    loadReviewQueue();
+  } catch (e) {
+    showToast('Could not save: ' + e.message);
+  }
+}
+
 // ── Direct links: shape, then proof ──────────────────────────────────
 // A hand-fixed link is the one asset here nobody else has, and the one that
 // rots fastest if every edit is believed. People mistype; a public write path
@@ -3594,18 +3720,23 @@ async function saveDirectLinks(trackId, playlistId, saveBtn) {
     // for its owner, it just does not speak for anybody else.
     if (artist && trackName && currentUser) {
       const verified = {};
-      let unproven = 0;
+      const unproven = [];
       for (const [key, url] of Object.entries(direct_urls)) {
         if (await verifyDirectUrl(key, url, artist, trackName)) verified[key] = url;
-        else unproven++;
+        else unproven.push([key, url]);
       }
       if (Object.keys(verified).length) {
         trackLinksCacheSet(artist, trackName, { direct_urls: verified });
       }
+      // Bandcamp, Tidal and YouTube have no free lookup - and that is exactly
+      // where the obscure repertoire lives, so dropping these would throw away
+      // the corrections that matter most. They go to a person instead.
+      if (unproven.length) await submitForReview(artist, trackName, unproven, item);
       showToast(
-        unproven === 0 ? 'Direct links saved'
-        : Object.keys(verified).length ? `Saved. ${unproven} link${unproven > 1 ? 's' : ''} kept to this track only`
-        : 'Saved to this track only'
+        !unproven.length ? 'Direct links saved'
+        : Object.keys(verified).length
+          ? `Saved. ${unproven.length} sent for review`
+          : `Saved here. ${unproven.length} sent for review`
       );
     }
 
@@ -4113,6 +4244,18 @@ async function onSignedIn(user) {
   // If they arrived from someone's shared page and pressed Save, hand them the
   // playlist now that there is an account to hand it to.
   claimPendingPlaylist();
+  refreshReviewSection();
+}
+
+async function refreshReviewSection() {
+  const box = document.getElementById('review-section');
+  if (!box) return;
+  if (!(await isReviewer())) { box.style.display = 'none'; return; }
+  box.style.display = '';
+  await loadReviewQueue();
+  const n = document.querySelectorAll('#review-queue .review-row').length;
+  const badge = document.getElementById('review-count');
+  if (badge) badge.textContent = n ? String(n) : '';
 }
 
 // ── Auth: Sign In ─────────────────────────────────────────────────────
