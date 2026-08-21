@@ -271,9 +271,12 @@ button {
     .btn-ghost:hover { border-color: rgba(255,255,255,0.35); }
 
     .btn-sm {
-      font-size: 12px;
+      font-size: 12.5px;
       padding: 6px 12px;
       min-width: 44px;
+      font-family: var(--font-text);
+      font-weight: 600;
+      letter-spacing: 0.02em;
     }
     /* The remainder of the 44px sweep. Inputs and the modal close button were
        sized by eye; the text links had no padding at all, so "Create one" was a
@@ -1586,7 +1589,7 @@ button {
     </div>
     <!-- Spotify embed (shown if playlist was imported from Spotify) -->
     <div id="public-spotify-embed" style="display:none;padding:0 16px;margin-top:16px">
-      <div style="font-family:var(--font-display);font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-align:center">LISTEN ON SPOTIFY</div>
+      <div style="font-family:var(--font-text);font-size:11.5px;font-weight:600;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;text-align:center">LISTEN ON SPOTIFY</div>
       <iframe id="spotify-embed-iframe"
         style="border-radius:12px;width:100%;border:none"
         height="352"
@@ -1594,7 +1597,7 @@ button {
         loading="lazy">
       </iframe>
       <div class="divider" style="margin:16px 0"></div>
-      <div style="font-family:var(--font-display);font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-align:center">OR OPEN ON ANY PLATFORM</div>
+      <div style="font-family:var(--font-text);font-size:11.5px;font-weight:600;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;text-align:center">OR OPEN ON ANY PLATFORM</div>
     </div>
     <div class="public-content" id="public-tracks">
       <div class="loading-dots"><span></span><span></span><span></span></div>
