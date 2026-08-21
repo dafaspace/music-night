@@ -1455,7 +1455,7 @@ button {
 <div id="app">
 
   <!-- ── Toast ─────────────────────────────────────────────────────── -->
-  <div id="toast"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
 
   <!-- ══════════════════════════════════════════════════════════════════
        AUTH SCREENS
@@ -1701,14 +1701,14 @@ button {
         <label>Paste a link <span class="text-muted" style="font-family:DM Sans;font-size:11px;letter-spacing:0">(Spotify, Apple Music, YouTube, Deezer, SoundCloud, Tidal)</span></label>
         <div style="display:flex;gap:8px">
           <div class="input-icon-wrap" style="flex:1">
-            <span class="input-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+            <span class="input-icon"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
             <input type="text" id="paste-link-input" placeholder="https://open.spotify.com/track/…" autocomplete="off" />
           </div>
           <button class="btn btn-secondary btn-sm" id="btn-parse-link" style="white-space:nowrap">↵ Fill</button>
         </div>
         <div style="margin-top:32px;text-align:center">
           <div style="font-size:11px;color:var(--muted);font-family:DM Sans;margin-bottom:10px;letter-spacing:0.3px">or let me hear</div>
-          <button id="btn-audd" title="Identify song playing nearby" style="
+          <button id="btn-audd" aria-label="Identify the song playing nearby" title="Identify song playing nearby" style="
             width:68px;height:68px;border-radius:50%;border:none;cursor:pointer;
             background:rgba(124,58,237,0.12);
             border:1.5px solid rgba(124,58,237,0.35);
@@ -1734,7 +1734,7 @@ button {
       <div class="form-group">
         <label>Artist</label>
         <div class="ac-wrap input-icon-wrap">
-          <span class="input-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+          <span class="input-icon"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
           <input type="text" id="search-artist" placeholder="e.g. Radiohead" autocomplete="off" />
           <div class="ac-dropdown" id="ac-artist" style="display:none"></div>
         </div>
@@ -1742,7 +1742,7 @@ button {
       <div class="form-group">
         <label>Track Name</label>
         <div class="ac-wrap input-icon-wrap">
-          <span class="input-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
+          <span class="input-icon"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
           <input type="text" id="search-track" placeholder="e.g. Creep" autocomplete="off" />
           <div class="ac-dropdown" id="ac-track" style="display:none"></div>
         </div>
@@ -1804,7 +1804,7 @@ button {
     </div>
 
     <!-- Tab Bar -->
-    <nav class="tabbar">
+    <nav class="tabbar" aria-label="Main sections">
       <button class="tab-btn active" data-tab="search">
         <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
         <span>Search</span>
@@ -1831,7 +1831,7 @@ button {
       <div class="modal-handle"></div>
       <div class="modal-header">
         <span class="modal-title" id="modal-playlist-title">New Playlist</span>
-        <button class="modal-close" data-close="overlay-playlist"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="modal-close" aria-label="Close, without saving the playlist" data-close="overlay-playlist"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body">
         <div class="form-group">
@@ -1889,7 +1889,7 @@ button {
         </div>
         <div style="display:flex;gap:6px;align-items:center">
           <button class="btn btn-secondary btn-sm" id="btn-detail-edit">Edit</button>
-          <button class="modal-close" data-close="overlay-playlist-detail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          <button class="modal-close" aria-label="Close the playlist" data-close="overlay-playlist-detail"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
       </div>
       <div class="modal-body" style="padding-bottom:8px">
@@ -1920,7 +1920,7 @@ button {
       <div class="modal-handle"></div>
       <div class="modal-header">
         <span class="modal-title">Import from Spotify</span>
-        <button class="modal-close" data-close="overlay-spotify"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="modal-close" aria-label="Close the Spotify import" data-close="overlay-spotify"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body" id="spotify-modal-body">
         <!-- Step 1: Connect -->
@@ -1955,7 +1955,7 @@ button {
       <div class="modal-handle"></div>
       <div class="modal-header">
         <span class="modal-title">Import Tracks</span>
-        <button class="modal-close" data-close="overlay-import"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="modal-close" aria-label="Close the import" data-close="overlay-import"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body">
         <!-- Source tabs -->
@@ -2013,7 +2013,7 @@ button {
       <div class="modal-handle"></div>
       <div class="modal-header">
         <span class="modal-title">Account</span>
-        <button class="modal-close" data-close="overlay-account"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="modal-close" aria-label="Close account settings" data-close="overlay-account"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body">
         <div style="text-align:center;padding:8px 0 20px">
@@ -2045,7 +2045,7 @@ button {
       <div class="modal-handle"></div>
       <div class="modal-header">
         <span class="modal-title" id="confirm-title">Are you sure?</span>
-        <button class="modal-close" data-close="overlay-confirm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="modal-close" aria-label="Cancel, and change nothing" data-close="overlay-confirm"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body">
         <p style="color:var(--text);font-size:14px;line-height:1.5" id="confirm-text">This action cannot be undone.</p>
@@ -2978,9 +2978,9 @@ function renderPlaylists() {
         </div>
         <div class="card-actions" onclick="event.stopPropagation()">
           ${p.is_public && p.public_slug ? `
-          <button class="btn btn-icon btn-ghost" onclick="copyPublicLink('${p.public_slug}')" title="Copy link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>` : ''}
-          <button class="btn btn-icon btn-ghost" onclick="openEditPlaylist('${p.id}')" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-          <button class="btn btn-icon btn-ghost" style="color:#f87171" onclick="deletePlaylist('${p.id}')" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+          <button class="btn btn-icon btn-ghost" onclick="copyPublicLink('${p.public_slug}')" title="Copy link"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>` : ''}
+          <button class="btn btn-icon btn-ghost" onclick="openEditPlaylist('${p.id}')" title="Edit"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="btn btn-icon btn-ghost" style="color:#f87171" onclick="deletePlaylist('${p.id}')" title="Delete" aria-label="Delete this playlist"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
         </div>
       </div>
       ${p.description ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">${escHtml(p.description)}</div>` : ''}
@@ -3340,7 +3340,7 @@ function renderTrackList(tracks, playlistId) {
         <div class="track-actions" style="display:flex;align-items:center;gap:4px">
           ${t.duration_ms ? `<span style="font-size:11px;color:var(--muted)">${fmtDuration(t.duration_ms)}</span>` : ''}
           <button class="btn btn-icon btn-ghost" style="color:#f87171" title="Remove"
-            onclick="deleteTrack('${t.id}','${playlistId}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            onclick="deleteTrack('${t.id}','${playlistId}')"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
       </div>
       <div class="platform-links" style="margin-top:8px">${topLinks}</div>
