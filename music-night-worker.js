@@ -158,6 +158,38 @@ async function resolveIsrc(isrc, env, ctx) {
   return out;
 }
 
+
+// ── POST /delete-account - required by App Store rule 5.1.1(v) ───────────────
+// Deleting an auth user needs the service key, which cannot live in the page, so
+// it happens here. The id is never taken from the request: whoever holds a valid
+// token deletes themselves and nobody else. Accepting an id from the body would
+// turn one leaked token into a way to erase any account.
+async function deleteAccount(request, env) {
+  const j = (data, status) => json(data, status, cors());
+
+  const user = await verifyUser(request, env);
+  if (!user) return j({ error: "Sign in first" }, 401);
+  if (!env.SUPABASE_KEY) return j({ error: "Not configured" }, 503);
+
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
+    method: "DELETE",
+    headers: {
+      apikey: env.SUPABASE_KEY,
+      Authorization: `Bearer ${env.SUPABASE_KEY}`,
+    },
+  });
+
+  if (!res.ok) {
+    const detail = (await res.text()).slice(0, 160);
+    // A foreign key still pointing at auth.users shows up here rather than as a
+    // half-deleted account, which is why the cascades are a migration and not a
+    // sequence of deletes from the client.
+    return j({ error: "Could not delete the account", status: res.status, detail }, 502);
+  }
+
+  return j({ deleted: true }, 200);
+}
+
 async function sharePage(slug, url) {
   const pls = await sb(`music_playlists?public_slug=eq.${encodeURIComponent(slug)}&is_public=eq.true&select=id,name,description,user_id&limit=1`);
   const pl = pls && pls[0];
@@ -268,6 +300,10 @@ export default {
 
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+
+    if (request.method === "POST" && url.pathname === "/delete-account") {
+      return deleteAccount(request, env);
+    }
 
     if (request.method === "GET" && url.pathname === "/resolve") {
       return resolveIsrc(url.searchParams.get("isrc") || "", env, ctx);

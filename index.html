@@ -731,6 +731,10 @@ button {
       margin: 20px 0 0; padding-top: 16px;
       border-top: 1px solid var(--border);
     }
+    .danger-note {
+      margin: 0 0 12px; font-size: 12.5px; line-height: 1.55;
+      color: var(--muted-strong);
+    }
     .edit-danger .btn {
       width: 100%;
       color: #f87171;
@@ -2150,6 +2154,18 @@ button {
           <div id="review-queue"></div>
         </div>
         <button class="btn btn-ghost w-full" id="btn-signout">Sign Out</button>
+
+        <!-- App Store review rule 5.1.1(v): an app offering account creation must
+             offer account deletion inside the app. A support address or a page on
+             the website does not satisfy it. -->
+        <div class="edit-danger" style="margin-top:22px">
+          <p class="danger-note">
+            Deleting your account removes your playlists, your tracks and your
+            profile. Anyone holding a link to a playlist of yours will find
+            nothing there. This cannot be undone.
+          </p>
+          <button class="btn btn-ghost" id="btn-delete-account">Delete my account</button>
+        </div>
       </div>
     </div>
   </div>
@@ -4548,6 +4564,44 @@ document.getElementById('btn-signup').addEventListener('click', async () => {
 });
 
 // ── Auth: Sign Out ────────────────────────────────────────────────────
+
+// Deleting an account is irreversible and the confirmation is sized to match:
+// typing the word is a deliberate act, where a second tap on a dialog is not.
+const _delAccount = document.getElementById('btn-delete-account');
+if (_delAccount) _delAccount.addEventListener('click', async () => {
+  const typed = window.prompt(
+    'This deletes your account, your playlists and your tracks permanently.\n\n' +
+    'Type DELETE to confirm.'
+  );
+  if (typed === null) return;
+  if (typed.trim().toUpperCase() !== 'DELETE') {
+    showToast('Not deleted - the word did not match');
+    return;
+  }
+
+  _delAccount.disabled = true;
+  _delAccount.textContent = 'Deleting...';
+  try {
+    const { data: { session } } = await sbClient.auth.getSession();
+    const res = await fetch(MUSIC_NIGHT_WORKER + '/delete-account', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + session?.access_token },
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || !body.deleted) throw new Error(body.detail || body.error || `HTTP ${res.status}`);
+
+    await sbClient.auth.signOut();
+    try { localStorage.clear(); } catch (e) {}
+    // A full reload rather than a state change: nothing from the deleted account
+    // should survive in memory to be rendered a moment later.
+    window.location.replace(SITE_URL);
+  } catch (e) {
+    _delAccount.disabled = false;
+    _delAccount.textContent = 'Delete my account';
+    showToast('Could not delete: ' + e.message);
+  }
+});
+
 document.getElementById('btn-signout').addEventListener('click', async () => {
   closeModal('overlay-account');
   await sbClient.auth.signOut();
