@@ -57,6 +57,9 @@
       --primary-soft:   rgba(124,58,237,0.1);
       --primary-border: rgba(124,58,237,0.3);
       --accent:         #F5C518;
+      /* --primary is a fill. As text on the dark ground it measures 3.23:1, so
+         type that wants to look primary uses the lifted tint instead. */
+      --primary-text:   #b69bff;   /* 5.9:1 on --surface */
       --text:           #f0f0f0;
       /* #666 measured 3.36:1 against --bg, under the 4.5:1 floor for small text.
          It was painting 68 places, including the only irreversible-action
@@ -364,7 +367,7 @@ button {
     /* One wrapping row: the platform buttons and the disclosure sit together, so
        the card is two rows rather than three and nothing dangles. */
     .track-actions {
-      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px;
+      display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px;
     }
     .track-actions .platform-links { display: contents; }
 
@@ -721,7 +724,7 @@ button {
     .detail-actions {
       position: sticky; bottom: 0; z-index: 2;
       margin-top: 12px;
-      display: flex; gap: 8px;
+      display: flex; gap: 12px;
       padding: 12px 0 calc(4px + env(safe-area-inset-bottom));
       background: var(--surface);
       /* a fade rather than a hard edge, so the list reads as continuing under it */
@@ -918,6 +921,7 @@ button {
       justify-content: space-between;
       padding: 16px 20px 12px;
       border-bottom: 1px solid var(--border);
+      gap: 12px;
     }
     .modal-title {
       font-family: var(--font-display);
@@ -945,7 +949,7 @@ button {
     .modal-footer {
       padding: 0 20px;
       display: flex;
-      gap: 8px;
+      gap: 12px;
     }
     .modal-footer .btn { flex: 1; }
 
@@ -1111,8 +1115,8 @@ button {
       font-weight: 600;
     }
     .shared-tab-btn.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
+      color: var(--primary-text);
+      border-bottom-color: var(--primary-text);
     }
 
     /* ── Sort pills ─────────────────────────────────────────────────── */
@@ -1286,7 +1290,7 @@ button {
       max-width: 360px;
     }
     .feedback-modal-label {
-      color: #555;
+      color: var(--muted-strong);
       font-size: 11.5px;
       margin-bottom: 5px;
       font-family: var(--font-text);
@@ -1493,7 +1497,7 @@ button {
     }
     .public-footer-join-btns {
       display: flex;
-      gap: 8px;
+      gap: 12px;
       align-items: center;
     }
     .public-footer-join-btns .btn {
@@ -2195,7 +2199,7 @@ button {
 <div id="overlay-feedback" class="overlay" onclick="closeFeedback()">
   <div style="padding:20px;width:100%;display:flex;justify-content:center;cursor:default" onclick="event.stopPropagation()">
     <div class="feedback-modal">
-      <div style="font-family:var(--font-text);color:var(--primary);font-size:11.5px;font-weight:700;letter-spacing:.1em;margin-bottom:3px">FEEDBACK</div>
+      <div style="font-family:var(--font-text);color:var(--primary-text);font-size:11.5px;font-weight:700;letter-spacing:.1em;margin-bottom:3px">FEEDBACK</div>
       <div style="font-family:'Bebas Neue','Arial Narrow',sans-serif;font-size:19px;margin-bottom:14px;line-height:1.2">Share a thought or report a bug</div>
       <div class="feedback-modal-label">Type</div>
       <div style="display:flex;gap:8px;margin-bottom:14px">
