@@ -4926,27 +4926,17 @@ async function loadPublicPlaylist(slug) {
       return;
     }
 
-    // Load author name
-    let authorName = '';
-    let authorUsername = '';
-    try {
-      const { data: profile } = await sbClient
-        .from('profiles')
-        .select('*')
-        .eq('id', pl.user_id)
-        .maybeSingle();
-      authorName = profile?.display_name || '';
-      authorUsername = profile?.username || '';
-    } catch (_) {}
-
-    // Load tracks
-    const { data: tracks } = await sbClient
-      .from('playlist_tracks')
-      .select('*')
-      .eq('playlist_id', pl.id)
-      .order('position', { ascending: true });
-
-    const trackList = tracks || [];
+    // The author and the tracks depend on the playlist row but not on each other,
+    // so they go together rather than one after the other. Measured: three
+    // round-trips in series were two seconds before a visitor saw anything.
+    const [profileRes, tracksRes] = await Promise.all([
+      sbClient.from('profiles').select('display_name,username').eq('id', pl.user_id).maybeSingle(),
+      sbClient.from('playlist_tracks').select('*').eq('playlist_id', pl.id)
+        .order('position', { ascending: true }),
+    ]);
+    const authorName = profileRes?.data?.display_name || '';
+    const authorUsername = profileRes?.data?.username || '';
+    const trackList = tracksRes?.data || [];
 
     // Render header
     document.getElementById('public-playlist-name').textContent = pl.name;
@@ -5149,7 +5139,7 @@ async function enrichTrackList(container, trackList) {
   try {
     const keys = trackList.map(t => normKey(t.artist));
     const { data } = await sbClient.from('track_links')
-      .select('artist,track_name,artwork_url,preview_url,direct_urls')
+      .select('artist,track_name,artwork_url,preview_url,direct_urls,enrich_missed_at')
       .in('artist', [...new Set(keys)]);
     (data || []).forEach(r => byKey.set(`${r.artist}|${r.track_name}`, r));
   } catch (e) { /* the cache is an optimisation, never a requirement */ }
@@ -5160,6 +5150,7 @@ async function enrichTrackList(container, trackList) {
   const items = container.querySelectorAll('.track-item');
   const queue = trackList.map((t, i) => ({ t, i }));
   const fresh = [];
+  const missed = [];
 
   const paint = (i, data) => {
     const item = items[i];
@@ -5187,20 +5178,36 @@ async function enrichTrackList(container, trackList) {
         paint(i, { artwork: hit.artwork_url, preview: hit.preview_url });
         continue;
       }
+      // A miss is worth remembering too. Four tracks on this playlist are not
+      // findable by search - "Dave Brubeck 40 Days" returns eight results
+      // without 40 Days among them - and without a marker they were re-asked on
+      // every single visit, forever, for an answer that will not change.
+      // A month is short enough that a catalogue addition still gets picked up.
+      if (hit?.enrich_missed_at) {
+        const age = Date.now() - new Date(hit.enrich_missed_at).getTime();
+        if (age < 30 * 24 * 3600 * 1000) continue;
+      }
       const data = await enrichTrack(t);
       paint(i, data);
       if (data && (data.artwork || data.preview)) fresh.push([t, data]);
+      else missed.push(t);
     }
   }
   await Promise.all(Array.from({ length: Math.min(6, trackList.length) }, worker));
 
   // 3. Write what was learned back, so the next visitor pays nothing. These come
   //    from the platform rather than from a person, so they need no review.
-  if (currentUser && fresh.length) {
+  if (currentUser) {
     for (const [t, d] of fresh) {
       trackLinksCacheSet(t.artist, t.track_name, {
         artwork_url: d.artwork || null,
         preview_url: d.preview || null,
+        enrich_missed_at: null,
+      });
+    }
+    for (const t of missed) {
+      trackLinksCacheSet(t.artist, t.track_name, {
+        enrich_missed_at: new Date().toISOString(),
       });
     }
   }

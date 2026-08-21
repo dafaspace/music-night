@@ -19,3 +19,10 @@ alter table playlist_tracks
   alter column created_at type timestamptz using created_at at time zone 'UTC';
 alter table profiles
   alter column created_at type timestamptz using created_at at time zone 'UTC';
+
+-- Remember a miss, not only a hit. Four tracks on a 35-track playlist are not
+-- findable by search at all - "Dave Brubeck 40 Days" returns eight results
+-- without 40 Days among them - and without this they were re-asked on every
+-- visit, forever, for an answer that does not change. Re-checked after a month,
+-- so a catalogue addition is still picked up.
+alter table track_links add column if not exists enrich_missed_at timestamptz;
