@@ -2096,6 +2096,36 @@ function closeModal(id) {
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────
+// Every copy went through navigator.clipboard.writeText().then(toast) with no
+// catch. The API refuses for several ordinary reasons - the document not being
+// focused, permission policy, older Safari - and a rejected promise with no
+// handler does nothing at all: no copy, no message, no error. That is exactly
+// what "the button does nothing" looks like. Fall back to the old execCommand
+// path, and if even that fails, show the link so it can be copied by hand.
+async function copyToClipboard(text, okMessage = 'Link copied') {
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast(okMessage);
+    return true;
+  } catch (e) { /* fall through */ }
+
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);   // iOS needs the explicit range
+    const ok = document.execCommand('copy');
+    ta.remove();
+    if (ok) { showToast(okMessage); return true; }
+  } catch (e) { /* fall through */ }
+
+  window.prompt('Copy this link:', text);
+  return false;
+}
+
 function showToast(msg, duration = 2500) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -2790,8 +2820,7 @@ document.getElementById('btn-share-track').addEventListener('click', async () =>
     });
 
     const url = `${SITE_URL}?p=${slug}`;
-    await navigator.clipboard.writeText(url);
-    showToast('Track link copied!');
+    await copyToClipboard(url, 'Track link copied');
     await loadPlaylists();
   } catch (err) {
     showToast('Error: ' + err.message);
@@ -2879,7 +2908,7 @@ async function moveTrack(trackId, playlistId, direction) {
 document.getElementById('btn-copy-link').addEventListener('click', () => {
   const url = document.getElementById('detail-share-url').textContent;
   if (url) {
-    navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
+    copyToClipboard(url);
   }
 });
 
@@ -3214,7 +3243,7 @@ document.getElementById('btn-detail-edit').addEventListener('click', () => {
 // ── Playlists: copy public link ───────────────────────────────────────
 function copyPublicLink(slug) {
   const url = `${SITE_URL}?p=${slug}`;
-  navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
+  copyToClipboard(url);
 }
 
 // ── Tracks: load for detail modal (stub, full logic in step 6) ────────
@@ -4870,7 +4899,7 @@ function togglePreview(btn) {
 
 // ── Public playlist: button handlers ─────────────────────────────────
 document.getElementById('btn-public-copy').addEventListener('click', () => {
-  navigator.clipboard.writeText(window.location.href).then(() => showToast('Link copied!'));
+  copyToClipboard(window.location.href);
 });
 const _pubSignin = document.getElementById('link-public-signin');
 if (_pubSignin) _pubSignin.addEventListener('click', () => {
