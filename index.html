@@ -2744,14 +2744,14 @@ function scoreCandidate(cand, artist, track) {
 // artworkUrl100 is a thumbnail; the same URL serves any size.
 const bigArt = (url) => url ? url.replace(/\/\d+x\d+bb\./, '/600x600bb.') : null;
 
-async function lookupItunes(artist, track) {
+async function searchItunesOnce(artist, track, matchArtist, matchTrack) {
   const term = encodeURIComponent(`${artist} ${track}`.trim());
   const res = await fetch(`https://itunes.apple.com/search?term=${term}&entity=song&limit=12`);
   if (!res.ok) return null;
   const { results = [] } = await res.json();
   let best = null, bestScore = 0;
   for (const c of results) {
-    const sc = scoreCandidate(c, artist, track);
+    const sc = scoreCandidate(c, matchArtist, matchTrack);
     if (sc <= 0) continue;
     // Prefer the earliest release: the same recording turns up on the album, a
     // deluxe edition and three compilations.
@@ -2759,7 +2759,27 @@ async function lookupItunes(artist, track) {
       best = c; bestScore = sc;
     }
   }
-  if (!best) return null;
+  return best ? { best, bestScore } : null;
+}
+
+async function lookupItunes(artist, track) {
+  let hit = await searchItunesOnce(artist, track, artist, track);
+
+  // Imports join collaborators with semicolons and keep "(feat. ...)" in the
+  // title, and a search for the whole string finds nothing at all. Measured on
+  // the four tracks this library could not resolve: two of them come back the
+  // moment the query is the first artist and the bare title. The match is still
+  // scored against the original, so a loose query cannot buy a loose result.
+  if (!hit) {
+    const firstArtist = String(artist || '').split(/[;,]|\s+&\s+|\sfeat\.?\s/i)[0].trim();
+    const bareTrack = String(track || '').replace(/\s*[([]\s*(feat|ft|with)\.?[^)\]]*[)\]]/ig, '').trim();
+    if (firstArtist !== artist || bareTrack !== track) {
+      await new Promise(r => setTimeout(r, 150));
+      hit = await searchItunesOnce(firstArtist, bareTrack, firstArtist, bareTrack);
+    }
+  }
+  if (!hit) return null;
+  const { best, bestScore } = hit;
   return {
     artwork: bigArt(best.artworkUrl100),
     preview: best.previewUrl || null,
