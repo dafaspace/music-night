@@ -67,6 +67,115 @@ async function overRecognizeLimit(env, userId) {
   return false;
 }
 
+
+// ── GET /p/{slug} - the card a chat app renders ──────────────────────────────
+// GitHub Pages serves one static file to every URL, and no messenger runs
+// JavaScript, so a shared link unfurls as a blank card no matter what the app
+// does after it loads. Everything built into the share page is invisible at the
+// moment a person decides whether to tap. So the card is rendered here.
+const esc = (v) => String(v ?? "")
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
+async function sb(path) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+    cf: { cacheTtl: 300, cacheEverything: true },
+  });
+  return r.ok ? r.json() : null;
+}
+
+async function sharePage(slug, url) {
+  const pls = await sb(`music_playlists?public_slug=eq.${encodeURIComponent(slug)}&is_public=eq.true&select=id,name,description,user_id&limit=1`);
+  const pl = pls && pls[0];
+  if (!pl) return new Response("Not found", { status: 404 });
+
+  const [profiles, tracks] = await Promise.all([
+    sb(`profiles?id=eq.${pl.user_id}&select=display_name,username&limit=1`),
+    sb(`playlist_tracks?playlist_id=eq.${pl.id}&select=artist,track_name&order=position&limit=4`),
+  ]);
+
+  // The sender's name comes from their id, never from the URL. Taking it from a
+  // query parameter would let anyone mint "<trusted name> recommends this",
+  // which turns a share link into a phishing tool.
+  const who = profiles && profiles[0];
+  const fromName = who?.display_name || "";
+  const list = tracks || [];
+
+  // Cover art for the card: the first track that has one in the shared cache.
+  let art = "";
+  if (list.length) {
+    const key = (v) => String(v || "").toLowerCase().trim();
+    const rows = await sb(
+      `track_links?artist=eq.${encodeURIComponent(key(list[0].artist))}` +
+      `&track_name=eq.${encodeURIComponent(key(list[0].track_name))}` +
+      `&select=artwork_url&limit=1`
+    );
+    art = (rows && rows[0] && rows[0].artwork_url) || "";
+  }
+
+  const appUrl = `https://tunemail.app/?p=${encodeURIComponent(slug)}`;
+  const title = pl.name || "A playlist";
+  const summary = list.length
+    ? list.map((t) => `${t.artist} - ${t.track_name}`).join(" · ")
+    : "Open it in whatever you already listen with.";
+  const desc = summary.length > 200 ? summary.slice(0, 200).replace(/\s+\S*$/, "") + "…" : summary;
+
+  const html = `<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(title)} · Tunemail</title>
+<meta name="description" content="${esc(desc)}">
+<meta property="og:type" content="music.playlist">
+<meta property="og:site_name" content="Tunemail">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="${esc(desc)}">
+<meta property="og:url" content="${esc(url.href)}">
+${art ? `<meta property="og:image" content="${esc(art)}"><meta property="og:image:width" content="600"><meta property="og:image:height" content="600">` : ""}
+<meta name="twitter:card" content="${art ? "summary_large_image" : "summary"}">
+<meta name="twitter:title" content="${esc(title)}">
+<meta name="twitter:description" content="${esc(desc)}">
+${art ? `<meta name="twitter:image" content="${esc(art)}">` : ""}
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0d0d1a;color:#f0f0f0;line-height:1.6;padding:24px;
+     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+     display:flex;min-height:100vh;align-items:center;justify-content:center}
+.card{max-width:420px;width:100%}
+.brand{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#7c3aed;font-weight:700;margin-bottom:14px}
+.from{font-size:15px;margin:0 0 14px}.from b{color:#a78bfa}
+.row{display:flex;gap:16px;align-items:center}
+img{width:104px;height:104px;border-radius:10px;flex-shrink:0;object-fit:cover;background:#1a1a2e}
+h1{font-size:24px;line-height:1.2;letter-spacing:-.01em;margin:0 0 6px;text-wrap:balance}
+.meta{color:#9a9aa6;font-size:14px;margin:0}
+ul{margin:18px 0 0;padding:0;list-style:none;color:#b6b6c2;font-size:14px}
+li{padding:3px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cta{display:block;margin-top:22px;background:#7c3aed;color:#fff;text-align:center;
+     text-decoration:none;font-weight:600;padding:15px;border-radius:12px;font-size:16.5px}
+.sub{color:#9a9aa6;font-size:13px;text-align:center;margin-top:12px}
+</style></head><body><div class="card">
+<div class="brand">Tunemail</div>
+${fromName ? `<p class="from"><b>${esc(fromName)}</b> sent you this</p>` : ""}
+<div class="row">
+  ${art ? `<img src="${esc(art)}" alt="">` : ""}
+  <div>
+    <h1>${esc(title)}</h1>
+    <p class="meta">${list.length ? `${list.length}${list.length === 4 ? "+" : ""} track${list.length === 1 ? "" : "s"}` : "Playlist"}</p>
+  </div>
+</div>
+${list.length ? `<ul>${list.map((t) => `<li>${esc(t.artist)} - ${esc(t.track_name)}</li>`).join("")}</ul>` : ""}
+<a class="cta" href="${esc(appUrl)}">Listen &rarr;</a>
+<p class="sub">Opens in whatever you already use. No app, no account.</p>
+</div></body></html>`;
+
+  return new Response(html, {
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "public, max-age=600",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
+}
+
 export default {
   // Supabase pauses a free project after a week without API activity and drops
   // its DNS record with it - the whole app dies until someone restores it by
@@ -86,6 +195,10 @@ export default {
 
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+
+    if (request.method === "GET" && url.pathname.startsWith("/p/")) {
+      return sharePage(url.pathname.slice(3), url);
+    }
 
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: cors() });

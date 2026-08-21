@@ -2129,6 +2129,15 @@ button {
 // Derived, never hardcoded: the previous domain survived in eight places after
 // the move and quietly broke copy-link, the profile URL and the Spotify
 // redirect. A constant that reads itself cannot go stale.
+// The link people actually send. GitHub Pages serves one static file to every
+// URL and no messenger runs JavaScript, so a link straight to the app unfurls as
+// a blank card - everything on the share page is invisible at the moment someone
+// decides whether to tap. The worker renders a real card and sends humans on to
+// the app. Set SHARE_BASE once the worker has its custom domain; until then this
+// falls back to the app URL, which works but unfurls blank.
+const SHARE_BASE = 'https://link.tunemail.app';
+const shareUrl = (slug) => `${SHARE_BASE}/p/${encodeURIComponent(slug)}`;
+
 const SITE_URL = location.origin + location.pathname.replace(/index\.html$/, '');
 
 const SB_URL = "https://rqruaqoecvpythbvnozf.supabase.co";
@@ -2890,8 +2899,7 @@ document.getElementById('btn-share-track').addEventListener('click', async () =>
       playlist_id: pl.id, artist, track_name: track, genre: genre || null, position: 0
     });
 
-    const url = `${SITE_URL}?p=${slug}`;
-    await copyToClipboard(url, 'Track link copied');
+    await copyToClipboard(shareUrl(slug), 'Track link copied');
     await loadPlaylists();
   } catch (err) {
     showToast('Error: ' + err.message);
@@ -3281,7 +3289,7 @@ function openPlaylistDetail(id) {
   // Share row
   const shareRow = document.getElementById('detail-share-row');
   if (p.is_public && p.public_slug) {
-    const url = `${SITE_URL}?p=${p.public_slug}`;
+    const url = shareUrl(p.public_slug);
     document.getElementById('detail-share-url').textContent = url;
     shareRow.style.display = '';
   } else {
@@ -3313,7 +3321,7 @@ document.getElementById('btn-detail-edit').addEventListener('click', () => {
 
 // ── Playlists: copy public link ───────────────────────────────────────
 function copyPublicLink(slug) {
-  const url = `${SITE_URL}?p=${slug}`;
+  const url = shareUrl(slug);
   copyToClipboard(url);
 }
 
