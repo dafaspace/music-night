@@ -702,6 +702,22 @@ button {
       background: var(--primary-soft);
       border-color: var(--primary-border);
     }
+    /* Icon-only platform buttons: see the note in buildPlatformLinksHtml. The
+       44px keeps the target legal while the row finally fits on one line. */
+    .platform-btn {
+      position: relative;
+      width: 44px; min-width: 44px; padding: 0;
+      gap: 0;
+    }
+    .platform-btn svg, .platform-btn img { width: 18px; height: 18px; }
+    .platform-exact {
+      position: absolute; right: -3px; top: -3px;
+      width: 15px; height: 15px; border-radius: 50%;
+      background: var(--primary); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 2px solid var(--surface);
+    }
+
     .platform-expand {
       display: inline-flex; align-items: center; justify-content: center;
       min-height: 34px; padding: 0 12px;
@@ -2937,9 +2953,18 @@ function buildPlatformLinksHtml(artist, trackName, odesliLinks, showAll = false,
     // href can come from the user's own direct-link fields or straight from
     // Odesli and AudD, so it is filtered to a real http(s) URL: a javascript:
     // value here would run on click, and a quote would open an attribute.
-    return `<a href="${safeUrl(href)}" target="_blank" rel="noopener" class="platform-btn"${isExact ? ' style="border-color:rgba(124,58,237,0.4)"' : ''}>
-      <span style="display:inline-flex;align-items:center;gap:5px">${p.icon}<span>${p.name}</span>${isExact ? '<span style="font-size:9px;color:#a78bfa"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>' : ''}</span>
-    </a>`;
+    // Icon only. Four labelled pills measure about 393px against 315px of card,
+    // so they wrapped to two rows and the disclosure took a third - the height of
+    // one track was more than double what it needed to be. A platform logo is
+    // built to be recognised without its name; the name moves to the label a
+    // screen reader and a tooltip read.
+    const exactMark = isExact
+      ? '<span class="platform-exact" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>'
+      : '';
+    return `<a href="${safeUrl(href)}" target="_blank" rel="noopener"
+      class="platform-btn${isExact ? ' is-exact' : ''}"
+      title="${escHtml(p.name)}${isExact ? ' - exact link' : ''}"
+      aria-label="Open on ${escHtml(p.name)}${isExact ? ', exact link' : ''}">${p.icon}${exactMark}</a>`;
   }).join('');
 }
 
@@ -3626,12 +3651,12 @@ function toggleTrackPlatforms(btn) {
   const linksDiv = btn.closest('.track-item').querySelector('.platform-links');
   if (expanded) {
     linksDiv.innerHTML = STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS)
-      .map(p => `<a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn"><span style="display:inline-flex;align-items:center;gap:5px">${p.icon}<span>${p.name}</span></span></a>`).join('');
+      .map(p => `<a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn" title="${escHtml(p.name)}" aria-label="Open on ${escHtml(p.name)}">${p.icon}</a>`).join('');
     btn.textContent = '+ More';
     btn.dataset.expanded = '0';
   } else {
     linksDiv.innerHTML = STREAMING_PLATFORMS
-      .map(p => `<a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn"><span style="display:inline-flex;align-items:center;gap:5px">${p.icon}<span>${p.name}</span></span></a>`).join('');
+      .map(p => `<a href="${p.url(artist, track)}" target="_blank" rel="noopener" class="platform-btn" title="${escHtml(p.name)}" aria-label="Open on ${escHtml(p.name)}">${p.icon}</a>`).join('');
     btn.textContent = '− Less';
     btn.dataset.expanded = '1';
   }
@@ -5266,7 +5291,7 @@ function renderPublicTracks(trackList) {
     const container = document.getElementById('public-tracks');
     container.innerHTML = trackList.map((t, i) => {
       const topLinks = STREAMING_PLATFORMS.slice(0, TOP_PLATFORMS)
-        .map(p => `<a href="${p.url(t.artist, t.track_name)}" target="_blank" rel="noopener" class="platform-btn">${p.icon} ${p.name}</a>`)
+        .map(p => `<a href="${p.url(t.artist, t.track_name)}" target="_blank" rel="noopener" class="platform-btn" title="${escHtml(p.name)}" aria-label="Open on ${escHtml(p.name)}">${p.icon}</a>`)
         .join('');
       return `
         <div class="track-item">
