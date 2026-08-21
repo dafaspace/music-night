@@ -58,11 +58,31 @@
       --primary-border: rgba(124,58,237,0.3);
       --accent:         #F5C518;
       --text:           #f0f0f0;
-      --muted:          #666;
-      --muted-strong:   #9a9aa6;   /* 5.1:1 on --bg: the floor for body-size text */
+      /* #666 measured 3.36:1 against --bg, under the 4.5:1 floor for small text.
+         It was painting 68 places, including the only irreversible-action
+         warning in the app. */
+      --muted:          #9a9aa6;   /* 6.93:1 */
+      --muted-strong:   #b6b6c2;   /* 9.4:1, for secondary text that carries weight */
       --border:         rgba(255,255,255,0.08);
       --radius:         12px;
       --radius-lg:      20px;
+    }
+
+
+    /* Honour the system preferences, the way Cinemail already does. The
+       contrast block only helps people who turned the setting on, which is why
+       the default above had to be fixed rather than left to it. */
+    @media (prefers-contrast: more) {
+      :root { --muted: #c9c9d2; --muted-strong: #e2e2ea; --border: rgba(255,255,255,0.38); }
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      *, *::before, *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important; scroll-behavior: auto !important;
+      }
     }
 
     /* ── Base ───────────────────────────────────────────────────────── */
@@ -1996,7 +2016,7 @@ button {
         <button class="modal-close" data-close="overlay-confirm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="modal-body">
-        <p style="color:var(--muted);font-size:14px" id="confirm-text">This action cannot be undone.</p>
+        <p style="color:var(--text);font-size:14px;line-height:1.5" id="confirm-text">This action cannot be undone.</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" data-close="overlay-confirm">Cancel</button>
@@ -2035,6 +2055,11 @@ button {
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
 // ── Config ────────────────────────────────────────────────────────────
+// Derived, never hardcoded: the previous domain survived in eight places after
+// the move and quietly broke copy-link, the profile URL and the Spotify
+// redirect. A constant that reads itself cannot go stale.
+const SITE_URL = location.origin + location.pathname.replace(/index\.html$/, '');
+
 const SB_URL = "https://rqruaqoecvpythbvnozf.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxcnVhcW9lY3ZweXRoYnZub3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyOTY4OTEsImV4cCI6MjA5MTg3Mjg5MX0.3yw1LEN2mvZMg1PXA_IvE0DmNbh4TXNP2uyWRFFJNQo";
 
@@ -2229,7 +2254,7 @@ async function loadDiscover() {
       return;
     }
 
-    const base = 'https://dafaspace.github.io/music-night/';
+    const base = SITE_URL;
     container.innerHTML = playlists.map(p => {
       const count = countMap[p.id] || 0;
       const profile = profileMap[p.user_id] || {};
@@ -2764,7 +2789,7 @@ document.getElementById('btn-share-track').addEventListener('click', async () =>
       playlist_id: pl.id, artist, track_name: track, genre: genre || null, position: 0
     });
 
-    const url = `https://dafaspace.github.io/music-night/?p=${slug}`;
+    const url = `${SITE_URL}?p=${slug}`;
     await navigator.clipboard.writeText(url);
     showToast('Track link copied!');
     await loadPlaylists();
@@ -3156,7 +3181,7 @@ function openPlaylistDetail(id) {
   // Share row
   const shareRow = document.getElementById('detail-share-row');
   if (p.is_public && p.public_slug) {
-    const url = `https://dafaspace.github.io/music-night/?p=${p.public_slug}`;
+    const url = `${SITE_URL}?p=${p.public_slug}`;
     document.getElementById('detail-share-url').textContent = url;
     shareRow.style.display = '';
   } else {
@@ -3188,7 +3213,7 @@ document.getElementById('btn-detail-edit').addEventListener('click', () => {
 
 // ── Playlists: copy public link ───────────────────────────────────────
 function copyPublicLink(slug) {
-  const url = `https://dafaspace.github.io/music-night/?p=${slug}`;
+  const url = `${SITE_URL}?p=${slug}`;
   navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
 }
 
@@ -3792,7 +3817,7 @@ document.getElementById('search-artist').addEventListener('input', function() {
   acArtistTimer = setTimeout(async () => {
     try {
       const res = await fetch(`https://musicbrainz.org/ws/2/artist?query=${encodeURIComponent(q)}&limit=6&fmt=json`, {
-        headers: { 'User-Agent': 'MusicNight/1.0 (dafaspace.github.io/music-night)' }
+        headers: { 'User-Agent': 'Tunemail/1.0 (https://tunemail.app)' }
       });
       const data = await res.json();
       const artists = data.artists || [];
@@ -3827,7 +3852,7 @@ document.getElementById('search-track').addEventListener('input', function() {
     try {
       const query = `recording:"${q}" AND artist:"${artist}"`;
       const res = await fetch(`https://musicbrainz.org/ws/2/recording?query=${encodeURIComponent(query)}&limit=6&fmt=json`, {
-        headers: { 'User-Agent': 'MusicNight/1.0 (dafaspace.github.io/music-night)' }
+        headers: { 'User-Agent': 'Tunemail/1.0 (https://tunemail.app)' }
       });
       const data = await res.json();
       const recs = data.recordings || [];
@@ -3887,7 +3912,7 @@ document.getElementById('btn-save-username').addEventListener('click', async () 
 
 function updateProfileLink(username) {
   if (!username) return;
-  const url = `https://dafaspace.github.io/music-night/?u=${username}`;
+  const url = `${SITE_URL}?u=${username}`;
   const linkDiv = document.getElementById('account-profile-link');
   const linkEl = document.getElementById('account-profile-url');
   linkEl.href = url;
@@ -4014,7 +4039,7 @@ document.getElementById('signup-password').addEventListener('keydown', e => {
 
 // ── Spotify OAuth (PKCE) ─────────────────────────────────────────────
 const SPOTIFY_CLIENT_ID = 'a93649a2c3e642a3a4e15451e8c17d78';
-const SPOTIFY_REDIRECT   = 'https://dafaspace.github.io/music-night/';
+const SPOTIFY_REDIRECT   = SITE_URL;
 const SPOTIFY_SCOPES     = 'playlist-read-private playlist-read-collaborative';
 
 function generateRandomString(len) {
