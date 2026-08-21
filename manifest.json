@@ -1,7 +1,7 @@
 {
   "name": "Tunemail",
   "short_name": "Tunemail",
-  "description": "Share music playlists across multiple streaming services",
+  "description": "Send someone music and they open it in the streaming service they already use - no app, no account.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
