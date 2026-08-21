@@ -64,6 +64,15 @@
       --muted:          #9a9aa6;   /* 6.93:1 */
       --muted-strong:   #b6b6c2;   /* 9.4:1, for secondary text that carries weight */
       --border:         rgba(255,255,255,0.08);
+      /* Type scale. Measured before this existed: 41 distinct size+family+weight
+         combinations across the app, 15 of them Bebas below 16px. Bebas is a
+         condensed display face with no optical sizing - at caption sizes it
+         loses legibility and reads cheap, which is what "the font looks bad"
+         was pointing at. Bebas keeps the display sizes; DM Sans takes anything
+         that has to be read rather than seen. Tracking is in em, since a fixed
+         pixel value is wrong at some size by definition (apple-design 15). */
+      --font-display: 'Bebas Neue', 'Oswald', -apple-system, 'Arial Narrow', sans-serif;
+      --font-text:    'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --radius:         12px;
       --radius-lg:      20px;
     }
@@ -89,7 +98,7 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--font-text);
       font-size: 14px;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
@@ -108,7 +117,7 @@
     .screen {
       display: none;
       min-height: 100vh;
-      padding-bottom: 80px;
+      padding-bottom: calc(80px + env(safe-area-inset-bottom));
     }
     .screen.active { display: block; }
 
@@ -123,7 +132,7 @@
     }
 
     .auth-logo {
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 42px;
       letter-spacing: 2px;
       margin-bottom: 8px;
@@ -148,7 +157,7 @@
     }
 
     .auth-card h2 {
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 22px;
       letter-spacing: 1px;
       margin-bottom: 20px;
@@ -161,11 +170,12 @@
     }
     .form-group label {
       display: block;
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
-      font-size: 13px;
-      letter-spacing: 0.8px;
+      font-family: var(--font-text);
+      font-size: 12.5px;
+      letter-spacing: 0.03em;
       color: var(--muted);
       margin-bottom: 6px;
+      font-weight: 600;
     }
     .form-group input,
     .form-group textarea,
@@ -175,7 +185,7 @@
       border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--text);
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--font-text);
       font-size: 14px;
       padding: 10px 12px;
       outline: none;
@@ -225,8 +235,8 @@ button {
       align-items: center;
       justify-content: center;
       gap: 6px;
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
-      letter-spacing: 1px;
+      font-family: var(--font-display);
+      letter-spacing: 0.05em;
       border-radius: 8px;
       border: none;
       cursor: pointer;
@@ -280,7 +290,10 @@ button {
        avatar. Pills stay visually small - a 44px-tall pill would dominate the
        screen - so the height comes from padding on the hit box while the border
        keeps its own size via a smaller line-height. */
-    .sort-pill { min-height: 44px; padding-top: 0; padding-bottom: 0; }
+    .sort-pill { min-height: 44px; padding-top: 0; padding-bottom: 0;
+      letter-spacing: 0.01em;
+      font-weight: 500;
+    }
     .feedback-topbar-btn { min-height: 44px; min-width: 44px; }
     .avatar-btn { width: 44px; height: 44px; }
 
@@ -339,7 +352,7 @@ button {
     .track-header { display: flex; align-items: center; gap: 14px; }
     .track-info { min-width: 0; }
     .track-name {
-      font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+      font-family: var(--font-text); font-size: 15px; font-weight: 600;
       line-height: 1.3; color: var(--text);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
@@ -383,7 +396,7 @@ button {
       text-align: center;
     }
     .check-email-title {
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 26px;
       letter-spacing: 1px;
       margin-bottom: 10px;
@@ -408,7 +421,7 @@ button {
       z-index: 100;
       background: var(--bg);
       border-bottom: 1px solid var(--border);
-      padding: 0 16px;
+      padding: env(safe-area-inset-top) 16px 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -416,7 +429,7 @@ button {
     }
 
     .topbar-logo {
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 24px;
       letter-spacing: 2px;
     }
@@ -435,7 +448,7 @@ button {
       background: var(--primary-soft);
       border: 1px solid var(--primary-border);
       color: #a78bfa;
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 14px;
       cursor: pointer;
       display: flex;
@@ -457,7 +470,11 @@ button {
       border-top: 1px solid var(--border);
       display: flex;
       z-index: 100;
-      height: 60px;
+      /* border-box means a padding-bottom would eat into the 60px and shorten the
+         buttons instead of lifting them clear. The height grows instead, the way
+         Cinemail does it for the notch. */
+      height: calc(60px + env(safe-area-inset-bottom));
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
     .tab-btn {
@@ -471,11 +488,12 @@ button {
       border: none;
       cursor: pointer;
       color: var(--muted);
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-text);
       font-size: 10px;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.06em;
       transition: color 0.15s;
       padding: 0;
+      font-weight: 600;
     }
     .tab-btn .tab-icon { font-size: 20px; line-height: 1; }
     .tab-btn.active { color: var(--primary); }
@@ -494,7 +512,7 @@ button {
       margin-bottom: 14px;
     }
     .section-title {
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 18px;
       letter-spacing: 1px;
     }
@@ -518,7 +536,7 @@ button {
       margin-bottom: 6px;
     }
     .card-title {
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 16px;
       letter-spacing: 0.5px;
       line-height: 1.2;
@@ -539,13 +557,14 @@ button {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-text);
       font-size: 11px;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.04em;
       border-radius: 4px;
       padding: 0 7px;
       height: 20px;
       white-space: nowrap;
+      font-weight: 600;
     }
     .badge svg { flex-shrink: 0; }
     .badge-text { position: relative; top: 1px; }
@@ -575,7 +594,7 @@ button {
       gap: 10px;
     }
     .track-num {
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 16px;
       color: var(--muted);
       min-width: 20px;
@@ -615,7 +634,7 @@ button {
       align-items: center;
       justify-content: center;
       gap: 6px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--font-text);
       font-size: 12.5px;
       font-weight: 500;
       background: rgba(255,255,255,0.05);
@@ -642,7 +661,7 @@ button {
       border: 1px solid var(--border); border-radius: 8px;
       background: rgba(255,255,255,0.03);
       color: var(--muted-strong);
-      font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 500;
+      font-family: var(--font-text); font-size: 12.5px; font-weight: 500;
       cursor: pointer; white-space: nowrap;
       transition: color 150ms, border-color 150ms, background 150ms;
     }
@@ -672,7 +691,7 @@ button {
     /* ── Genre Pills ────────────────────────────────────────────────── */
     .genre-pills { display: flex; flex-wrap: wrap; gap: 6px; }
     .genre-pill {
-      font-family: 'DM Sans', sans-serif; font-size: 12px;
+      font-family: var(--font-text); font-size: 12px;
       padding: 4px 10px; border-radius: 20px; cursor: pointer;
       background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
       color: #aaa; transition: all 0.15s;
@@ -686,7 +705,7 @@ button {
       background: rgba(124,58,237,0.15); color: #c4b5fd;
       border: 1px solid rgba(124,58,237,0.3);
       border-radius: 20px; padding: 1px 7px; font-size: 10px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--font-text);
     }
 
     /* ── Autocomplete ───────────────────────────────────────────────── */
@@ -699,7 +718,7 @@ button {
     }
     .ac-item {
       padding: 10px 14px; cursor: pointer;
-      font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text);
+      font-family: var(--font-text); font-size: 13px; color: var(--text);
       border-bottom: 1px solid rgba(255,255,255,0.05);
       display: flex; flex-direction: column; gap: 2px;
     }
@@ -707,7 +726,7 @@ button {
     .ac-item:hover, .ac-item.ac-active { background: rgba(124,58,237,0.15); }
     .ac-item-sub { font-size: 11px; color: var(--muted); }
     .ac-loading { padding: 10px 14px; font-size: 12px; color: var(--muted);
-      font-family: 'DM Sans', sans-serif; }
+      font-family: var(--font-text); }
 
     /* ── Search Tab ─────────────────────────────────────────────────── */
     .search-bar {
@@ -721,7 +740,7 @@ button {
       border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--text);
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--font-text);
       font-size: 14px;
       padding: 10px 12px;
       outline: none;
@@ -742,7 +761,7 @@ button {
       opacity: 0.6;
     }
     .empty-state-title {
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 18px;
       letter-spacing: 1px;
       color: var(--text);
@@ -784,7 +803,8 @@ button {
       border-radius: 20px 20px 0 0;
       width: 100%;
       max-width: 480px;
-      max-height: 88vh;
+      max-height: min(88vh, calc(100dvh - env(safe-area-inset-top) - 24px));
+      padding-bottom: env(safe-area-inset-bottom);
       overflow-y: auto;
       transform: translateY(100%);
       transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
@@ -810,7 +830,7 @@ button {
       border-bottom: 1px solid var(--border);
     }
     .modal-title {
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 20px;
       letter-spacing: 1px;
     }
@@ -896,7 +916,7 @@ button {
       border-radius: 8px;
       color: var(--text);
       font-size: 13px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--font-text);
       padding: 9px 16px;
       white-space: nowrap;
       z-index: 500;
@@ -959,7 +979,7 @@ button {
       border-bottom: 1px solid var(--border);
     }
     .public-header-logo {
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 16px;
       letter-spacing: 2px;
       color: var(--muted);
@@ -967,7 +987,7 @@ button {
     }
     .public-header-logo span { color: var(--primary); }
     .public-playlist-name {
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 32px;
       letter-spacing: 1px;
       line-height: 1.1;
@@ -992,9 +1012,9 @@ button {
       border-bottom: 2px solid transparent;
       color: var(--muted);
       cursor: pointer;
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 14px;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.05em;
       padding: 8px 16px;
       margin-bottom: -1px;
       transition: color 0.15s, border-color 0.15s;
@@ -1011,7 +1031,7 @@ button {
       border-radius: 20px;
       color: var(--muted);
       cursor: pointer;
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 12px;
       letter-spacing: 0.5px;
       padding: 3px 10px;
@@ -1048,7 +1068,7 @@ button {
       padding-top: 8px;
     }
     .direct-links-toggle {
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--font-text);
       font-size: 11px;
       color: #a78bfa;
       background: none;
@@ -1067,11 +1087,12 @@ button {
       display: flex;
       align-items: center;
       gap: 5px;
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
-      font-size: 11px;
-      letter-spacing: 0.5px;
+      font-family: var(--font-text);
+      font-size: 11.5px;
+      letter-spacing: 0.02em;
       color: var(--muted);
       margin-bottom: 3px;
+      font-weight: 500;
     }
     .direct-links-field input {
       width: 100%;
@@ -1079,7 +1100,7 @@ button {
       border: 1px solid var(--border);
       border-radius: 6px;
       color: var(--text);
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--font-text);
       font-size: 11px;
       padding: 6px 8px;
       outline: none;
@@ -1099,7 +1120,7 @@ button {
       padding: 4px 8px;
       border-radius: 8px;
       color: var(--muted);
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--font-text);
       font-size: 13px;
       transition: color 0.15s, background 0.15s;
     }
@@ -1174,10 +1195,11 @@ button {
     }
     .feedback-modal-label {
       color: #555;
-      font-size: 11px;
+      font-size: 11.5px;
       margin-bottom: 5px;
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
-      letter-spacing: 1px;
+      font-family: var(--font-text);
+      letter-spacing: 0.04em;
+      font-weight: 600;
     }
     .fb-type-btn { min-height: 44px;
       flex: 1;
@@ -1186,7 +1208,7 @@ button {
       background: transparent;
       border: 1px solid rgba(255,255,255,0.15);
       color: #aaa;
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--font-text);
       font-size: 12px;
       cursor: pointer;
       transition: all 0.15s;
@@ -1199,7 +1221,7 @@ button {
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 8px;
       color: var(--text);
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--font-text);
       font-size: 13px;
       padding: 10px 12px;
       outline: none;
@@ -1216,9 +1238,9 @@ button {
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.1);
       color: #aaa;
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 14px;
-      letter-spacing: 1px;
+      letter-spacing: 0.05em;
       cursor: pointer;
       transition: all 0.15s;
     }
@@ -1230,9 +1252,9 @@ button {
       background: var(--primary);
       border: none;
       color: #fff;
-      font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+      font-family: var(--font-display);
       font-size: 14px;
-      letter-spacing: 1px;
+      letter-spacing: 0.05em;
       cursor: pointer;
       transition: opacity 0.15s;
     }
@@ -1316,7 +1338,7 @@ button {
       height: 38px;
       line-height: 1;
       border-radius: 20px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--font-text);
       font-size: 13px;
       cursor: pointer;
       text-decoration: none;
@@ -1358,7 +1380,7 @@ button {
       100% { transform: rotate(0deg); }
     }
     .public-footer-hint {
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--font-text);
       font-size: 11px;
       color: rgba(255,255,255,0.2);
       letter-spacing: 0.2px;
@@ -1564,7 +1586,7 @@ button {
     </div>
     <!-- Spotify embed (shown if playlist was imported from Spotify) -->
     <div id="public-spotify-embed" style="display:none;padding:0 16px;margin-top:16px">
-      <div style="font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-align:center">LISTEN ON SPOTIFY</div>
+      <div style="font-family:var(--font-display);font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-align:center">LISTEN ON SPOTIFY</div>
       <iframe id="spotify-embed-iframe"
         style="border-radius:12px;width:100%;border:none"
         height="352"
@@ -1572,7 +1594,7 @@ button {
         loading="lazy">
       </iframe>
       <div class="divider" style="margin:16px 0"></div>
-      <div style="font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-align:center">OR OPEN ON ANY PLATFORM</div>
+      <div style="font-family:var(--font-display);font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-align:center">OR OPEN ON ANY PLATFORM</div>
     </div>
     <div class="public-content" id="public-tracks">
       <div class="loading-dots"><span></span><span></span><span></span></div>
@@ -1821,7 +1843,7 @@ button {
           </label>
         </div>
         <div class="divider"></div>
-        <div style="font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:13px;letter-spacing:0.5px;color:var(--muted);margin-bottom:10px">Streaming Links <span style="font-family:DM Sans;font-size:11px;letter-spacing:0;text-transform:none">(optional — adds an embedded player)</span></div>
+        <div style="font-family:var(--font-display);font-size:13px;letter-spacing:0.5px;color:var(--muted);margin-bottom:10px">Streaming Links <span style="font-family:DM Sans;font-size:11px;letter-spacing:0;text-transform:none">(optional — adds an embedded player)</span></div>
         <div class="form-group">
           <label style="display:flex;align-items:center;gap:6px"><span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:4px"><svg width="13" height="13" viewBox="0 0 168 168"><circle cx="84" cy="84" r="84" fill="#1DB954"/><path d="M120.7 116.4c-1.6 2.7-5.1 3.5-7.7 1.9-21.2-13-47.9-15.9-79.3-8.7-3 .7-6.1-1.2-6.8-4.2-.7-3 1.2-6.1 4.2-6.8 34.4-7.9 64-4.5 87.8 10.1 2.7 1.6 3.5 5.1 1.9 7.7zm10.2-22.8c-2 3.4-6.4 4.5-9.8 2.5-24.3-14.9-61.3-19.3-90-10.5-3.7 1.1-7.6-1-8.7-4.7-1.1-3.7 1-7.6 4.7-8.7 32.8-10 73.5-5.1 101.3 12 3.4 2 4.5 6.4 2.5 9.8zm.9-23.8c-29.1-17.3-77.2-18.9-105-10.5-4.5 1.4-9.2-1.2-10.5-5.6-1.4-4.5 1.2-9.2 5.6-10.5 31.9-9.7 84.9-7.8 118.4 12.1 4 2.4 5.4 7.6 3 11.6-2.4 4.1-7.6 5.4-11.6 3z" fill="white"/></svg></span> Spotify URL</label>
           <input type="url" id="playlist-spotify-url" placeholder="https://open.spotify.com/playlist/..." />
@@ -1895,7 +1917,7 @@ button {
         <div id="spotify-step-connect">
           <div style="text-align:center;padding:16px 0 24px">
             <div style="font-size:48px;margin-bottom:12px"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
-            <div style="font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:18px;letter-spacing:1px;margin-bottom:8px">Connect Spotify</div>
+            <div style="font-family:var(--font-display);font-size:18px;letter-spacing:1px;margin-bottom:8px">Connect Spotify</div>
             <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">
               Sign in with Spotify to import your playlists.<br/>
               We only read your playlists — we never modify them.
@@ -1935,7 +1957,7 @@ button {
         <!-- CSV tab -->
         <div id="import-panel-csv">
           <div style="background:var(--primary-soft);border:1px solid var(--primary-border);border-radius:8px;padding:12px;margin-bottom:14px">
-            <div style="font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:13px;letter-spacing:0.5px;color:#a78bfa;margin-bottom:4px">Exportify CSV</div>
+            <div style="font-family:var(--font-display);font-size:13px;letter-spacing:0.5px;color:#a78bfa;margin-bottom:4px">Exportify CSV</div>
             <div style="font-size:12px;color:var(--muted);line-height:1.6">
               Go to <strong style="color:var(--text)">exportify.app</strong> → connect Spotify → export playlist as CSV → upload here.<br/>
               Artist, track name, album, duration and Spotify URI are all imported automatically.
@@ -1943,7 +1965,7 @@ button {
           </div>
           <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--border);border-radius:10px;padding:28px 16px;cursor:pointer;transition:border-color 0.15s" id="csv-drop-zone">
             <span style="font-size:28px"><svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.6 3.9A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg></span>
-            <span style="font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:14px;letter-spacing:0.5px;color:var(--muted)">Drop CSV here or tap to browse</span>
+            <span style="font-family:var(--font-display);font-size:14px;letter-spacing:0.5px;color:var(--muted)">Drop CSV here or tap to browse</span>
             <input type="file" id="csv-file-input" accept=".csv" style="display:none" />
           </label>
           <div id="csv-file-name" style="font-size:12px;color:#a78bfa;margin-top:8px;display:none"></div>
@@ -1964,7 +1986,7 @@ button {
 
         <!-- Preview -->
         <div id="import-preview" style="display:none;margin-top:12px">
-          <div style="font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:13px;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px" id="import-preview-count"></div>
+          <div style="font-family:var(--font-display);font-size:13px;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px" id="import-preview-count"></div>
           <div id="import-preview-list" style="max-height:150px;overflow-y:auto"></div>
         </div>
       </div>
@@ -4713,7 +4735,7 @@ async function loadPublicPlaylist(slug) {
     if (spotifyEmbedSrc) {
       embedHtml += `
         <div style="margin-bottom:12px">
-          <div style="display:flex;align-items:center;gap:6px;font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${SVG_ICONS.spotify} SPOTIFY</div>
+          <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${SVG_ICONS.spotify} SPOTIFY</div>
           <iframe src="${spotifyEmbedSrc}"
             style="border-radius:12px;width:100%;border:none" height="352"
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
@@ -4744,7 +4766,7 @@ async function loadPublicPlaylist(slug) {
       if (appleEmbedUrl) {
         embedHtml += `
           <div style="margin-bottom:12px">
-            <div style="display:flex;align-items:center;gap:6px;font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${SVG_ICONS.apple} APPLE MUSIC</div>
+            <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${SVG_ICONS.apple} APPLE MUSIC</div>
             <iframe src="${appleEmbedUrl}"
               style="border-radius:12px;width:100%;border:none;overflow:hidden;background:transparent" height="450"
               sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
@@ -4758,7 +4780,7 @@ async function loadPublicPlaylist(slug) {
       if (deezerId) {
         embedHtml += `
           <div style="margin-bottom:12px">
-            <div style="display:flex;align-items:center;gap:6px;font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${SVG_ICONS.deezer} DEEZER</div>
+            <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${SVG_ICONS.deezer} DEEZER</div>
             <iframe src="https://widget.deezer.com/widget/dark/playlist/${deezerId}"
               style="border-radius:12px;width:100%;border:none" height="350"
               allow="encrypted-media; clipboard-write" loading="lazy"></iframe>
@@ -4769,7 +4791,7 @@ async function loadPublicPlaylist(slug) {
     if (pl.soundcloud_url) {
       embedHtml += `
         <div style="margin-bottom:12px">
-          <div style="display:flex;align-items:center;gap:6px;font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${SVG_ICONS.soundcloud} SOUNDCLOUD</div>
+          <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">${SVG_ICONS.soundcloud} SOUNDCLOUD</div>
           <iframe src="https://w.soundcloud.com/player/?url=${encodeURIComponent(pl.soundcloud_url)}&color=%237c3aed&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&visual=true"
             style="border-radius:12px;width:100%;border:none" height="300" loading="lazy"></iframe>
         </div>`;
@@ -4782,7 +4804,7 @@ async function loadPublicPlaylist(slug) {
       embedDiv.innerHTML = `
         <div style="padding:0 16px;margin-top:16px">${embedHtml}</div>
         ${hasAlternatives ? '<div class="divider" style="margin:16px 0"></div>' : ''}
-        ${hasAlternatives ? `<div style="font-family:Bebas Neue,'Arial Narrow',sans-serif;font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-align:center;padding:0 16px">OR OPEN ON ANY PLATFORM</div>` : ''}
+        ${hasAlternatives ? `<div style="font-family:var(--font-display);font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-align:center;padding:0 16px">OR OPEN ON ANY PLATFORM</div>` : ''}
       `;
       embedDiv.style.display = '';
     }
