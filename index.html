@@ -2169,6 +2169,13 @@ function showTab(name) {
 
 // ── Modal management ──────────────────────────────────────────────────
 function openModal(id) {
+  // One sheet at a time. Opening a second while the first is up leaves the
+  // earlier one live but hidden underneath - which is how the Spotify import
+  // became unreachable behind the CSV one, with its button present, reported
+  // visible by the DOM, and covered by another modal.
+  document.querySelectorAll('.overlay.open').forEach(el => {
+    if (el.id !== id) el.classList.remove('open');
+  });
   document.getElementById(id).classList.add('open');
 }
 function closeModal(id) {
