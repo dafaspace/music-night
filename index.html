@@ -4632,18 +4632,19 @@ async function importSpotifyPlaylist(spotifyId, name, total) {
 }
 
 // ── Spotify: open modal ───────────────────────────────────────────────
-const _spotifyBtn = document.getElementById('btn-spotify-import');
-if (_spotifyBtn) _spotifyBtn.addEventListener('click', () => {
+// This was bound to a button with id "btn-spotify-import" that appears nowhere
+// in the markup, behind `if (_spotifyBtn)` - so the whole Spotify import sat
+// there, complete and working, with nothing able to open it and nothing
+// complaining. A defensive guard around a missing element turns an obvious
+// wiring mistake into an invisible one.
+function openSpotifyImport() {
   const token = localStorage.getItem('spotify_token');
   document.getElementById('spotify-step-connect').style.display = token ? 'none' : '';
   document.getElementById('spotify-step-select').style.display = 'none';
   document.getElementById('spotify-step-importing').style.display = 'none';
   openModal('overlay-spotify');
-
-  if (token) {
-    loadSpotifyPlaylists(token);
-  }
-});
+  if (token) loadSpotifyPlaylists(token);
+}
 
 document.getElementById('btn-spotify-connect').addEventListener('click', spotifyLogin);
 
