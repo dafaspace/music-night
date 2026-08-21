@@ -394,6 +394,21 @@ button {
     .review-link:hover { text-decoration: underline; }
     .review-actions { display: flex; gap: 6px; }
 
+    .playlist-filter {
+      display: flex; align-items: center; gap: 8px;
+      margin: 0 0 12px; padding: 0 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      color: var(--muted);
+    }
+    .playlist-filter input {
+      flex: 1; min-height: 44px; padding: 0;
+      background: none; border: none; outline: none;
+      color: var(--text); font-family: var(--font-text); font-size: 14px;
+    }
+    .playlist-filter input::placeholder { color: var(--muted); }
+    .playlist-filter:focus-within { border-color: var(--primary-border); }
+
     .btn-icon {
       width: 44px;
       height: 44px;
@@ -1817,6 +1832,14 @@ button {
         <button class="sort-pill" data-sort="alpha">A → Z</button>
         <button class="sort-pill" data-sort="visibility">Public</button>
       </div>
+      <!-- Filtering by name searches the tracks too: a playlist is remembered by
+           what is in it at least as often as by what it is called. -->
+      <div class="playlist-filter">
+        <svg class="g" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="search" id="playlist-filter" placeholder="Filter playlists and tracks"
+               aria-label="Filter playlists by name or by a track inside them" autocomplete="off" />
+      </div>
       <div id="playlists-list">
         <div class="loading-dots"><span></span><span></span><span></span></div>
       </div>
@@ -3059,8 +3082,46 @@ document.getElementById('btn-copy-link').addEventListener('click', () => {
 });
 
 // ── Playlists: render list ────────────────────────────────────────────
+// Matching on the track list as well as the name: people look for "that one with
+// the Coltrane" as readily as for a title they chose months ago.
+let playlistFilter = '';
+let playlistTrackIndex = new Map();   // playlist id -> lowercased track text
+
+async function buildPlaylistTrackIndex() {
+  if (!currentUser || !playlists.length) return;
+  try {
+    const { data } = await sbClient.from('playlist_tracks')
+      .select('playlist_id,artist,track_name')
+      .in('playlist_id', playlists.map(p => p.id));
+    const map = new Map();
+    (data || []).forEach(t => {
+      const prev = map.get(t.playlist_id) || '';
+      map.set(t.playlist_id, `${prev} ${t.artist} ${t.track_name}`.toLowerCase());
+    });
+    playlistTrackIndex = map;
+    if (playlistFilter) renderPlaylists();
+  } catch (e) { /* filtering by name still works without it */ }
+}
+
+function playlistMatches(p) {
+  if (!playlistFilter) return true;
+  const q = playlistFilter;
+  if ((p.name || '').toLowerCase().includes(q)) return true;
+  if ((p.description || '').toLowerCase().includes(q)) return true;
+  return (playlistTrackIndex.get(p.id) || '').includes(q);
+}
+
 function renderPlaylists() {
   const container = document.getElementById('playlists-list');
+  const visible = playlists.filter(playlistMatches);
+  if (playlistFilter && !visible.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-title">Nothing matches</div>
+        <p>No playlist name, description or track contains "${escHtml(playlistFilter)}".</p>
+      </div>`;
+    return;
+  }
   if (!playlists.length) {
     container.innerHTML = `
       <div class="empty-state">
@@ -3070,7 +3131,7 @@ function renderPlaylists() {
       </div>`;
     return;
   }
-  container.innerHTML = playlists.map(p => `
+  container.innerHTML = visible.map(p => `
     <div class="card" data-playlist-id="${p.id}" style="cursor:pointer" onclick="openPlaylistDetail('${p.id}')">
       <div class="card-header">
         <span class="drag-handle" onclick="event.stopPropagation()" title="Drag to reorder">⠿</span>
@@ -3238,6 +3299,7 @@ async function loadPlaylists() {
       _trackCount: p.playlist_tracks?.[0]?.count || 0
     }));
     renderPlaylists();
+  buildPlaylistTrackIndex();
   } catch (err) {
     showToast('Failed to load playlists');
     console.warn(err);
@@ -4525,23 +4587,28 @@ async function spotifyGetAllPlaylists(token) {
 }
 
 async function spotifyGetAllTracks(playlistId, token) {
-  // /tracks was retired in the February 2026 Web API changes; /items replaces it.
-  // external_ids carries the ISRC, which was already being requested and then
-  // dropped on the floor - it is the only identifier that survives a jump
-  // between services, so it is the one thing worth keeping.
-  let url = `/playlists/${playlistId}/items?limit=100&fields=next,items(track(name,artists,album(name),duration_ms,uri,external_ids))`;
+  // /tracks was retired in the February 2026 Web API changes and /items replaces
+  // it - but the element inside is now called "item"; "track" is kept only for
+  // backward compatibility and is absent from a fields= projection that asks for
+  // it by the old name. Asking for the wrong field returned an empty list, and
+  // an empty list imported "successfully" as an empty playlist.
+  //
+  // No fields= projection at all: it is a bandwidth optimisation, and paying for
+  // it with a silent shape mismatch is a bad trade on a hundred rows.
+  let url = `/playlists/${playlistId}/items?limit=100`;
   const all = [];
   while (url) {
     const data = await spotifyGet(url, token);
     const tracks = (data.items || [])
-      .filter(i => i.track && i.track.uri)
-      .map(i => ({
-        track_name:   i.track.name,
-        artist:       (i.track.artists || []).map(a => a.name).join(', '),
-        album:        i.track.album?.name || '',
-        duration_ms:  i.track.duration_ms || null,
-        spotify_uri:  i.track.uri,
-        isrc:         i.track.external_ids?.isrc || null,
+      .map(i => i.item || i.track)          // "item" now, "track" on older responses
+      .filter(t => t && t.uri && t.type !== 'episode')
+      .map(t => ({
+        track_name:   t.name,
+        artist:       (t.artists || []).map(a => a.name).join(', '),
+        album:        t.album?.name || '',
+        duration_ms:  t.duration_ms || null,
+        spotify_uri:  t.uri,
+        isrc:         t.external_ids?.isrc || null,
         release_date: '',
         genre:        null
       }));
@@ -4578,6 +4645,16 @@ async function importSpotifyPlaylist(spotifyId, name, total) {
 
   try {
     const tracks = await spotifyGetAllTracks(spotifyId, token);
+
+    // Zero tracks is a failure, not an import. The batch loop simply does not run
+    // for an empty list, so this used to create an empty playlist and announce
+    // success - which is how a changed field name looked like a working import.
+    if (!tracks.length) {
+      document.getElementById('spotify-step-importing').style.display = 'none';
+      document.getElementById('spotify-step-select').style.display = '';
+      showToast('Spotify returned no tracks for that playlist');
+      return;
+    }
 
     // Create new Tunemail playlist
     const slug = generateSlug();
@@ -4629,6 +4706,20 @@ async function importSpotifyPlaylist(spotifyId, name, total) {
     document.getElementById('spotify-step-select').style.display = '';
     document.getElementById('spotify-step-importing').style.display = 'none';
   }
+}
+
+
+// ── Playlists: filter ────────────────────────────────────────────────
+const _plFilter = document.getElementById('playlist-filter');
+if (_plFilter) {
+  let t = null;
+  _plFilter.addEventListener('input', () => {
+    playlistFilter = _plFilter.value.trim().toLowerCase();
+    clearTimeout(t);
+    // Short debounce: typing should not re-render the list on every keystroke,
+    // and the delay is below what a person notices.
+    t = setTimeout(renderPlaylists, 120);
+  });
 }
 
 // ── Spotify: open modal ───────────────────────────────────────────────
