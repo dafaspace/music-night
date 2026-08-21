@@ -718,6 +718,29 @@ button {
       border: 2px solid var(--surface);
     }
 
+    .detail-actions {
+      position: sticky; bottom: 0; z-index: 2;
+      margin-top: 12px;
+      display: flex; gap: 8px;
+      padding: 12px 0 calc(4px + env(safe-area-inset-bottom));
+      background: var(--surface);
+      /* a fade rather than a hard edge, so the list reads as continuing under it */
+      box-shadow: 0 -12px 12px -12px rgba(0,0,0,0.6);
+    }
+    .edit-danger {
+      margin: 20px 0 0; padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .edit-danger .btn {
+      width: 100%;
+      color: #f87171;
+      border-color: rgba(248,113,113,0.35);
+    }
+    .edit-danger .btn:hover {
+      background: rgba(248,113,113,0.08);
+      border-color: rgba(248,113,113,0.6);
+    }
+
     .platform-expand {
       display: inline-flex; align-items: center; justify-content: center;
       min-height: 34px; padding: 0 12px;
@@ -1936,6 +1959,12 @@ button {
           <input type="url" id="playlist-soundcloud-url" placeholder="https://soundcloud.com/..." />
         </div>
       </div>
+      <!-- Destructive actions belong at the foot of the sheet that edits the
+           thing, which is where iOS, Spotify and Apple Music all put them, and
+           separated from the controls people use every day. -->
+      <div id="edit-danger" class="edit-danger" style="display:none">
+        <button class="btn btn-ghost" id="btn-delete-from-edit">Delete this playlist</button>
+      </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" data-close="overlay-playlist">Cancel</button>
         <button class="btn btn-primary" id="btn-save-playlist">Save</button>
@@ -1969,7 +1998,10 @@ button {
         <div id="detail-tracks-list">
           <div class="loading-dots"><span></span><span></span><span></span></div>
         </div>
-        <div style="margin-top:12px;display:flex;gap:8px">
+        <!-- Pinned: with thirty-five tracks the primary action of this screen sat
+             below the whole list, so adding a track meant scrolling past
+             everything first. -->
+        <div class="detail-actions">
           <button class="btn btn-primary" id="btn-add-track-to-playlist" style="flex:1">+ Add Track</button>
           <button class="btn btn-secondary btn-sm" id="btn-import-text" title="Import from text">↓ Import</button>
           <button class="btn btn-ghost btn-sm" id="btn-export-json" title="Export JSON">JSON</button>
@@ -2622,6 +2654,7 @@ function showConfirm(title, text, cb) {
 // ── New playlist button ───────────────────────────────────────────────
 document.getElementById('btn-new-playlist').addEventListener('click', () => {
   document.getElementById('modal-playlist-title').textContent = 'New Playlist';
+  document.getElementById('edit-danger').style.display = 'none';
   document.getElementById('playlist-name-input').value = '';
   document.getElementById('playlist-desc-input').value = '';
   document.getElementById('playlist-public-toggle').checked = false;
@@ -3333,6 +3366,17 @@ async function loadPlaylists() {
 }
 
 // ── Playlists: save (create or update) ───────────────────────────────
+
+// The same confirm and the same deletion as the row icon - one destructive path,
+// two doors to it, so a fix or a safeguard lands in both.
+const _delFromEdit = document.getElementById('btn-delete-from-edit');
+if (_delFromEdit) _delFromEdit.addEventListener('click', () => {
+  if (!currentPlaylist) return;
+  const id = currentPlaylist.id;
+  closeModal('overlay-playlist');
+  deletePlaylist(id);
+});
+
 document.getElementById('btn-save-playlist').addEventListener('click', async () => {
   const name = document.getElementById('playlist-name-input').value.trim();
   if (!name) { showToast('Please enter a playlist name'); return; }
@@ -3401,6 +3445,7 @@ function openEditPlaylist(id) {
   if (!p) return;
   currentPlaylist = p;
   document.getElementById('modal-playlist-title').textContent = 'Edit Playlist';
+  document.getElementById('edit-danger').style.display = '';
   document.getElementById('playlist-name-input').value = p.name;
   document.getElementById('playlist-desc-input').value = p.description || '';
   document.getElementById('playlist-public-toggle').checked = p.is_public;
@@ -4000,6 +4045,7 @@ let searchTabNewPlaylist = false;
 document.getElementById('btn-new-playlist-inline').addEventListener('click', () => {
   searchTabNewPlaylist = true;
   document.getElementById('modal-playlist-title').textContent = 'New Playlist';
+  document.getElementById('edit-danger').style.display = 'none';
   document.getElementById('playlist-name-input').value = '';
   document.getElementById('playlist-desc-input').value = '';
   document.getElementById('playlist-public-toggle').checked = false;
