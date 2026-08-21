@@ -2774,14 +2774,49 @@ async function lookupItunes(artist, track) {
 // because it is exact and free; the search is the fallback and says so.
 const enrichCache = new Map();
 
+// Apple's catalogue by ISRC, through the worker so the developer token stays a
+// secret. This finds recordings that search cannot: "Dave Brubeck 40 Days"
+// returns eight results without 40 Days among them, and no amount of matching
+// heuristics rescues a record the search index will not surface. A code
+// identifies the recording itself.
+const appleIsrcCache = new Map();
+
+async function resolveAppleByIsrc(isrc) {
+  if (!isrc) return null;
+  if (appleIsrcCache.has(isrc)) return appleIsrcCache.get(isrc);
+  let out = null;
+  try {
+    const r = await fetch(`${MUSIC_NIGHT_WORKER}/resolve?isrc=${encodeURIComponent(isrc)}`);
+    if (r.ok) {
+      const d = await r.json();
+      if (d && d.found) out = d;
+    }
+  } catch (e) { /* an unreachable resolver falls through to search */ }
+  appleIsrcCache.set(isrc, out);
+  return out;
+}
+
 async function enrichTrack(t) {
   const key = `${t.isrc || ''}|${t.artist}|${t.track_name}`;
   if (enrichCache.has(key)) return enrichCache.get(key);
   let out = null;
   try {
     if (t.isrc) {
+      // Apple first: exact, and it carries artwork, preview and a real track URL
+      // in one answer.
+      const ap = await resolveAppleByIsrc(t.isrc);
+      if (ap) out = {
+        artwork: ap.artwork, preview: ap.preview,
+        appleUrl: ap.appleUrl, exact: true,
+      };
       const d = await resolveByIsrc(t.isrc);
-      if (d) out = { artwork: d.artwork, preview: d.preview, deezerUrl: d.deezer, exact: true };
+      if (d) out = {
+        artwork: out?.artwork || d.artwork,
+        preview: out?.preview || d.preview,
+        appleUrl: out?.appleUrl || null,
+        deezerUrl: d.deezer,
+        exact: true,
+      };
     }
     if (!out || !out.artwork || !out.preview) {
       const it = await lookupItunes(t.artist, t.track_name);

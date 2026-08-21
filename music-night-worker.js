@@ -21,7 +21,7 @@ const RECOGNIZE_PER_HOUR = 20;
 
 const cors = (origin = ALLOWED_ORIGIN) => ({
   "Access-Control-Allow-Origin": origin,
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
   "Vary": "Origin",
 });
@@ -92,6 +92,71 @@ async function sb(path) {
 // traffic, so the budget is spent before we arrive. No header or retry fixes
 // that. The cache is filled from the owner's browser instead, which has its own
 // address and demonstrably works.
+
+
+// ── GET /resolve?isrc=... - the exact record, by code rather than by name ────
+// Search cannot find some recordings at all: "Dave Brubeck 40 Days" returns
+// eight results without 40 Days among them, the same way "radiohead creep"
+// misses Pablo Honey. An ISRC identifies the recording itself, so this finds
+// what no amount of matching heuristics can.
+//
+// This lives on the Worker, unlike the iTunes calls that had to move to the
+// browser: the Apple Music API authenticates with a developer token, so its
+// limits count per token rather than per address. An authenticated API is safe
+// to call from shared infrastructure; an anonymous one is not.
+async function resolveIsrc(isrc, env, ctx) {
+  const j = (data, status = 200) => new Response(JSON.stringify(data), {
+    status,
+    headers: { ...cors(), "Content-Type": "application/json", "Cache-Control": "public, max-age=86400" },
+  });
+
+  if (!/^[A-Z0-9]{12}$/i.test(isrc)) return j({ error: "bad isrc" }, 400);
+  if (!env.APPLE_DEV_TOKEN) return j({ error: "not configured" }, 503);
+
+  // Apple's answer for an ISRC does not change, so a repeat costs nothing.
+  const cacheKey = new Request(`https://cache.tunemail/isrc/${isrc}`);
+  const cache = caches.default;
+  const hit = await cache.match(cacheKey);
+  if (hit) return hit;
+
+  let res;
+  try {
+    res = await fetch(
+      `https://api.music.apple.com/v1/catalog/us/songs?filter[isrc]=${encodeURIComponent(isrc)}`,
+      { headers: { Authorization: `Bearer ${env.APPLE_DEV_TOKEN}` } }
+    );
+  } catch (e) {
+    return j({ error: "unreachable" }, 502);
+  }
+  if (!res.ok) {
+    // 401 means the token expired - they last six months - and that should be
+    // legible rather than showing up as "no match".
+    return j({ error: res.status === 401 ? "token expired" : `apple ${res.status}` }, 502);
+  }
+
+  const body = await res.json().catch(() => null);
+  const song = body?.data?.[0];
+  if (!song) {
+    const miss = j({ found: false });
+    if (ctx) ctx.waitUntil(cache.put(cacheKey, miss.clone()));
+    return miss;
+  }
+
+  const a = song.attributes || {};
+  const out = j({
+    found: true,
+    isrc,
+    artist: a.artistName || null,
+    title: a.name || null,
+    album: a.albumName || null,
+    year: (a.releaseDate || "").slice(0, 4) || null,
+    appleUrl: a.url || null,
+    preview: a.previews?.[0]?.url || null,
+    artwork: a.artwork?.url ? a.artwork.url.replace("{w}", "600").replace("{h}", "600") : null,
+  });
+  if (ctx) ctx.waitUntil(cache.put(cacheKey, out.clone()));
+  return out;
+}
 
 async function sharePage(slug, url) {
   const pls = await sb(`music_playlists?public_slug=eq.${encodeURIComponent(slug)}&is_public=eq.true&select=id,name,description,user_id&limit=1`);
@@ -203,6 +268,10 @@ export default {
 
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+
+    if (request.method === "GET" && url.pathname === "/resolve") {
+      return resolveIsrc(url.searchParams.get("isrc") || "", env, ctx);
+    }
 
     if (request.method === "GET" && url.pathname.startsWith("/p/")) {
       return sharePage(url.pathname.slice(3), url);
