@@ -3440,15 +3440,30 @@ async function deleteTrack(trackId, playlistId) {
 }
 
 // ── Direct links: toggle panel ────────────────────────────────────────
+const GLYPH_PENCIL = '<svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>';
+
 function toggleDirectLinks(btn, trackId) {
   const item = btn.closest('.track-item') || document.querySelector(`[data-track-id="${trackId}"]`);
   if (!item) return;
   const panel = item.querySelector('.direct-links-panel');
   const toggleBtn = item.querySelector('.direct-links-toggle');
   if (!panel) return;
-  const open = panel.style.display === 'none' || !panel.style.display;
-  panel.style.display = open ? '' : 'none';
-  if (toggleBtn) toggleBtn.textContent = open ? '− Close' : (item.querySelector('[data-platform-key]')?.value ? '<svg class="g" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>️ Edit direct links' : '+ Add direct links');
+
+  // The old test was `display === 'none' || !display`. Opening sets display to
+  // the empty string, so on the next click `!''` was true, the panel was judged
+  // closed, and it reopened itself. Neither Close nor Cancel could ever shut it.
+  // Ask what is actually rendered instead of guessing from the inline style.
+  const isHidden = getComputedStyle(panel).display === 'none';
+  panel.style.display = isHidden ? '' : 'none';
+
+  if (toggleBtn) {
+    const hasValue = [...item.querySelectorAll('[data-platform-key]')].some(i => i.value.trim());
+    // innerHTML, not textContent: the label carries a glyph, and textContent
+    // would print the SVG markup as words.
+    toggleBtn.innerHTML = isHidden
+      ? '− Close'
+      : (hasValue ? `${GLYPH_PENCIL} Edit direct links` : '+ Add direct links');
+  }
 }
 
 // ── Direct links: save to DB ──────────────────────────────────────────
