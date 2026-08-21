@@ -1988,6 +1988,11 @@ button {
         <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border)">
           <button class="shared-tab-btn active" id="import-tab-csv" onclick="switchImportTab('csv')">CSV File</button>
           <button class="shared-tab-btn" id="import-tab-text" onclick="switchImportTab('text')">Paste Text</button>
+          <!-- The Spotify screen and its import code existed all along with
+               nothing in the interface opening them. It belongs here, beside the
+               other two ways of getting tracks in, and it is the only one that
+               carries the ISRC. -->
+          <button class="shared-tab-btn" id="import-tab-spotify" onclick="openSpotifyImport()">Spotify</button>
         </div>
 
         <!-- CSV tab -->
