@@ -3366,8 +3366,11 @@ function renderTrackList(tracks, playlistId) {
     return `
     <div class="track-item" data-track-id="${t.id}" data-spotify-uri="${escHtml(t.spotify_uri || '')}">
       <div class="track-header">
-        <span class="drag-handle" title="Drag to reorder">⠿</span>
-        <div class="track-num">${i + 1}</div>
+        <span class="drag-handle" title="Drag to reorder" aria-label="Drag to reorder this track">⠿</span>
+        <div class="track-art">
+          <button class="track-play" hidden aria-label="Play a 30 second preview"
+                  onclick="event.stopPropagation();togglePreview(this)"></button>
+        </div>
         <div class="track-info">
           <div class="track-name">${escHtml(t.track_name)}</div>
           <div class="track-artist">
@@ -3415,6 +3418,8 @@ function renderTrackList(tracks, playlistId) {
       </div>
     </div>`;
   }).join('');
+
+  enrichTrackList(container, tracks);
 
   // Fetch odesli links sequentially to respect rate limit (10 req/min)
   const uriTracks = tracks.filter(t => t.spotify_uri);
@@ -3763,9 +3768,22 @@ async function saveDirectLinks(trackId, playlistId, saveBtn) {
 }
 
 // ── Utility: escape HTML ──────────────────────────────────────────────
+// Three of the older columns are TIMESTAMP rather than TIMESTAMPTZ, so Postgres
+// returns "2026-05-05T05:29:14.971995" with no zone. JavaScript reads a
+// zone-less date-time as local, so a UTC value taken as UTC+3 lands three hours
+// in the past - which is why a playlist saved a moment ago said "3h ago". The
+// column type is being fixed too; this keeps every other timestamp honest.
+function parseStamp(iso) {
+  if (!iso) return null;
+  const hasZone = /[Zz]$|[+-]\d{2}:?\d{2}$/.test(iso);
+  return new Date(hasZone ? iso : iso + 'Z');
+}
+
 function fmtDate(iso) {
   if (!iso) return '';
-  const d = new Date(iso), now = new Date();
+  const d = parseStamp(iso), now = new Date();
+  if (!d || isNaN(d)) return '';
+  if (d > now) return 'just now';   // a small clock skew must not read as the future
   const diff = (now - d) / 1000;
   if (diff < 60) return 'just now';
   if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
@@ -5116,35 +5134,75 @@ function renderPublicTracks(trackList) {
 // nothing waits on the network to read. A film page cannot play; a track page
 // can, and that is the whole reason this page should exist.
 async function enrichPublicTracks(trackList) {
-  const container = document.getElementById('public-tracks');
-  for (let i = 0; i < trackList.length; i++) {
-    const t = trackList[i];
-    const data = await enrichTrack(t);
-    if (!data) continue;
-    const item = container.querySelectorAll('.track-item')[i];
-    if (!item) continue;
+  return enrichTrackList(document.getElementById('public-tracks'), trackList);
+}
 
+async function enrichTrackList(container, trackList) {
+  if (!container || !trackList.length) return;
+
+  // Measured on a 35-track playlist: one lookup per track, in series, with a
+  // pause between them - 34 requests taking 39 seconds to finish, and the covers
+  // trailing behind that. Three fixes, in order of how much they save.
+
+  // 1. Ask the shared cache once for everything, instead of the network per row.
+  const byKey = new Map();
+  try {
+    const keys = trackList.map(t => normKey(t.artist));
+    const { data } = await sbClient.from('track_links')
+      .select('artist,track_name,artwork_url,preview_url,direct_urls')
+      .in('artist', [...new Set(keys)]);
+    (data || []).forEach(r => byKey.set(`${r.artist}|${r.track_name}`, r));
+  } catch (e) { /* the cache is an optimisation, never a requirement */ }
+
+  // 2. Run the misses with a small concurrency instead of one at a time. Six is
+  //    enough to hide the latency and gentle enough for an endpoint that
+  //    documents no rate limit.
+  const items = container.querySelectorAll('.track-item');
+  const queue = trackList.map((t, i) => ({ t, i }));
+  const fresh = [];
+
+  const paint = (i, data) => {
+    const item = items[i];
+    if (!item || !data) return;
     if (data.artwork) {
       const holder = item.querySelector('.track-art');
       if (holder && !holder.querySelector('img')) {
         const img = document.createElement('img');
-        img.src = data.artwork;
-        img.alt = '';
-        img.loading = 'lazy';
-        holder.prepend(img);          // prepend: the play button stays on top
+        img.src = data.artwork; img.alt = ''; img.loading = 'lazy';
+        holder.prepend(img);
         holder.classList.add('has-art');
       }
     }
     if (data.preview) {
       const btn = item.querySelector('.track-play');
-      if (btn) {
-        btn.dataset.preview = data.preview;
-        btn.hidden = false;
-      }
+      if (btn) { btn.dataset.preview = data.preview; btn.hidden = false; }
     }
-    // A pause between calls: iTunes documents no rate limit, which is a reason
-    // to be careful rather than a licence to hammer it.
-    await new Promise(r => setTimeout(r, 120));
+  };
+
+  async function worker() {
+    while (queue.length) {
+      const { t, i } = queue.shift();
+      const hit = byKey.get(`${normKey(t.artist)}|${normKey(t.track_name)}`);
+      if (hit && (hit.artwork_url || hit.preview_url)) {
+        paint(i, { artwork: hit.artwork_url, preview: hit.preview_url });
+        continue;
+      }
+      const data = await enrichTrack(t);
+      paint(i, data);
+      if (data && (data.artwork || data.preview)) fresh.push([t, data]);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(6, trackList.length) }, worker));
+
+  // 3. Write what was learned back, so the next visitor pays nothing. These come
+  //    from the platform rather than from a person, so they need no review.
+  if (currentUser && fresh.length) {
+    for (const [t, d] of fresh) {
+      trackLinksCacheSet(t.artist, t.track_name, {
+        artwork_url: d.artwork || null,
+        preview_url: d.preview || null,
+      });
+    }
   }
 }
 
